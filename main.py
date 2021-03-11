@@ -2,12 +2,17 @@ import os
 from nacl.signing import VerifyKey
 from nacl.exceptions import BadSignatureError
 
+import google.cloud.logging
 from flask import Flask, jsonify, abort, request
 from dotenv import load_dotenv
 
 load_dotenv()
 PUBLIC_KEY = os.getenv("PUBLIC_KEY")
 verify_key = VerifyKey(bytes.fromhex(PUBLIC_KEY))
+
+client = google.cloud.logging.Client()
+client.get_default_handler()
+client.setup_logging()
 
 app = Flask(__name__)
 
@@ -19,10 +24,13 @@ def verifyRequest(request):
         verify_key.verify("{0}{1}".format(timestamp, body).encode(), bytes.fromhex(signature))
         return True
     except BadSignatureError:
+        logging.warning("401 - Invalid request signature")
         abort(401, "invalid request signature")
         return False
     except Exception as e:
-        abort(401, "verifyRequest error -> \n{}".format(str(e)))
+        errorText = "verifyRequest error -> \n{}".format(str(e))
+        logging.warning(errorText)
+        abort(401, errorText)
         return False
 
 
@@ -40,12 +48,4 @@ def hello_world():
     return "Hello, World!"
 
 if __name__ == "__main__":
-    try:
-        import googleclouddebugger
-        googleclouddebugger.enable(
-            breakpoint_enable_canary=True
-        )
-    except ImportError:
-    	pass
-
     app.run(debug = True, host='0.0.0.0')
