@@ -2,12 +2,12 @@ import os
 from nacl.signing import VerifyKey
 from nacl.exceptions import BadSignatureError
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, abort
 from dotenv import load_dotenv
 
 load_dotenv()
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-verify_key = VerifyKey(bytes.fromhex(DISCORD_TOKEN))
+PUBLIC_KEY = os.getenv("PUBLIC_KEY")
+verify_key = VerifyKey(bytes.fromhex(PUBLIC_KEY))
 
 app = Flask(__name__)
 
@@ -16,13 +16,18 @@ def verifyRequest(request):
         signature = request.headers["X-Signature-Ed25519"]
         timestamp = request.headers["X-Signature-Timestamp"]
         body = request.data
+        verify_key.verify(f'{timestamp}{body}'.encode(), bytes.fromhex(signature))
         return True
-    except:
+    except BadSignatureError:
         abort(401, 'invalid request signature')
         return False
+    except Exception as e:
+        abort(401, "verifyRequest error -> \n{}".format(str(e)))
+        return False
+
 
 @app.route('/', methods=['POST'])
-def ping():
+def ping(request):
     if (not verifyRequest(request)): return
 
     if request.json["type"] == 1:
@@ -32,8 +37,6 @@ def ping():
 
 @app.route('/abc/')
 def hello_world():
-    if (not verifyRequest(request)): return
-    
     return "Hello, World!"
 
 if __name__ == "__main__":
