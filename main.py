@@ -2,7 +2,7 @@ import os
 from nacl.signing import VerifyKey
 from nacl.exceptions import BadSignatureError
 
-from flask import Flask, jsonify, abort
+from flask import Flask, jsonify, abort, request
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -27,7 +27,7 @@ def verifyRequest(request):
 
 
 @app.route('/', methods=['POST'])
-def ping(request):
+def ping():
     if (not verifyRequest(request)): return
 
     if request.json["type"] == 1:
