@@ -16,10 +16,10 @@ def verifyRequest(request):
         signature = request.headers["X-Signature-Ed25519"]
         timestamp = request.headers["X-Signature-Timestamp"]
         body = request.data
-        verify_key.verify(f'{timestamp}{body}'.encode(), bytes.fromhex(signature))
+        verify_key.verify("{0}{1}".format(timestamp, body).encode(), bytes.fromhex(signature))
         return True
     except BadSignatureError:
-        abort(401, 'invalid request signature')
+        abort(401, "invalid request signature")
         return False
     except Exception as e:
         abort(401, "verifyRequest error -> \n{}".format(str(e)))
