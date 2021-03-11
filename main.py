@@ -1,4 +1,5 @@
 import os
+import logging
 from nacl.signing import VerifyKey
 from nacl.exceptions import BadSignatureError
 
@@ -21,10 +22,10 @@ def verifyRequest(request):
         signature = request.headers["X-Signature-Ed25519"]
         timestamp = request.headers["X-Signature-Timestamp"]
         body = request.data
-        verify_key.verify("{0}{1}".format(timestamp, body).encode(), bytes.fromhex(signature))
+        verify_key.verify(f"{timestamp}{body}".encode(), bytes.fromhex(signature))
         return True
-    except BadSignatureError:
-        logging.warning("401 - Invalid request signature")
+    except BadSignatureError as e:
+        logging.warning(f"Invalid request signature -> \n{str(e)}\n{signature}\n{timestamp}\n{bytes.fromhex(signature)}")
         abort(401, "invalid request signature")
         return False
     except Exception as e:
