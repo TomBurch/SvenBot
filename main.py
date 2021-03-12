@@ -40,7 +40,7 @@ def interaction():
                         "content": f"Executing role"
                     }
                 })
-        except Exception e:
+        except Exception as e:
             logging.error(f"Error executing '{command}':\n{str(e)})")
             abort(404, f"Error executing '{command}'")
         
