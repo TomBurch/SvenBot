@@ -22,20 +22,23 @@ def interaction():
         data = request.json.get("data")
         command = data.get("name")
 
-        if command == "ping":
-            return jsonify({
-                "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                "data": {
-                    "content": "Pong!"
-                }
-            })
-        elif command == "role":
-            return jsonify({
-                "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                "data": {
-                    "content": f"Selected role is: \n{str(data.get("options"))}"
-                }
-            })
+        try:
+            if command == "ping":
+                return jsonify({
+                    "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+                    "data": {
+                        "content": "Pong!"
+                    }
+                })
+            elif command == "role":
+                return jsonify({
+                    "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+                    "data": {
+                        "content": f"Selected role is: \n{str(data.get("options"))}"
+                    }
+                })
+        except Exception e:
+            abort(404, f"Error executing '{command}':\n{str(e)})")
         
         abort(404, f"'{command}' is not a known command")
     else:
