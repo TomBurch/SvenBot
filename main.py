@@ -29,6 +29,13 @@ def interaction():
                     "content": "Pong!"
                 }
             })
+        elif command == "role":
+            return jsonify({
+                "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+                "data": {
+                    "content": f"Selected role is: \n{str(data.get("options"))}"
+                }
+            })
         
         abort(404, f"'{command}' is not a known command")
     else:
