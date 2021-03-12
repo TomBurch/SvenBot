@@ -23,6 +23,8 @@ def interaction():
         command = data.get("name")
 
         try:
+            logging.debug(f"Executing '{command}'")
+            
             if command == "ping":
                 return jsonify({
                     "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
@@ -31,14 +33,16 @@ def interaction():
                     }
                 })
             elif command == "role":
+                logger.debug(str(data.get("options")))
                 return jsonify({
                     "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                     "data": {
-                        "content": f"Selected role is: \n{str(data.get("options"))}"
+                        "content": f"Executing role"
                     }
                 })
         except Exception e:
-            abort(404, f"Error executing '{command}':\n{str(e)})")
+            logging.error(f"Error executing '{command}':\n{str(e)})")
+            abort(404, f"Error executing '{command}'")
         
         abort(404, f"'{command}' is not a known command")
     else:
