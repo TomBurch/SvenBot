@@ -20,14 +20,19 @@ app = Flask(__name__)
 def interaction():
     if (request.json.get("type") == InteractionType.APPLICATION_COMMAND):
         data = request.json.get("data")
+        command = data.get("name")
 
-        if data.get("name") == "ping":
+        if command == "ping":
             return jsonify({
                 "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                 "data": {
                     "content": "Pong!"
                 }
             })
+        
+        abort(404, f"'{command}' is not a known command")
+    else:
+        abort(404, "Not an application command")
 
 @app.route('/abc/')
 def hello_world():

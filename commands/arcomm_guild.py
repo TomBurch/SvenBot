@@ -20,4 +20,5 @@ ping_json = {
 
 if __name__ == "__main__":
     r = requests.post(url, headers = headers, json = ping_json)
+    print(r.status_code, r.reason)
     None
