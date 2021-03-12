@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-CLIENT_ID = os.getenv("APP_ID")
+CLIENT_ID = os.getenv("CLIENT_ID")
 
 url = f"https://discord.com/api/v8/applications/{CLIENT_ID}/guilds/342006395010547712/commands"
 
