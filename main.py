@@ -23,7 +23,7 @@ def interaction():
         command = data.get("name")
 
         try:
-            logging.debug(f"Executing '{command}'")
+            logging.info(f"Executing '{command}'")
             
             if command == "ping":
                 return jsonify({
@@ -33,7 +33,7 @@ def interaction():
                     }
                 })
             elif command == "role":
-                logging.debug(str(data.get("options")))
+                logging.info(str(data.get("options")))
                 return jsonify({
                     "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                     "data": {
