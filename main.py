@@ -15,10 +15,19 @@ client.setup_logging()
 
 app = Flask(__name__)
 
-@app.route('/', methods=['POST'])
+@app.route('/interaction/', methods=['POST'])
 @verify_key_decorator(PUBLIC_KEY)
-def ping():
-    None
+def interaction():
+    if (request.json.get("type") == InteractionType.APPLICATION_COMMAND):
+        data = request.json.get("data")
+
+        if data.get("name") == "ping":
+            return jsonify({
+                "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+                "data": {
+                    "content": "Pong!"
+                }
+            })
 
 @app.route('/abc/')
 def hello_world():
