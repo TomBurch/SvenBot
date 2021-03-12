@@ -33,7 +33,7 @@ def interaction():
                     }
                 })
             elif command == "role":
-                logger.debug(str(data.get("options")))
+                logging.debug(str(data.get("options")))
                 return jsonify({
                     "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                     "data": {
