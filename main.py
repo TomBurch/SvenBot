@@ -45,15 +45,18 @@ def handle_interaction(request):
                 url = f"https://discord.com/api/v8/guilds/{guild_id}/members/{user_id}/roles/{role_id}"
                 if role_id in member.get("roles"):
                     r = requests.delete(url, headers = headers)
-                    response = f"You have left <@&{role_id}>"
+                    response = f"<@{user_id}> You have left <@&{role_id}>"
                 else:
                     r = requests.put(url, headers = headers)
-                    response = f"You have joined <@&{role_id}>"
+                    response = f"<@{user_id}> You have joined <@&{role_id}>"
 
                 return {
                     "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                     "data": {
-                        "content": response
+                        "content": response,
+                        "allowed_mentions": {
+                            "parse": ["users"]
+                        }
                     }
                 }
                 
