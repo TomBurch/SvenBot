@@ -65,6 +65,34 @@ class TestInteractions(unittest.TestCase):
         self.assertEqual(r.get("data").get("allowed_mentions").get("parse"), ["users"])
 
         interaction.json["member"]["roles"] = []
+        responses.reset()
+
+        responses.add(**{
+            "method": responses.PUT,
+            "url": f"https://discord.com/api/v8/guilds/None/members/{user}/roles/{role}",
+            "status": 403
+        })
+        responses.add(**{
+            "method": responses.DELETE,
+            "url": f"https://discord.com/api/v8/guilds/None/members/{user}/roles/{role}",
+            "status": 403
+        })
+
+        r = handle_interaction(interaction)
+        self.assertEqual(responses.calls[0].request.method, responses.PUT)
+        self.assertEqual(responses.calls[0].request.url, "https://discord.com/api/v8/guilds/None/members/User123/roles/Role456")
+        self.assertEqual(r.get("type"), InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE)
+        self.assertEqual(r.get("data").get("content"), f"<@{user}> Role <@&{role}> is restricted")
+        self.assertEqual(r.get("data").get("allowed_mentions").get("parse"), ["users"])
+
+        interaction.json["member"]["roles"] = [role]
+
+        r = handle_interaction(interaction)
+        self.assertEqual(responses.calls[1].request.method, responses.DELETE)
+        self.assertEqual(responses.calls[1].request.url, "https://discord.com/api/v8/guilds/None/members/User123/roles/Role456")
+        self.assertEqual(r.get("type"), InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE)
+        self.assertEqual(r.get("data").get("content"), f"<@{user}> Role <@&{role}> is restricted")
+        self.assertEqual(r.get("data").get("allowed_mentions").get("parse"), ["users"])
         
 
 if __name__ == "__main__":

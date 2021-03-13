@@ -20,14 +20,16 @@ cache.init_app(app)
 def execute_role(roles, role_id, guild_id, user_id):
     url = f"https://discord.com/api/v8/guilds/{guild_id}/members/{user_id}/roles/{role_id}"
     if role_id in roles:
-        r = utility.req(requests.delete, [204], url)
+        r = utility.req(requests.delete, [204, 403], url)
         reply = f"<@{user_id}> You've left <@&{role_id}>"
     else:
-        r = utility.req(requests.put, [204], url)
+        r = utility.req(requests.put, [204, 403], url)
         reply = f"<@{user_id}> You've joined <@&{role_id}>"
 
-    if not r:
+    if r is False:
         return "Error executing 'role'"
+    if r.status_code == 403:
+        return f"<@{user_id}> Role <@&{role_id}> is restricted"
     return reply
 
 def handle_interaction(request):
