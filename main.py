@@ -21,20 +21,6 @@ cache = Cache(config = {'CACHE_TYPE': 'SimpleCache'})
 app = Flask(__name__)
 cache.init_app(app)
 
-def execute_role(roles, role_id, guild_id, user_id):
-    url = f"https://discord.com/api/v8/guilds/{guild_id}/members/{user_id}/roles/{role_id}"
-    if role_id in roles:
-        r = req(requests.delete, 200, url, headers)
-        reply = f"<@{user_id}> You have left <@&{role_id}>"
-    else:
-        r = req(requests.put, 200, url, headers)
-        reply = f"<@{user_id}> You have joined <@&{role_id}>"
-
-    if not r:
-        return "Error executing 'role'"
-    return reply
-
-
 def req(function, status, url, headers):
     r = function(url, headers = headers)
     if r.status_code != status:
@@ -42,6 +28,18 @@ def req(function, status, url, headers):
         return False
     return r
 
+def execute_role(roles, role_id, guild_id, user_id):
+    url = f"https://discord.com/api/v8/guilds/{guild_id}/members/{user_id}/roles/{role_id}"
+    if role_id in roles:
+        r = req(requests.delete, 204, url, headers)
+        reply = f"<@{user_id}> You have left <@&{role_id}>"
+    else:
+        r = req(requests.put, 204, url, headers)
+        reply = f"<@{user_id}> You have joined <@&{role_id}>"
+
+    if not r:
+        return "Error executing 'role'"
+    return reply
 
 def handle_interaction(request):
     if (request.json.get("type") == InteractionType.APPLICATION_COMMAND):

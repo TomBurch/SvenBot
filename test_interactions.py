@@ -37,11 +37,13 @@ class TestInteractions(unittest.TestCase):
 
         responses.add(**{
             "method": responses.PUT,
-            "url": f"https://discord.com/api/v8/guilds/None/members/{user}/roles/{role}"
+            "url": f"https://discord.com/api/v8/guilds/None/members/{user}/roles/{role}",
+            "status": 204
         })
         responses.add(**{
             "method": responses.DELETE,
-            "url": f"https://discord.com/api/v8/guilds/None/members/{user}/roles/{role}"
+            "url": f"https://discord.com/api/v8/guilds/None/members/{user}/roles/{role}",
+            "status": 204
         })
 
         interaction = Interaction("role", options = [{"value": role}])
