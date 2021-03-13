@@ -13,7 +13,7 @@ class Interaction():
                 "user": {
                     "id": "User123" 
                 },
-                "roles": ["Role456"]
+                "roles": []
             },
             "data": {
                 "name": name,
@@ -32,24 +32,36 @@ class TestInteractions(unittest.TestCase):
 
     @responses.activate
     def test_role(self):
+        user = "User123"
+        role = "Role456"
+
         responses.add(**{
             "method": responses.PUT,
-            "url": "https://discord.com/api/v8/guilds/None/members/User123/roles/Role456"
+            "url": f"https://discord.com/api/v8/guilds/None/members/{user}/roles/{role}"
         })
         responses.add(**{
             "method": responses.DELETE,
-            "url": "https://discord.com/api/v8/guilds/None/members/User123/roles/Role456"
+            "url": f"https://discord.com/api/v8/guilds/None/members/{user}/roles/{role}"
         })
 
-        interaction = Interaction("role", options = [{"value": "Role456"}])
-        handle_interaction(interaction)
-        self.assertEqual(responses.calls[0].request.method, responses.DELETE)
+        interaction = Interaction("role", options = [{"value": role}])
+
+        r = handle_interaction(interaction)
+        self.assertEqual(responses.calls[0].request.method, responses.PUT)
         self.assertEqual(responses.calls[0].request.url, "https://discord.com/api/v8/guilds/None/members/User123/roles/Role456")
+        self.assertEqual(r.get("type"), InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE)
+        self.assertEqual(r.get("data").get("content"), f"You have joined <@&{role}>")
+
+        interaction.json["member"]["roles"] = [role]
+
+        r = handle_interaction(interaction)
+        self.assertEqual(responses.calls[1].request.method, responses.DELETE)
+        self.assertEqual(responses.calls[1].request.url, "https://discord.com/api/v8/guilds/None/members/User123/roles/Role456")
+        self.assertEqual(r.get("type"), InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE)
+        self.assertEqual(r.get("data").get("content"), f"You have left <@&{role}>")
 
         interaction.json["member"]["roles"] = []
-        handle_interaction(interaction)
-        self.assertEqual(responses.calls[1].request.method, responses.PUT)
-        self.assertEqual(responses.calls[1].request.url, "https://discord.com/api/v8/guilds/None/members/User123/roles/Role456")
+        
 
 if __name__ == "__main__":
     unittest.main()
