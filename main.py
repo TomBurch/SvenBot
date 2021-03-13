@@ -18,16 +18,13 @@ app = Flask(__name__)
 cache.init_app(app)
 
 def execute_role(roles, role_id, guild_id, user_id):
-    if not utility.verify_role(role_id, guild_id):
-        return "Role is reserved"
-
     url = f"https://discord.com/api/v8/guilds/{guild_id}/members/{user_id}/roles/{role_id}"
     if role_id in roles:
-        r = utility.req(requests.delete, 204, url)
-        reply = f"<@{user_id}> You have left <@&{role_id}>"
+        r = utility.req(requests.delete, [204], url)
+        reply = f"<@{user_id}> You've left <@&{role_id}>"
     else:
-        r = utility.req(requests.put, 204, url)
-        reply = f"<@{user_id}> You have joined <@&{role_id}>"
+        r = utility.req(requests.put, [204], url)
+        reply = f"<@{user_id}> You've joined <@&{role_id}>"
 
     if not r:
         return "Error executing 'role'"
