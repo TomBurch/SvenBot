@@ -1,8 +1,10 @@
 import os
 import logging
+import requests
 
 import google.cloud.logging
 from flask import Flask, jsonify, abort, request
+from flask_caching import Cache
 from discord_interactions import verify_key_decorator, InteractionType, InteractionResponseType
 from dotenv import load_dotenv
 
@@ -13,16 +15,20 @@ client = google.cloud.logging.Client()
 client.get_default_handler()
 client.setup_logging()
 
+cache = Cache(config = {'CACHE_TYPE': 'SimpleCache'})
+
 app = Flask(__name__)
+cache.init_app(app)
 
 @app.route('/interaction/', methods=['POST'])
 @verify_key_decorator(PUBLIC_KEY)
 def interaction():
     if (request.json.get("type") == InteractionType.APPLICATION_COMMAND):
         data = request.json.get("data")
-        command = data.get("name")
-
+        member = request.json.get("member")
+        
         try:
+            command = data.get("name")
             logging.info(f"Executing '{command}'")
             
             if command == "ping":
@@ -33,11 +39,22 @@ def interaction():
                     }
                 })
             elif command == "role":
-                logging.info(str(data.get("options")))
+                role_id = data.get("options")[0].get("value")
+                guild_id = requests.json.get("guild_id")
+                user_id = members.get("user").get("id")
+
+                url = f"https://discord.com/api/v8/guilds/{guild_id}/members/{user_id}/roles/{role_id}"
+                if role_id in member.get("roles"):
+                    r = requests.delete(url)
+                    response = f"You have left <&{role_id}>"
+                else:
+                    r = requests.put(url)
+                    response = f"You have joined <&{role_id}>"
+
                 return jsonify({
                     "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                     "data": {
-                        "content": f"Executing role"
+                        "content": response
                     }
                 })
         except Exception as e:
