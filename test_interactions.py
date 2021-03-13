@@ -52,7 +52,7 @@ class TestInteractions(unittest.TestCase):
         self.assertEqual(responses.calls[0].request.method, responses.PUT)
         self.assertEqual(responses.calls[0].request.url, "https://discord.com/api/v8/guilds/None/members/User123/roles/Role456")
         self.assertEqual(r.get("type"), InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE)
-        self.assertEqual(r.get("data").get("content"), f"<@{user}> You have joined <@&{role}>")
+        self.assertEqual(r.get("data").get("content"), f"<@{user}> You've joined <@&{role}>")
         self.assertEqual(r.get("data").get("allowed_mentions").get("parse"), ["users"])
 
         interaction.json["member"]["roles"] = [role]
@@ -61,7 +61,7 @@ class TestInteractions(unittest.TestCase):
         self.assertEqual(responses.calls[1].request.method, responses.DELETE)
         self.assertEqual(responses.calls[1].request.url, "https://discord.com/api/v8/guilds/None/members/User123/roles/Role456")
         self.assertEqual(r.get("type"), InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE)
-        self.assertEqual(r.get("data").get("content"), f"<@{user}> You have left <@&{role}>")
+        self.assertEqual(r.get("data").get("content"), f"<@{user}> You've left <@&{role}>")
         self.assertEqual(r.get("data").get("allowed_mentions").get("parse"), ["users"])
 
         interaction.json["member"]["roles"] = []
