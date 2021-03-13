@@ -40,7 +40,7 @@ def interaction():
                 })
             elif command == "role":
                 role_id = data.get("options")[0].get("value")
-                guild_id = requests.json.get("guild_id")
+                guild_id = request.json.get("guild_id")
                 user_id = members.get("user").get("id")
 
                 url = f"https://discord.com/api/v8/guilds/{guild_id}/members/{user_id}/roles/{role_id}"
