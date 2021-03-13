@@ -1,32 +1,8 @@
-import os
 import requests
 
-from dotenv import load_dotenv
+from command_utility import ApplicationCommandOptionType, APP_URL, HEADERS
 
-load_dotenv()
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-CLIENT_ID = os.getenv("CLIENT_ID")
-
-url = f"https://discord.com/api/v8/applications/{CLIENT_ID}/guilds/342006395010547712/commands"
-
-class ApplicationCommandOptionType:
-    SUB_COMMAND = 1
-    SUB_COMMAND_GROUP = 2
-    STRING = 3
-    INTEGER = 4
-    BOOLEAN = 5
-    USER = 6
-    CHANNEL = 7
-    ROLE = 8
-
-headers = {
-    "Authorization": f"Bot {BOT_TOKEN}"
-}
-
-ping_json = {
-    "name": "ping",
-    "description": "Ping!"
-}
+url = f"{APP_URL}/guilds/342006395010547712/commands"
 
 role_json = {
     "name": "role",
@@ -40,6 +16,7 @@ role_json = {
 }
 
 if __name__ == "__main__":
-    r = requests.post(url, headers = headers, json = role_json)
+    #r = requests.post(url, headers = HEADERS, json = role_json)
+    #r = requests.delete(f"{url}/818978868785709066", headers = HEADERS)
+    r = requests.get(url, headers = HEADERS)
     print(r.status_code, r.reason, r.text)
-    None
