@@ -21,14 +21,39 @@ cache = Cache(config = {'CACHE_TYPE': 'SimpleCache'})
 app = Flask(__name__)
 cache.init_app(app)
 
+def execute_role(roles, role_id, guild_id, user_id):
+    url = f"https://discord.com/api/v8/guilds/{guild_id}/members/{user_id}/roles/{role_id}"
+    if role_id in roles:
+        r = req(requests.delete, 200, url, headers)
+        reply = f"<@{user_id}> You have left <@&{role_id}>"
+    else:
+        r = req(requests.put, 200, url, headers)
+        reply = f"<@{user_id}> You have joined <@&{role_id}>"
+
+    if not r:
+        return "Error executing 'role'"
+    return reply
+
+
+def req(function, status, url, headers):
+    r = function(url, headers = headers)
+    if r.status_code != status:
+        logging.error(f"Received unexpected status code {r.status_code} (expected {status})\n{r.reason}\n{r.text}")
+        return False
+    return r
+
+
 def handle_interaction(request):
     if (request.json.get("type") == InteractionType.APPLICATION_COMMAND):
         data = request.json.get("data")
-        member = request.json.get("member")
         command = data.get("name")
         
         try:
-            logging.info(f"Executing '{command}'")
+            member = request.json.get("member")
+            user = member.get("user")
+            username = user.get("username")
+
+            logging.info(f"'{username}' executing '{command}'")
             
             if command == "ping":
                 return {
@@ -38,22 +63,17 @@ def handle_interaction(request):
                     }
                 }
             elif command == "role":
+                roles = member.get("roles")
                 role_id = data.get("options")[0].get("value")
                 guild_id = request.json.get("guild_id")
-                user_id = member.get("user").get("id")
+                user_id = user.get("id")
 
-                url = f"https://discord.com/api/v8/guilds/{guild_id}/members/{user_id}/roles/{role_id}"
-                if role_id in member.get("roles"):
-                    r = requests.delete(url, headers = headers)
-                    response = f"<@{user_id}> You have left <@&{role_id}>"
-                else:
-                    r = requests.put(url, headers = headers)
-                    response = f"<@{user_id}> You have joined <@&{role_id}>"
+                reply = execute_role(roles, role_id, guild_id, user_id)
 
                 return {
                     "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                     "data": {
-                        "content": response,
+                        "content": reply,
                         "allowed_mentions": {
                             "parse": ["users"]
                         }
