@@ -15,6 +15,17 @@ role_json = {
     }]
 }
 
+members_json = {
+    "name": "members",
+    "description": "Get a list of members in a role",
+    "options": [{
+        "name": "role",
+        "description": "The role",
+        "type": ApplicationCommandOptionType.ROLE,
+        "required": True,
+    }]
+}
+
 if __name__ == "__main__":
     #r = requests.post(url, headers = HEADERS, json = role_json)
     #r = requests.delete(f"{url}/818978868785709066", headers = HEADERS)

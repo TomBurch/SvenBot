@@ -15,5 +15,5 @@ def req(function, statuses, url):
     r = function(url, headers = headers)
     if r.status_code not in statuses:
         logging.error(f"Received unexpected status code {r.status_code} (expected {statuses})\n{r.reason}\n{r.text}")
-        return False
+        raise RuntimeError(f"Req error: {r.text}")
     return r

@@ -17,6 +17,19 @@ cache = Cache(config = {'CACHE_TYPE': 'SimpleCache'})
 app = Flask(__name__)
 cache.init_app(app)
 
+def execute_members(role_id, guild_id):
+    url = f"https://discord.com/api/v8/guilds/{guild_id}/members/"
+    r = utility.req(requests.get, [204], url)
+    members = r.json()
+    reply = ""
+
+    for member in members:
+        if role_id in member["roles"]:
+            reply += member["user"]["username"] + "\n"
+    
+    return f"```\n{reply}```"
+
+
 def execute_role(roles, role_id, guild_id, user_id):
     url = f"https://discord.com/api/v8/guilds/{guild_id}/members/{user_id}/roles/{role_id}"
     if role_id in roles:
@@ -26,21 +39,21 @@ def execute_role(roles, role_id, guild_id, user_id):
         r = utility.req(requests.put, [204, 403], url)
         reply = f"<@{user_id}> You've joined <@&{role_id}>"
 
-    if r is False:
-        return "Error executing 'role'"
     if r.status_code == 403:
         return f"<@{user_id}> Role <@&{role_id}> is restricted"
+
     return reply
 
 def handle_interaction(request):
     if (request.json.get("type") == InteractionType.APPLICATION_COMMAND):
-        data = request.json.get("data")
-        command = data.get("name")
+        data = request.json["data"]
+        command = data["name"]
         
         try:
-            member = request.json.get("member")
-            user = member.get("user")
-            username = user.get("username")
+            member = request.json["member"]
+            user = member["user"]
+            username = user["username"]
+            guild_id = request.json["guild_id"]
 
             logging.info(f"'{username}' executing '{command}'")
             
@@ -52,10 +65,9 @@ def handle_interaction(request):
                     }
                 }
             elif command == "role":
-                roles = member.get("roles")
-                role_id = data.get("options")[0].get("value")
-                guild_id = request.json.get("guild_id")
-                user_id = user.get("id")
+                roles = member["roles"]
+                role_id = data["options"][0]["value"]
+                user_id = user["id"]
 
                 reply = execute_role(roles, role_id, guild_id, user_id)
 
@@ -68,7 +80,20 @@ def handle_interaction(request):
                         }
                     }
                 }
-                
+            elif command == "members":
+                role_id = data["options"][0]["value"]
+
+                reply = execute_members(role_id, guild_id)
+
+                return {
+                    "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+                    "data": {
+                        "content": reply,
+                        "allowed_mentions": {
+                            "parse": []
+                        }
+                    }
+                }
         except Exception as e:
             logging.error(f"Error executing '{command}':\n{str(e)})")
             abort(404, f"Error executing '{command}'")
