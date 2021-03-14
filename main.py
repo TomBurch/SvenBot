@@ -19,7 +19,7 @@ cache.init_app(app)
 
 def execute_members(role_id, guild_id):
     url = f"https://discord.com/api/v8/guilds/{guild_id}/members"
-    r = utility.req(requests.get, [200], url)
+    r = utility.req(requests.get, [200], url, params = {"limit": 200})
     members = r.json()
     reply = ""
 
