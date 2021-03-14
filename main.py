@@ -18,7 +18,7 @@ app = Flask(__name__)
 cache.init_app(app)
 
 def execute_members(role_id, guild_id):
-    url = f"https://discord.com/api/v8/guilds/{guild_id}/members/"
+    url = f"https://discord.com/api/v8/guilds/{guild_id}/members"
     r = utility.req(requests.get, [204], url)
     members = r.json()
     reply = ""

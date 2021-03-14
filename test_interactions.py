@@ -155,7 +155,7 @@ class TestInteractions(unittest.TestCase):
 
         successMembers = responses.Response(
             method = responses.GET,
-            url = "https://discord.com/api/v8/guilds/Guild123/members/",
+            url = "https://discord.com/api/v8/guilds/Guild123/members",
             status = 204,
             json = [self.memberWithRole]
         )
