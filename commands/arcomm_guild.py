@@ -26,6 +26,11 @@ members_json = {
     }]
 }
 
+myroles_json = {
+    "name": "myroles",
+    "description": "Get a list of roles you're in"
+}
+
 if __name__ == "__main__":
     #r = requests.post(url, headers = HEADERS, json = role_json)
     #r = requests.delete(f"{url}/818978868785709066", headers = HEADERS)

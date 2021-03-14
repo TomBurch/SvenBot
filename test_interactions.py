@@ -9,11 +9,15 @@ def callMatchesResponse(call, response):
     return call.request.method == response.method and call.request.url == response.url and call.response.status_code == response.status
 
 class Reply(dict):
-    def __init__(self, _type, content, mentions = None):
+    def __init__(self, _type, content, mentions = None, flags = None):
+        data = {"content": content}
         if mentions is not None:
-            dict.__init__(self, type = _type, data = {"content": content, "allowed_mentions": {"parse": mentions}})
-        else:
-            dict.__init__(self, type = _type, data = {"content": content})
+            data["allowed_mentions"] = {}
+            data["allowed_mentions"]["parse"] = mentions
+        if flags is not None:
+            data["flags"] = flags
+
+        dict.__init__(self, type = _type, data = data)
 
 class Member(dict):
     def __init__(self, id, name, roles = []):
@@ -52,8 +56,8 @@ class TestInteractions(unittest.TestCase):
 
         expectedReply = Reply(
             InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            f"<@{userId}> You've left <@&{role}>",
-            ["users"]
+            content = f"<@{userId}> You've left <@&{role}>",
+            mentions = ["users"]
         )
 
         successLeave = responses.Response(
@@ -76,8 +80,8 @@ class TestInteractions(unittest.TestCase):
 
         expectedReply = Reply(
             InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            f"<@{userId}> You've joined <@&{role}>",
-            ["users"]
+            content = f"<@{userId}> You've joined <@&{role}>",
+            mentions = ["users"]
         )
 
         successJoin = responses.Response(
@@ -100,8 +104,8 @@ class TestInteractions(unittest.TestCase):
 
         expectedReply = Reply(
             InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            f"<@{userId}> Role <@&{role}> is restricted",
-            ["users"]
+            content = f"<@{userId}> Role <@&{role}> is restricted",
+            mentions = ["users"]
         )
 
         failedLeave = responses.Response(
@@ -124,8 +128,8 @@ class TestInteractions(unittest.TestCase):
 
         expectedReply = Reply(
             InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            f"<@{userId}> Role <@&{role}> is restricted",
-            ["users"]
+            content = f"<@{userId}> Role <@&{role}> is restricted",
+            mentions = ["users"]
         )
 
         failedJoin = responses.Response(
@@ -149,8 +153,8 @@ class TestInteractions(unittest.TestCase):
 
         expectedReply = Reply(
             InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            f"```\n{username}\n```",
-            []
+            content = f"```\n{username}\n```",
+            mentions = []
         )
 
         successMembers = responses.Response(
@@ -165,6 +169,21 @@ class TestInteractions(unittest.TestCase):
         reply = handle_interaction(interaction)
 
         assert callMatchesResponse(responses.calls[0], successMembers)
+        self.assertEqual(reply, expectedReply)
+
+    def test_myroles(self):
+        userId = self.memberWithRole["user"]["id"]
+        role = self.memberWithRole["roles"][0]
+
+        expectedReply = Reply(
+            InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            content = f"<@&{role}>\n",
+            mentions = [],
+            flags = 64
+        )
+
+        interaction = Interaction("myroles", self.memberWithRole)
+        reply = handle_interaction(interaction)
         self.assertEqual(reply, expectedReply)
 
 if __name__ == "__main__":
