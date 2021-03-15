@@ -1,6 +1,6 @@
 import requests
 
-from command_utility import ApplicationCommandOptionType, APP_URL, HEADERS
+from command_utility import ApplicationCommandOptionType, APP_URL, HEADERS, CLIENT_ID
 
 url = f"{APP_URL}/guilds/342006395010547712/commands"
 
@@ -13,6 +13,11 @@ role_json = {
         "type": ApplicationCommandOptionType.ROLE,
         "required": True,
     }]
+}
+
+roles_json = {
+    "name": "role",
+    "description": "Get a list of roles you can join"
 }
 
 members_json = {

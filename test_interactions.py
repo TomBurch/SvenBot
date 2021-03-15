@@ -1,9 +1,14 @@
 import unittest
 import responses
 import werkzeug.exceptions as exceptions
+from dotenv import load_dotenv
+import os
 
 from main import handle_interaction
 from discord_interactions import InteractionType, InteractionResponseType
+
+load_dotenv()
+CLIENT_ID = os.getenv("CLIENT_ID")
 
 def callMatchesResponse(call, response):
     return call.request.method == response.method and call.request.url == response.url and call.response.status_code == response.status
@@ -23,6 +28,13 @@ class Member(dict):
     def __init__(self, id, name, roles = []):
         dict.__init__(self, user = {"id": id, "username": name}, roles = roles)
 
+class Role(dict):
+    def __init__(self, id, name, position, botId = None):
+        if botId is not None:
+            dict.__init__(self, id = id, name = name, position = position, tags = {"bot_id": botId})
+        else:
+            dict.__init__(self, id = id, name = name, position = position)
+
 class Interaction():
     def __init__(self, name, member = None, options = []):
         self.json = {
@@ -38,7 +50,9 @@ class Interaction():
 class TestInteractions(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.memberWithRole = Member("User123", "TestUser", ["Role456"])
+        self.botRole = Role("SvenBotRoleId", "SvenBot", 2, CLIENT_ID)
+        self.testRole = Role("RoleId456", "TestRole", 1)
+        self.memberWithRole = Member("User123", "TestUser", [self.testRole["id"]])
         self.memberNoRole = Member("User234", "TestUser2")
 
     def test_ping(self):
@@ -52,22 +66,22 @@ class TestInteractions(unittest.TestCase):
     @responses.activate
     def test_role_withRole(self):
         userId = self.memberWithRole["user"]["id"]
-        role = self.memberWithRole["roles"][0]
+        roleId = self.testRole["id"]
 
         expectedReply = Reply(
             InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            content = f"<@{userId}> You've left <@&{role}>",
+            content = f"<@{userId}> You've left <@&{roleId}>",
             mentions = ["users"]
         )
 
         successLeave = responses.Response(
             method = responses.DELETE,
-            url = f"https://discord.com/api/v8/guilds/Guild123/members/{userId}/roles/{role}",
+            url = f"https://discord.com/api/v8/guilds/Guild123/members/{userId}/roles/{roleId}",
             status = 204
         )
         responses.add(successLeave)
 
-        interaction = Interaction("role", self.memberWithRole, options = [{"value": role}])
+        interaction = Interaction("role", self.memberWithRole, options = [{"value": roleId}])
         reply = handle_interaction(interaction)
 
         assert callMatchesResponse(responses.calls[0], successLeave)
@@ -76,22 +90,22 @@ class TestInteractions(unittest.TestCase):
     @responses.activate
     def test_role_withNoRole(self):
         userId = self.memberNoRole["user"]["id"]
-        role = self.memberWithRole["roles"][0]
+        roleId = self.testRole["id"]
 
         expectedReply = Reply(
             InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            content = f"<@{userId}> You've joined <@&{role}>",
+            content = f"<@{userId}> You've joined <@&{roleId}>",
             mentions = ["users"]
         )
 
         successJoin = responses.Response(
             method = responses.PUT,
-            url = f"https://discord.com/api/v8/guilds/Guild123/members/{userId}/roles/{role}",
+            url = f"https://discord.com/api/v8/guilds/Guild123/members/{userId}/roles/{roleId}",
             status = 204
         )
         responses.add(successJoin)
 
-        interaction = Interaction("role", self.memberNoRole, options = [{"value": role}])
+        interaction = Interaction("role", self.memberNoRole, options = [{"value": roleId}])
         reply = handle_interaction(interaction)
 
         assert callMatchesResponse(responses.calls[0], successJoin)
@@ -100,22 +114,22 @@ class TestInteractions(unittest.TestCase):
     @responses.activate
     def test_role_restrictedWithRole(self):
         userId = self.memberWithRole["user"]["id"]
-        role = self.memberWithRole["roles"][0]
+        roleId = self.testRole["id"]
 
         expectedReply = Reply(
             InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            content = f"<@{userId}> Role <@&{role}> is restricted",
+            content = f"<@{userId}> Role <@&{roleId}> is restricted",
             mentions = ["users"]
         )
 
         failedLeave = responses.Response(
             method = responses.DELETE,
-            url = f"https://discord.com/api/v8/guilds/Guild123/members/{userId}/roles/{role}",
+            url = f"https://discord.com/api/v8/guilds/Guild123/members/{userId}/roles/{roleId}",
             status = 403
         )
         responses.add(failedLeave)
 
-        interaction = Interaction("role", self.memberWithRole, options = [{"value": role}])
+        interaction = Interaction("role", self.memberWithRole, options = [{"value": roleId}])
         reply = handle_interaction(interaction)
 
         assert callMatchesResponse(responses.calls[0], failedLeave)
@@ -124,27 +138,73 @@ class TestInteractions(unittest.TestCase):
     @responses.activate
     def test_role_restrictedWithNoRole(self):
         userId = self.memberNoRole["user"]["id"]
-        role = self.memberWithRole["roles"][0]
+        roleId = self.testRole["id"]
 
         expectedReply = Reply(
             InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            content = f"<@{userId}> Role <@&{role}> is restricted",
+            content = f"<@{userId}> Role <@&{roleId}> is restricted",
             mentions = ["users"]
         )
 
         failedJoin = responses.Response(
             method = responses.PUT,
-            url = f"https://discord.com/api/v8/guilds/Guild123/members/{userId}/roles/{role}",
+            url = f"https://discord.com/api/v8/guilds/Guild123/members/{userId}/roles/{roleId}",
             status = 403
         )
         responses.add(failedJoin)
 
-        interaction = Interaction("role", self.memberNoRole, options = [{"value": role}])
+        interaction = Interaction("role", self.memberNoRole, options = [{"value": roleId}])
         reply = handle_interaction(interaction)
 
         assert callMatchesResponse(responses.calls[0], failedJoin)
         self.assertEqual(reply, expectedReply)
     
+    @responses.activate
+    def test_roles(self):
+        role = self.testRole
+
+        expectedReply = Reply(
+            InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            content = "```\n{}\n```".format(role["name"]),
+            mentions = []
+        )
+
+        successRoles = responses.Response(
+            method = responses.GET,
+            url = f"https://discord.com/api/v8/guilds/Guild123/roles",
+            status = 200,
+            json = [self.testRole, self.botRole]
+        )
+        responses.add(successRoles)
+
+        interaction = Interaction("roles", self.memberWithRole)
+        reply = handle_interaction(interaction)
+
+        assert callMatchesResponse(responses.calls[0], successRoles)
+        self.assertEqual(reply, expectedReply)
+
+    @responses.activate
+    def test_rolesNoBotRole(self):
+        expectedReply = Reply(
+            InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            content = "ERROR: Unable to find bot's role",
+            mentions = []
+        )
+
+        successRoles = responses.Response(
+            method = responses.GET,
+            url = f"https://discord.com/api/v8/guilds/Guild123/roles",
+            status = 200,
+            json = [self.testRole]
+        )
+        responses.add(successRoles)
+
+        interaction = Interaction("roles", self.memberNoRole)
+        reply = handle_interaction(interaction)
+
+        assert callMatchesResponse(responses.calls[0], successRoles)
+        self.assertEqual(reply, expectedReply)
+
     @responses.activate
     def test_members(self):
         userId = self.memberNoRole["user"]["id"]

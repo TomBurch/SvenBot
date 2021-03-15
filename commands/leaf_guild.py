@@ -15,6 +15,11 @@ role_json = {
     }]
 }
 
+roles_json = {
+    "name": "role",
+    "description": "Get a list of roles you can join"
+}
+
 members_json = {
     "name": "members",
     "description": "Get a list of members in a role",

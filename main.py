@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 PUBLIC_KEY = os.getenv("PUBLIC_KEY")
+CLIENT_ID = os.getenv("CLIENT_ID")
 
 cache = Cache(config = {'CACHE_TYPE': 'SimpleCache'})
 
@@ -30,6 +31,28 @@ def execute_role(roles, role_id, guild_id, user_id):
         return f"<@{user_id}> Role <@&{role_id}> is restricted"
 
     return reply
+
+def execute_roles(guild_id):
+    url = f"https://discord.com/api/v8/guilds/{guild_id}/roles"
+    r = utility.req(requests.get, [200], url)
+    roles = r.json()
+
+    botPosition = -1
+    for role in roles:
+        if role.get("tags") is not None:
+            if role["tags"]["bot_id"] == CLIENT_ID:
+                botPosition = role["position"]
+    
+    if botPosition == -1:
+        return "ERROR: Unable to find bot's role"
+
+    joinableRoles = []
+    for role in roles:
+        if role["position"] < botPosition:
+            joinableRoles.append(role["name"])
+
+    joinableRoles = sorted(joinableRoles)
+    return "```\n{}\n```".format("\n".join(joinableRoles))
 
 def execute_members(role_id, guild_id):
     url = f"https://discord.com/api/v8/guilds/{guild_id}/members"
@@ -83,6 +106,17 @@ def handle_interaction(request):
                         "content": reply,
                         "allowed_mentions": {
                             "parse": ["users"]
+                        }
+                    }
+                }
+            elif command == "roles":
+                reply = execute_roles(guild_id)
+                return {
+                    "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+                    "data": {
+                        "content": reply,
+                        "allowed_mentions": {
+                            "parse": []
                         }
                     }
                 }
