@@ -16,7 +16,7 @@ role_json = {
 }
 
 roles_json = {
-    "name": "role",
+    "name": "roles",
     "description": "Get a list of roles you can join"
 }
 
@@ -39,5 +39,5 @@ myroles_json = {
 if __name__ == "__main__":
     #r = requests.post(url, headers = HEADERS, json = role_json)
     #r = requests.delete(f"{url}/818978868785709066", headers = HEADERS)
-    #r = requests.get(url, headers = HEADERS)
+    r = requests.get(url, headers = HEADERS)
     print(r.status_code, r.reason, r.text)
