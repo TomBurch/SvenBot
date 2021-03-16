@@ -39,17 +39,16 @@ def execute_roles(guild_id):
 
     botPosition = -1
     for role in roles:
-        if role.get("tags") is not None:
-            if role["tags"].get("bot_id") is not None:
-                if role["tags"]["bot_id"] == CLIENT_ID:
-                    botPosition = role["position"]
+        if role.get("tags", {}).get("bot_id") is not None:
+            if role["tags"]["bot_id"] == CLIENT_ID:
+                botPosition = role["position"]
     
     if botPosition == -1:
         return "ERROR: Unable to find bot's role"
 
     joinableRoles = []
     for role in roles:
-        if role["position"] < botPosition:
+        if role.get("tags", {}).get("bot_id") is None and role["position"] < botPosition:
             joinableRoles.append(role["name"])
 
     joinableRoles = sorted(joinableRoles)
