@@ -6,23 +6,13 @@ import os
 
 from main import handle_interaction
 from discord_interactions import InteractionType, InteractionResponseType
+from utility import ImmediateReply
 
 load_dotenv()
 CLIENT_ID = os.getenv("CLIENT_ID")
 
 def callMatchesResponse(call, response):
     return call.request.method == response.method and call.request.url == response.url and call.response.status_code == response.status
-
-class Reply(dict):
-    def __init__(self, _type, content, mentions = None, flags = None):
-        data = {"content": content}
-        if mentions is not None:
-            data["allowed_mentions"] = {}
-            data["allowed_mentions"]["parse"] = mentions
-        if flags is not None:
-            data["flags"] = flags
-
-        dict.__init__(self, type = _type, data = data)
 
 class Member(dict):
     def __init__(self, id, name, roles = []):
@@ -57,10 +47,8 @@ class TestInteractions(unittest.TestCase):
 
     def test_ping(self):
         result = handle_interaction(Interaction("ping", self.memberNoRole))
-        expected = {
-            'type': InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, 
-            'data': {'content': 'Pong!'}
-        }
+        expected = ImmediateReply("Pong!")
+
         self.assertEqual(result, expected)
 
     @responses.activate
@@ -68,11 +56,7 @@ class TestInteractions(unittest.TestCase):
         userId = self.memberWithRole["user"]["id"]
         roleId = self.testRole["id"]
 
-        expectedReply = Reply(
-            InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            content = f"<@{userId}> You've left <@&{roleId}>",
-            mentions = ["users"]
-        )
+        expectedReply = ImmediateReply(f"<@{userId}> You've left <@&{roleId}>", mentions = ["users"])
 
         successLeave = responses.Response(
             method = responses.DELETE,
@@ -92,11 +76,7 @@ class TestInteractions(unittest.TestCase):
         userId = self.memberNoRole["user"]["id"]
         roleId = self.testRole["id"]
 
-        expectedReply = Reply(
-            InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            content = f"<@{userId}> You've joined <@&{roleId}>",
-            mentions = ["users"]
-        )
+        expectedReply = ImmediateReply(f"<@{userId}> You've joined <@&{roleId}>", mentions = ["users"])
 
         successJoin = responses.Response(
             method = responses.PUT,
@@ -116,11 +96,7 @@ class TestInteractions(unittest.TestCase):
         userId = self.memberWithRole["user"]["id"]
         roleId = self.testRole["id"]
 
-        expectedReply = Reply(
-            InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            content = f"<@{userId}> Role <@&{roleId}> is restricted",
-            mentions = ["users"]
-        )
+        expectedReply = ImmediateReply(f"<@{userId}> Role <@&{roleId}> is restricted", mentions = ["users"])
 
         failedLeave = responses.Response(
             method = responses.DELETE,
@@ -140,11 +116,7 @@ class TestInteractions(unittest.TestCase):
         userId = self.memberNoRole["user"]["id"]
         roleId = self.testRole["id"]
 
-        expectedReply = Reply(
-            InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            content = f"<@{userId}> Role <@&{roleId}> is restricted",
-            mentions = ["users"]
-        )
+        expectedReply = ImmediateReply(f"<@{userId}> Role <@&{roleId}> is restricted", mentions = ["users"])
 
         failedJoin = responses.Response(
             method = responses.PUT,
@@ -163,11 +135,7 @@ class TestInteractions(unittest.TestCase):
     def test_roles(self):
         role = self.testRole
 
-        expectedReply = Reply(
-            InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            content = "```\n{}\n```".format(role["name"]),
-            mentions = []
-        )
+        expectedReply = ImmediateReply("```\n{}\n```".format(role["name"]), mentions = [])
 
         successRoles = responses.Response(
             method = responses.GET,
@@ -185,11 +153,7 @@ class TestInteractions(unittest.TestCase):
 
     @responses.activate
     def test_rolesNoBotRole(self):
-        expectedReply = Reply(
-            InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            content = "ERROR: Unable to find bot's role",
-            mentions = []
-        )
+        expectedReply = ImmediateReply("ERROR: Unable to find bot's role", mentions = [])
 
         successRoles = responses.Response(
             method = responses.GET,
@@ -211,11 +175,7 @@ class TestInteractions(unittest.TestCase):
         username = self.memberWithRole["user"]["username"]
         role = self.memberWithRole["roles"][0]
 
-        expectedReply = Reply(
-            InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            content = f"```\n{username}\n```",
-            mentions = []
-        )
+        expectedReply = ImmediateReply(f"```\n{username}\n```", mentions = [])
 
         successMembers = responses.Response(
             method = responses.GET,
@@ -235,12 +195,7 @@ class TestInteractions(unittest.TestCase):
         userId = self.memberWithRole["user"]["id"]
         role = self.memberWithRole["roles"][0]
 
-        expectedReply = Reply(
-            InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            content = f"<@&{role}>\n",
-            mentions = [],
-            flags = 64
-        )
+        expectedReply = ImmediateReply(f"<@&{role}>\n", mentions = [], ephemeral = True)
 
         interaction = Interaction("myroles", self.memberWithRole)
         reply = handle_interaction(interaction)

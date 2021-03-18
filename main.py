@@ -88,65 +88,30 @@ def handle_interaction(request):
             logging.info(f"'{username}' executing '{command}'")
             
             if command == "ping":
-                return {
-                    "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                    "data": {
-                        "content": "Pong!"
-                    }
-                }
+                return utility.ImmediateReply("Pong!")
+
             elif command == "role":
                 roles = member["roles"]
                 role_id = data["options"][0]["value"]
                 user_id = user["id"]
                 reply = execute_role(roles, role_id, guild_id, user_id)
 
-                return {
-                    "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                    "data": {
-                        "content": reply,
-                        "allowed_mentions": {
-                            "parse": ["users"]
-                        }
-                    }
-                }
+                return utility.ImmediateReply(reply, mentions = ["users"])
+
             elif command == "roles":
                 reply = execute_roles(guild_id)
-                return {
-                    "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                    "data": {
-                        "content": reply,
-                        "allowed_mentions": {
-                            "parse": []
-                        }
-                    }
-                }
+                return utility.ImmediateReply(reply, mentions = [])
+
             elif command == "members":
                 role_id = data["options"][0]["value"]
                 reply = execute_members(role_id, guild_id)
+                return utility.ImmediateReply(reply, mentions = [])
 
-                return {
-                    "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                    "data": {
-                        "content": reply,
-                        "allowed_mentions": {
-                            "parse": []
-                        }
-                    }
-                }
             elif command == "myroles":
                 roles = member["roles"]
                 reply = execute_myroles(roles)
+                return utility.ImmediateReply(reply, mentions = [], ephemeral = True)
 
-                return {
-                    "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                    "data": {
-                        "content": reply,
-                        "allowed_mentions": {
-                            "parse": []
-                        },
-                        "flags": 64
-                    }
-                }
         except Exception as e:
             logging.error(f"Error executing '{command}':\n{str(e)})")
             abort(404, f"Error executing '{command}'")
