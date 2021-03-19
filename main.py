@@ -1,6 +1,8 @@
 import os
 import logging
 import requests
+from datetime import datetime, timedelta
+from pytz import timezone
 
 import google.cloud.logging
 from flask import Flask, jsonify, abort, request
@@ -74,6 +76,14 @@ def execute_myroles(roles):
     
     return reply
 
+def execute_optime(today):
+    opday = today
+    opday = opday.replace(hour = 18, minute = 0, second = 0)
+    if today > opday:
+        opday = opday + timedelta(days = 1)
+
+    return "Optime starts in {}!".format(opday - today)
+
 def handle_interaction(request):
     if (request.json.get("type") == InteractionType.APPLICATION_COMMAND):
         data = request.json["data"]
@@ -111,6 +121,10 @@ def handle_interaction(request):
                 roles = member["roles"]
                 reply = execute_myroles(roles)
                 return utility.ImmediateReply(reply, mentions = [], ephemeral = True)
+
+            elif command == "optime":
+                reply = execute_optime(datetime.now(tz = timezone('Europe/London')))
+                return utility.ImmediateReply(reply)
 
         except Exception as e:
             logging.error(f"Error executing '{command}':\n{str(e)})")

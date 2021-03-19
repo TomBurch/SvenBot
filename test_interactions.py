@@ -3,9 +3,10 @@ import responses
 import werkzeug.exceptions as exceptions
 from dotenv import load_dotenv
 import os
+from datetime import datetime
 
-from main import handle_interaction
-from discord_interactions import InteractionType, InteractionResponseType
+from main import handle_interaction, execute_optime
+from discord_interactions import InteractionType
 from utility import ImmediateReply
 
 load_dotenv()
@@ -200,6 +201,14 @@ class TestInteractions(unittest.TestCase):
         interaction = Interaction("myroles", self.memberWithRole)
         reply = handle_interaction(interaction)
         self.assertEqual(reply, expectedReply)
+
+    def test_optime(self):
+        self.assertEqual(execute_optime(datetime(2021, 3, 19, 15, 30)), "Optime starts in 2:30:00!")
+        self.assertEqual(execute_optime(datetime(2021, 3, 19, 19, 30, 42)), "Optime starts in 22:29:18!")
+        self.assertEqual(execute_optime(datetime(2021, 3, 19, 18, 00, 00)), "Optime starts in 0:00:00!")
+
+        interaction = Interaction("optime", self.memberNoRole)
+        handle_interaction(interaction)
 
 if __name__ == "__main__":
     unittest.main()
