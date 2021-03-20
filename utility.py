@@ -37,7 +37,7 @@ def basicValidation(role, botPosition):
     return role.get("tags", {}).get("bot_id") is None and role["position"] < botPosition
 
 def colourValidation(role, botPosition):
-    return basicValidation(role, botPosition) and role.get("colour") != 0 
+    return basicValidation(role, botPosition) and role.get("color") != 0 
 
 role_validate_funcs = {
     "342006395010547712": colourValidation,

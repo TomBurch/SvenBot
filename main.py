@@ -52,6 +52,7 @@ def execute_roles(guild_id):
     joinableRoles = []
     for role in roles:
         if utility.validateRole(guild_id, role, botPosition):
+            logger.info(role.get("color"))
             joinableRoles.append(role["name"])
 
     joinableRoles = sorted(joinableRoles)
