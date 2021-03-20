@@ -76,13 +76,24 @@ def execute_myroles(roles):
     
     return reply
 
-def execute_optime(today):
-    opday = today
-    opday = opday.replace(hour = 18, minute = 0, second = 0)
-    if today > opday:
-        opday = opday + timedelta(days = 1)
+def execute_optime(today, modifier):
+    try:
+        opday = today
+        opday = opday.replace(hour = 18 + modifier, minute = 0, second = 0)
+        if today > opday:
+            opday = opday + timedelta(days = 1)
 
-    return "Optime starts in {}!".format(opday - today)
+        if modifier == 0:
+            modifierString = ""
+        elif modifier > 0:
+            modifierString = f" +{modifier}"
+        else:
+            modifierString = f" {modifier}"
+
+        timeUntilOptime = opday - today
+        return f"Optime{modifierString} starts in {timeUntilOptime}!"
+    except ValueError:
+        return "Optime modifier is too large"
 
 def handle_interaction(request):
     if (request.json.get("type") == InteractionType.APPLICATION_COMMAND):
@@ -90,6 +101,7 @@ def handle_interaction(request):
         command = data["name"]
         
         try:
+            options = data.get("options")
             member = request.json["member"]
             user = member["user"]
             username = user["username"]
@@ -102,7 +114,7 @@ def handle_interaction(request):
 
             elif command == "role":
                 roles = member["roles"]
-                role_id = data["options"][0]["value"]
+                role_id = options[0]["value"]
                 user_id = user["id"]
                 reply = execute_role(roles, role_id, guild_id, user_id)
 
@@ -113,7 +125,7 @@ def handle_interaction(request):
                 return utility.ImmediateReply(reply, mentions = [])
 
             elif command == "members":
-                role_id = data["options"][0]["value"]
+                role_id = options[0]["value"]
                 reply = execute_members(role_id, guild_id)
                 return utility.ImmediateReply(reply, mentions = [])
 
@@ -123,7 +135,12 @@ def handle_interaction(request):
                 return utility.ImmediateReply(reply, mentions = [], ephemeral = True)
 
             elif command == "optime":
-                reply = execute_optime(datetime.now(tz = timezone('Europe/London')))
+                if options is not None and len(options) > 0:
+                    modifier = options[0]["value"]
+                else:
+                    modifier = 0
+
+                reply = execute_optime(datetime.now(tz = timezone('Europe/London')), modifier)
                 return utility.ImmediateReply(reply)
 
         except Exception as e:

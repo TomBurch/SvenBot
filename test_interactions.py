@@ -203,9 +203,12 @@ class TestInteractions(unittest.TestCase):
         self.assertEqual(reply, expectedReply)
 
     def test_optime(self):
-        self.assertEqual(execute_optime(datetime(2021, 3, 19, 15, 30)), "Optime starts in 2:30:00!")
-        self.assertEqual(execute_optime(datetime(2021, 3, 19, 19, 30, 42)), "Optime starts in 22:29:18!")
-        self.assertEqual(execute_optime(datetime(2021, 3, 19, 18, 00, 00)), "Optime starts in 0:00:00!")
+        self.assertEqual(execute_optime(datetime(2021, 3, 19, 15, 30), 0), "Optime starts in 2:30:00!")
+        self.assertEqual(execute_optime(datetime(2021, 3, 19, 19, 30, 42), 0), "Optime starts in 22:29:18!")
+        self.assertEqual(execute_optime(datetime(2021, 3, 19, 18, 0, 0), 0), "Optime starts in 0:00:00!")
+        self.assertEqual(execute_optime(datetime(2021, 3, 19, 18, 0, 0), 1), "Optime +1 starts in 1:00:00!")
+        self.assertEqual(execute_optime(datetime(2021, 3, 19, 18, 0, 0), -1), "Optime -1 starts in 23:00:00!")
+        self.assertEqual(execute_optime(datetime(2021, 3, 19, 18, 0, 0), 7), "Optime modifier is too large")
 
         interaction = Interaction("optime", self.memberNoRole)
         handle_interaction(interaction)

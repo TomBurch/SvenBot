@@ -38,7 +38,13 @@ myroles_json = {
 
 optime_json = {
     "name": "optime",
-    "description": "Time until optime"
+    "description": "Time until optime",
+    "options": [{
+        "name": "modifier",
+        "description": "Modifier",
+        "type": ApplicationCommandOptionType.INTEGER,
+        "required": False
+    }]
 }
 
 if __name__ == "__main__":
