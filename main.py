@@ -22,6 +22,7 @@ cache.init_app(app)
 
 def execute_role(roles, role_id, guild_id, user_id):
     url = f"https://discord.com/api/v8/guilds/{guild_id}/members/{user_id}/roles/{role_id}"
+    
     if role_id in roles:
         r = utility.req(requests.delete, [204, 403], url)
         reply = f"<@{user_id}> You've left <@&{role_id}>"
@@ -50,7 +51,7 @@ def execute_roles(guild_id):
 
     joinableRoles = []
     for role in roles:
-        if role.get("tags", {}).get("bot_id") is None and role["position"] < botPosition:
+        if utility.validateRole(guild_id, role, botPosition):
             joinableRoles.append(role["name"])
 
     joinableRoles = sorted(joinableRoles)

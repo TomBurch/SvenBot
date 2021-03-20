@@ -136,7 +136,7 @@ class TestInteractions(unittest.TestCase):
     def test_roles(self):
         role = self.testRole
 
-        expectedReply = ImmediateReply("```\n{}\n```".format(role["name"]), mentions = [])
+        expectedReply = ImmediateReply("```\n\n```".format(self.botRole["name"], role["name"]), mentions = [])
 
         successRoles = responses.Response(
             method = responses.GET,
