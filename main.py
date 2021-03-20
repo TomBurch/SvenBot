@@ -1,6 +1,8 @@
 import os
 import logging
 import requests
+from datetime import datetime, timedelta
+from pytz import timezone
 
 import google.cloud.logging
 from flask import Flask, jsonify, abort, request
@@ -11,6 +13,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 PUBLIC_KEY = os.getenv("PUBLIC_KEY")
+CLIENT_ID = os.getenv("CLIENT_ID")
 
 cache = Cache(config = {'CACHE_TYPE': 'SimpleCache'})
 
@@ -19,6 +22,7 @@ cache.init_app(app)
 
 def execute_role(roles, role_id, guild_id, user_id):
     url = f"https://discord.com/api/v8/guilds/{guild_id}/members/{user_id}/roles/{role_id}"
+    
     if role_id in roles:
         r = utility.req(requests.delete, [204, 403], url)
         reply = f"<@{user_id}> You've left <@&{role_id}>"
@@ -30,6 +34,29 @@ def execute_role(roles, role_id, guild_id, user_id):
         return f"<@{user_id}> Role <@&{role_id}> is restricted"
 
     return reply
+
+def execute_roles(guild_id):
+    url = f"https://discord.com/api/v8/guilds/{guild_id}/roles"
+    r = utility.req(requests.get, [200], url)
+    roles = r.json()
+
+    botPosition = -1
+    for role in roles:
+        if role.get("tags", {}).get("bot_id") is not None:
+            if role["tags"]["bot_id"] == CLIENT_ID:
+                botPosition = role["position"]
+    
+    if botPosition == -1:
+        return "ERROR: Unable to find bot's role"
+
+    joinableRoles = []
+    for role in roles:
+        logging.info(role.get("color"))
+        if utility.validateRole(guild_id, role, botPosition):
+            joinableRoles.append(role["name"])
+
+    joinableRoles = sorted(joinableRoles)
+    return "```\n{}\n```".format("\n".join(joinableRoles))
 
 def execute_members(role_id, guild_id):
     url = f"https://discord.com/api/v8/guilds/{guild_id}/members"
@@ -51,12 +78,32 @@ def execute_myroles(roles):
     
     return reply
 
+def execute_optime(today, modifier):
+    try:
+        opday = today
+        opday = opday.replace(hour = 18 + modifier, minute = 0, second = 0)
+        if today > opday:
+            opday = opday + timedelta(days = 1)
+
+        if modifier == 0:
+            modifierString = ""
+        elif modifier > 0:
+            modifierString = f" +{modifier}"
+        else:
+            modifierString = f" {modifier}"
+
+        timeUntilOptime = opday - today
+        return f"Optime{modifierString} starts in {timeUntilOptime}!"
+    except ValueError:
+        return "Optime modifier is too large"
+
 def handle_interaction(request):
     if (request.json.get("type") == InteractionType.APPLICATION_COMMAND):
         data = request.json["data"]
         command = data["name"]
         
         try:
+            options = data.get("options")
             member = request.json["member"]
             user = member["user"]
             username = user["username"]
@@ -65,54 +112,39 @@ def handle_interaction(request):
             logging.info(f"'{username}' executing '{command}'")
             
             if command == "ping":
-                return {
-                    "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                    "data": {
-                        "content": "Pong!"
-                    }
-                }
+                return utility.ImmediateReply("Pong!")
+
             elif command == "role":
                 roles = member["roles"]
-                role_id = data["options"][0]["value"]
+                role_id = options[0]["value"]
                 user_id = user["id"]
                 reply = execute_role(roles, role_id, guild_id, user_id)
 
-                return {
-                    "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                    "data": {
-                        "content": reply,
-                        "allowed_mentions": {
-                            "parse": ["users"]
-                        }
-                    }
-                }
-            elif command == "members":
-                role_id = data["options"][0]["value"]
-                reply = execute_members(role_id, guild_id)
+                return utility.ImmediateReply(reply, mentions = ["users"])
 
-                return {
-                    "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                    "data": {
-                        "content": reply,
-                        "allowed_mentions": {
-                            "parse": []
-                        }
-                    }
-                }
+            elif command == "roles":
+                reply = execute_roles(guild_id)
+                return utility.ImmediateReply(reply, mentions = [])
+
+            elif command == "members":
+                role_id = options[0]["value"]
+                reply = execute_members(role_id, guild_id)
+                return utility.ImmediateReply(reply, mentions = [])
+
             elif command == "myroles":
                 roles = member["roles"]
                 reply = execute_myroles(roles)
+                return utility.ImmediateReply(reply, mentions = [], ephemeral = True)
 
-                return {
-                    "type": InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                    "data": {
-                        "content": reply,
-                        "allowed_mentions": {
-                            "parse": []
-                        },
-                        "flags": 64
-                    }
-                }
+            elif command == "optime":
+                if options is not None and len(options) > 0:
+                    modifier = options[0]["value"]
+                else:
+                    modifier = 0
+
+                reply = execute_optime(datetime.now(tz = timezone('Europe/London')), modifier)
+                return utility.ImmediateReply(reply)
+
         except Exception as e:
             logging.error(f"Error executing '{command}':\n{str(e)})")
             abort(404, f"Error executing '{command}'")
