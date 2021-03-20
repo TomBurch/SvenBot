@@ -36,7 +36,7 @@ class ImmediateReply(Reply):
 def basicValidation(role, botPosition):
     return role.get("tags", {}).get("bot_id") is None and role["position"] < botPosition
 
-def colourValidation():
+def colourValidation(role, botPosition):
     return basicValidation(role, botPosition) and role.get("colour") != 0 
 
 role_validate_funcs = {
