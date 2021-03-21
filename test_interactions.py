@@ -4,27 +4,30 @@ import werkzeug.exceptions as exceptions
 from dotenv import load_dotenv
 import os
 from datetime import datetime
+import pytest
 
 from main import handle_interaction, execute_optime
 from discord_interactions import InteractionType
-from utility import ImmediateReply
+from utility import ImmediateReply, clearMemoizeCache
 
 load_dotenv()
 CLIENT_ID = os.getenv("CLIENT_ID")
 
-def callMatchesResponse(call, response):
-    return call.request.method == response.method and call.request.url == response.url and call.response.status_code == response.status
+def assert_callMatchesResponse(call, response):
+    assert call.request.method == response.method
+    assert call.request.url == response.url
+    assert call.response.status_code == response.status
 
 class Member(dict):
     def __init__(self, id, name, roles = []):
         dict.__init__(self, user = {"id": id, "username": name}, roles = roles)
 
 class Role(dict):
-    def __init__(self, id, name, position, botId = None):
+    def __init__(self, id, name, position, color = 0, botId = None):
         if botId is not None:
-            dict.__init__(self, id = id, name = name, position = position, tags = {"bot_id": botId})
+            dict.__init__(self, id = id, name = name, position = position, color = color, tags = {"bot_id": botId})
         else:
-            dict.__init__(self, id = id, name = name, position = position)
+            dict.__init__(self, id = id, name = name, position = position, color = color)
 
 class Interaction():
     def __init__(self, name, member = None, options = []):
@@ -35,16 +38,24 @@ class Interaction():
                 "name": name,
                 "options": options
             },
-            "guild_id" : "Guild123"
+            "guild_id" : "342006395010547712"
         }
 
 class TestInteractions(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.botRole = Role("SvenBotRoleId", "SvenBot", 2, CLIENT_ID)
-        self.testRole = Role("RoleId456", "TestRole", 1)
+        self.botRole = Role("SvenBotRoleId", "SvenBot", 3, botId = CLIENT_ID)
+        self.testRole = Role("RoleId456", "TestRole", 2)
+        self.invalidRole = Role("RoleId789", "InvalidRole", 1, color = 10)
+        self.roles = [self.botRole, self.testRole, self.invalidRole]
+
+        self.arcommGuild = "342006395010547712"
+
         self.memberWithRole = Member("User123", "TestUser", [self.testRole["id"]])
         self.memberNoRole = Member("User234", "TestUser2")
+
+    def setUp(self):
+        clearMemoizeCache()
 
     def test_ping(self):
         result = handle_interaction(Interaction("ping", self.memberNoRole))
@@ -61,15 +72,16 @@ class TestInteractions(unittest.TestCase):
 
         successLeave = responses.Response(
             method = responses.DELETE,
-            url = f"https://discord.com/api/v8/guilds/Guild123/members/{userId}/roles/{roleId}",
+            url = f"https://discord.com/api/v8/guilds/{self.arcommGuild}/members/{userId}/roles/{roleId}",
             status = 204
         )
         responses.add(successLeave)
+        responses.add(responses.GET, f"https://discord.com/api/v8/guilds/{self.arcommGuild}/roles", json = self.roles, status = 200)
 
         interaction = Interaction("role", self.memberWithRole, options = [{"value": roleId}])
         reply = handle_interaction(interaction)
 
-        assert callMatchesResponse(responses.calls[0], successLeave)
+        assert_callMatchesResponse(responses.calls[1], successLeave)
         self.assertEqual(reply, expectedReply)
 
     @responses.activate
@@ -81,15 +93,16 @@ class TestInteractions(unittest.TestCase):
 
         successJoin = responses.Response(
             method = responses.PUT,
-            url = f"https://discord.com/api/v8/guilds/Guild123/members/{userId}/roles/{roleId}",
+            url = f"https://discord.com/api/v8/guilds/{self.arcommGuild}/members/{userId}/roles/{roleId}",
             status = 204
         )
         responses.add(successJoin)
+        responses.add(responses.GET, f"https://discord.com/api/v8/guilds/{self.arcommGuild}/roles", json = self.roles, status = 200)
 
         interaction = Interaction("role", self.memberNoRole, options = [{"value": roleId}])
         reply = handle_interaction(interaction)
 
-        assert callMatchesResponse(responses.calls[0], successJoin)
+        assert_callMatchesResponse(responses.calls[1], successJoin)
         self.assertEqual(reply, expectedReply)
 
     @responses.activate
@@ -101,15 +114,16 @@ class TestInteractions(unittest.TestCase):
 
         failedLeave = responses.Response(
             method = responses.DELETE,
-            url = f"https://discord.com/api/v8/guilds/Guild123/members/{userId}/roles/{roleId}",
+            url = f"https://discord.com/api/v8/guilds/{self.arcommGuild}/members/{userId}/roles/{roleId}",
             status = 403
         )
         responses.add(failedLeave)
+        responses.add(responses.GET, f"https://discord.com/api/v8/guilds/{self.arcommGuild}/roles", json = self.roles, status = 200)
 
         interaction = Interaction("role", self.memberWithRole, options = [{"value": roleId}])
         reply = handle_interaction(interaction)
 
-        assert callMatchesResponse(responses.calls[0], failedLeave)
+        assert_callMatchesResponse(responses.calls[1], failedLeave)
         self.assertEqual(reply, expectedReply)
 
     @responses.activate
@@ -121,26 +135,41 @@ class TestInteractions(unittest.TestCase):
 
         failedJoin = responses.Response(
             method = responses.PUT,
-            url = f"https://discord.com/api/v8/guilds/Guild123/members/{userId}/roles/{roleId}",
+            url = f"https://discord.com/api/v8/guilds/{self.arcommGuild}/members/{userId}/roles/{roleId}",
             status = 403
         )
         responses.add(failedJoin)
+        responses.add(responses.GET, f"https://discord.com/api/v8/guilds/{self.arcommGuild}/roles", json = self.roles, status = 200)
 
         interaction = Interaction("role", self.memberNoRole, options = [{"value": roleId}])
         reply = handle_interaction(interaction)
 
-        assert callMatchesResponse(responses.calls[0], failedJoin)
+        assert_callMatchesResponse(responses.calls[1], failedJoin)
+        self.assertEqual(reply, expectedReply)
+    
+    @responses.activate
+    def test_role_failedValidation(self):
+        userId = self.memberNoRole["user"]["id"]
+        roleId = self.invalidRole["id"]
+
+        expectedReply = ImmediateReply(f"<@{userId}> Role <@&{roleId}> is restricted", mentions = ["users"])
+
+        responses.add(responses.GET, f"https://discord.com/api/v8/guilds/{self.arcommGuild}/roles", json = self.roles, status = 200)
+
+        interaction = Interaction("role", self.memberNoRole, options = [{"value": roleId}])
+        reply = handle_interaction(interaction)
+
         self.assertEqual(reply, expectedReply)
     
     @responses.activate
     def test_roles(self):
         role = self.testRole
 
-        expectedReply = ImmediateReply("```\n\n```".format(self.botRole["name"], role["name"]), mentions = [])
+        expectedReply = ImmediateReply("```\nTestRole\n```".format(self.botRole["name"], role["name"]), mentions = [])
 
         successRoles = responses.Response(
             method = responses.GET,
-            url = f"https://discord.com/api/v8/guilds/Guild123/roles",
+            url = f"https://discord.com/api/v8/guilds/{self.arcommGuild}/roles",
             status = 200,
             json = [self.testRole, self.botRole]
         )
@@ -149,7 +178,7 @@ class TestInteractions(unittest.TestCase):
         interaction = Interaction("roles", self.memberWithRole)
         reply = handle_interaction(interaction)
 
-        assert callMatchesResponse(responses.calls[0], successRoles)
+        assert_callMatchesResponse(responses.calls[0], successRoles)
         self.assertEqual(reply, expectedReply)
 
     @responses.activate
@@ -158,17 +187,22 @@ class TestInteractions(unittest.TestCase):
 
         successRoles = responses.Response(
             method = responses.GET,
-            url = f"https://discord.com/api/v8/guilds/Guild123/roles",
+            url = f"https://discord.com/api/v8/guilds/{self.arcommGuild}/roles",
             status = 200,
             json = [self.testRole]
         )
         responses.add(successRoles)
 
-        interaction = Interaction("roles", self.memberNoRole)
-        reply = handle_interaction(interaction)
+        with pytest.raises(exceptions.NotFound) as e2:
+            with pytest.raises(RuntimeError) as e1:
+                interaction = Interaction("roles", self.memberNoRole)
+                reply = handle_interaction(interaction)
 
-        assert callMatchesResponse(responses.calls[0], successRoles)
-        self.assertEqual(reply, expectedReply)
+                assert_callMatchesResponse(responses.calls[0], successRoles)
+                self.assertEqual(reply, expectedReply)
+
+            assert e1.match("Unable to find bot's role")
+        assert e2.match("Error executing 'roles'")
 
     @responses.activate
     def test_members(self):
@@ -180,7 +214,7 @@ class TestInteractions(unittest.TestCase):
 
         successMembers = responses.Response(
             method = responses.GET,
-            url = "https://discord.com/api/v8/guilds/Guild123/members?limit=200",
+            url = f"https://discord.com/api/v8/guilds/{self.arcommGuild}/members?limit=200",
             status = 200,
             json = [self.memberWithRole]
         )
@@ -189,7 +223,7 @@ class TestInteractions(unittest.TestCase):
         interaction = Interaction("members", self.memberNoRole, options = [{"value": role}])
         reply = handle_interaction(interaction)
 
-        assert callMatchesResponse(responses.calls[0], successMembers)
+        assert_callMatchesResponse(responses.calls[0], successMembers)
         self.assertEqual(reply, expectedReply)
 
     def test_myroles(self):

@@ -6,7 +6,6 @@ from pytz import timezone
 
 import google.cloud.logging
 from flask import Flask, jsonify, abort, request
-from flask_caching import Cache
 from discord_interactions import verify_key_decorator, InteractionType, InteractionResponseType
 import utility
 from dotenv import load_dotenv
@@ -15,13 +14,14 @@ load_dotenv()
 PUBLIC_KEY = os.getenv("PUBLIC_KEY")
 CLIENT_ID = os.getenv("CLIENT_ID")
 
-cache = Cache(config = {'CACHE_TYPE': 'SimpleCache'})
-
 app = Flask(__name__)
-cache.init_app(app)
 
 def execute_role(roles, role_id, guild_id, user_id):
     url = f"https://discord.com/api/v8/guilds/{guild_id}/members/{user_id}/roles/{role_id}"
+
+    if not utility.validateRoleById(guild_id, role_id):
+        logging.warning(f"Role <@&{role_id}> is restricted (validation)")
+        return f"<@{user_id}> Role <@&{role_id}> is restricted"
     
     if role_id in roles:
         r = utility.req(requests.delete, [204, 403], url)
@@ -31,28 +31,17 @@ def execute_role(roles, role_id, guild_id, user_id):
         reply = f"<@{user_id}> You've joined <@&{role_id}>"
 
     if r.status_code == 403:
+        logging.warning(f"Role <@&{role_id}> is restricted (403)")
         return f"<@{user_id}> Role <@&{role_id}> is restricted"
 
     return reply
 
 def execute_roles(guild_id):
-    url = f"https://discord.com/api/v8/guilds/{guild_id}/roles"
-    r = utility.req(requests.get, [200], url)
-    roles = r.json()
-
-    botPosition = -1
-    for role in roles:
-        if role.get("tags", {}).get("bot_id") is not None:
-            if role["tags"]["bot_id"] == CLIENT_ID:
-                botPosition = role["position"]
-    
-    if botPosition == -1:
-        return "ERROR: Unable to find bot's role"
+    roles = utility.getRoles(guild_id)
 
     joinableRoles = []
     for role in roles:
-        logging.info(role.get("color"))
-        if utility.validateRole(guild_id, role, botPosition):
+        if utility.validateRole(guild_id, role):
             joinableRoles.append(role["name"])
 
     joinableRoles = sorted(joinableRoles)
