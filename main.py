@@ -1,33 +1,27 @@
 import os
 import logging
-import requests
 from datetime import datetime, timedelta
 from pytz import timezone
 
-import google.cloud.logging
-from flask import Flask, jsonify, abort, request
+from sanic import Sanic
+from sanic.response import json, text
+from sanic.exceptions import abort
 from discord_interactions import verify_key_decorator, InteractionType, InteractionResponseType
+
 import utility
-from dotenv import load_dotenv
 
-load_dotenv()
-PUBLIC_KEY = os.getenv("PUBLIC_KEY")
-CLIENT_ID = os.getenv("CLIENT_ID")
-
-app = Flask(__name__)
-
-def execute_role(roles, role_id, guild_id, user_id):
+async def execute_role(roles, role_id, guild_id, user_id):
     url = f"https://discord.com/api/v8/guilds/{guild_id}/members/{user_id}/roles/{role_id}"
 
-    if not utility.validateRoleById(guild_id, role_id):
+    if not await utility.validateRoleById(guild_id, role_id):
         logging.warning(f"Role <@&{role_id}> is restricted (validation)")
         return f"<@{user_id}> Role <@&{role_id}> is restricted"
     
     if role_id in roles:
-        r = utility.req(requests.delete, [204, 403], url)
+        r = await utility.delete([204, 403], url)
         reply = f"<@{user_id}> You've left <@&{role_id}>"
     else:
-        r = utility.req(requests.put, [204, 403], url)
+        r = await utility.put([204, 403], url)
         reply = f"<@{user_id}> You've joined <@&{role_id}>"
 
     if r.status_code == 403:
@@ -36,20 +30,20 @@ def execute_role(roles, role_id, guild_id, user_id):
 
     return reply
 
-def execute_roles(guild_id):
-    roles = utility.getRoles(guild_id)
+async def execute_roles(guild_id):
+    roles = await utility.getRoles(guild_id)
 
     joinableRoles = []
     for role in roles:
-        if utility.validateRole(guild_id, role):
+        if await utility.validateRole(guild_id, role, roles):
             joinableRoles.append(role["name"])
 
     joinableRoles = sorted(joinableRoles)
     return "```\n{}\n```".format("\n".join(joinableRoles))
 
-def execute_members(role_id, guild_id):
+async def execute_members(role_id, guild_id):
     url = f"https://discord.com/api/v8/guilds/{guild_id}/members"
-    r = utility.req(requests.get, [200], url, params = {"limit": 200})
+    r = await utility.get([200], url, params = {"limit": 200})
     members = r.json()
     reply = ""
 
@@ -86,7 +80,7 @@ def execute_optime(today, modifier):
     except ValueError:
         return "Optime modifier is too large"
 
-def handle_interaction(request):
+async def handle_interaction(request):
     if (request.json.get("type") == InteractionType.APPLICATION_COMMAND):
         data = request.json["data"]
         command = data["name"]
@@ -107,17 +101,17 @@ def handle_interaction(request):
                 roles = member["roles"]
                 role_id = options[0]["value"]
                 user_id = user["id"]
-                reply = execute_role(roles, role_id, guild_id, user_id)
+                reply = await execute_role(roles, role_id, guild_id, user_id)
 
                 return utility.ImmediateReply(reply, mentions = ["users"])
 
             elif command == "roles":
-                reply = execute_roles(guild_id)
+                reply = await execute_roles(guild_id)
                 return utility.ImmediateReply(reply, mentions = [])
 
             elif command == "members":
                 role_id = options[0]["value"]
-                reply = execute_members(role_id, guild_id)
+                reply = await execute_members(role_id, guild_id)
                 return utility.ImmediateReply(reply, mentions = [])
 
             elif command == "myroles":
@@ -142,18 +136,21 @@ def handle_interaction(request):
     else:
         abort(404, "Not an application command")
 
-@app.route('/interaction/', methods=['POST'])
-@verify_key_decorator(PUBLIC_KEY)
-def interaction():
-    return jsonify(handle_interaction(request))
+def app():
+    sanic_app = Sanic(__name__)
 
-@app.route('/abc/')
-def hello_world():
-    return "Hello, World!"
+    @sanic_app.route('/interaction/', methods=['POST'])
+    @verify_key_decorator(utility.PUBLIC_KEY)
+    async def interaction(request):
+        return jsonify(await handle_interaction(request))
+
+    @sanic_app.route('/abc/')
+    def hello_world(request):
+        return text("Hello, World!")
+
+    return sanic_app
+
+app = app()
 
 if __name__ == "__main__":
-    client = google.cloud.logging.Client()
-    client.get_default_handler()
-    client.setup_logging()
-
     app.run(debug = True, host='0.0.0.0')

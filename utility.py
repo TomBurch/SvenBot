@@ -1,30 +1,38 @@
 import logging
 import os
-import requests
+import cachetools.func
 
+import httpx
 from dotenv import load_dotenv
-from flask import Flask
-from flask_caching import Cache
 from discord_interactions import InteractionResponseType
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CLIENT_ID = os.getenv("CLIENT_ID")
-
-cache = Cache(config = {'CACHE_TYPE': 'SimpleCache'})
-app = Flask(__name__)
-cache.init_app(app)
+PUBLIC_KEY = os.getenv("PUBLIC_KEY")
 
 headers = {
     "Authorization": f"Bot {BOT_TOKEN}"
 }
 
-def req(function, statuses, url, params = None):
-    r = function(url, headers = headers, params = params)
+async def req(function, statuses, url, params = None):
+    r = await function(url, headers = headers, params = params)
     if r.status_code not in statuses:
         logging.error(f"Received unexpected status code {r.status_code} (expected {statuses})\n{r.reason}\n{r.text}")
         raise RuntimeError(f"Req error: {r.text}")
     return r
+
+async def get(statuses, url, params = None):
+    async with httpx.AsyncClient() as client:
+        return await req(client.get, statuses, url, params)
+
+async def delete(statuses, url, params = None):
+    async with httpx.AsyncClient() as client:
+        return await req(client.delete, statuses, url, params)
+
+async def put(statuses, url, params = None):
+    async with httpx.AsyncClient() as client:
+        return await req(client.put, statuses, url, params)
 
 class Reply(dict):
     def __init__(self, _type, content, mentions = None, ephemeral = False):
@@ -51,9 +59,12 @@ role_validate_funcs = {
     "333316787603243018": basicValidation
 }
 
-def validateRole(guild_id, role):
+async def validateRole(guild_id, role, roles = None):
+    if roles is None:
+        roles = await getRoles(guild_id)
+
     botPosition = -1
-    for r in getRoles(guild_id):
+    for r in roles:
         if r.get("tags", {}).get("bot_id") is not None:
             if r["tags"]["bot_id"] == CLIENT_ID:
                 botPosition = r["position"]
@@ -68,9 +79,10 @@ def validateRole(guild_id, role):
     else:
         return role_validate(role, botPosition)
 
-def validateRoleById(guild_id, role_id):
+async def validateRoleById(guild_id, role_id):
     roleMatchingRoleId = None
-    for r in getRoles(guild_id):
+    roles = await getRoles(guild_id)
+    for r in roles:
         if r["id"] == role_id:
             roleMatchingRoleId = r
             break
@@ -78,12 +90,13 @@ def validateRoleById(guild_id, role_id):
     if roleMatchingRoleId is None:
         raise RuntimeError("Unable to find role")
 
-    return validateRole(guild_id, roleMatchingRoleId)
+    return await validateRole(guild_id, roleMatchingRoleId, roles)
 
-@cache.memoize(40)
-def getRoles(guild_id):
+@cachetools.func.ttl_cache(ttl = 40)
+async def getRoles(guild_id):
     url = f"https://discord.com/api/v8/guilds/{guild_id}/roles"
-    return req(requests.get, [200], url).json()
+    roles = await get([200], url)
+    return roles.json()
 
 def clearMemoizeCache():
-    cache.delete_memoized(getRoles)
+    getRoles.cache_clear()
