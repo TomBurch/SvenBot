@@ -4,12 +4,39 @@ import cachetools.func
 
 import httpx
 from dotenv import load_dotenv
-from discord_interactions import InteractionResponseType
+from nacl.encoding import HexEncoder
+from nacl.exceptions import BadSignatureError
+from nacl.signing import VerifyKey
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CLIENT_ID = os.getenv("CLIENT_ID")
 PUBLIC_KEY = os.getenv("PUBLIC_KEY")
+
+class InteractionType:
+    PING = 1
+    APPLICATION_COMMAND = 2
+
+class InteractionResponseType:
+    PONG = 1
+    CHANNEL_MESSAGE_WITH_SOURCE = 4
+    DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5
+
+def verify_request(request):
+    signature = request.headers.get("X-Signature-Ed25519")
+    timestamp = request.headers.get("X-Signature-Timestamp")
+    if signature is None or timestamp is None or not verify_key(request.data, signature, timestamp):
+        abort(401, "Bad request signature")
+
+def verify_key(raw_body, signature, timestamp, client_public_key):
+    message = timestamp.encode() + raw_body
+
+    try:
+        VerifyKey(bytes.fromhex(PUBLIC_KEY)).verify(message, bytes.fromhex(signature))
+        return True
+    except Exception as e:
+        logging.error(e)
+        return False
 
 headers = {
     "Authorization": f"Bot {BOT_TOKEN}"

@@ -5,10 +5,9 @@ from datetime import datetime
 from sanic import exceptions
 from httpx import Response
 import pytest
-from discord_interactions import InteractionType
 
 from main import handle_interaction, execute_optime
-from utility import ImmediateReply, clearMemoizeCache, CLIENT_ID
+from utility import InteractionType, ImmediateReply, clearMemoizeCache, CLIENT_ID
 
 class Member(dict):
     def __init__(self, id, name, roles = []):

@@ -6,9 +6,9 @@ from pytz import timezone
 from sanic import Sanic
 from sanic.response import json, text
 from sanic.exceptions import abort
-from discord_interactions import verify_key_decorator, InteractionType, InteractionResponseType
 
 import utility
+from utility import InteractionType, InteractionResponseType
 
 async def execute_role(roles, role_id, guild_id, user_id):
     url = f"https://discord.com/api/v8/guilds/{guild_id}/members/{user_id}/roles/{role_id}"
@@ -140,9 +140,13 @@ def app():
     sanic_app = Sanic(__name__)
 
     @sanic_app.route('/interaction/', methods=['POST'])
-    @verify_key_decorator(utility.PUBLIC_KEY)
     async def interaction(request):
-        return jsonify(await handle_interaction(request))
+        utility.verify_request(request)
+
+        if request.json.get("type") == InteractionType.PING:
+            return json({'type': InteractionResponseType.PONG})
+
+        return json(await handle_interaction(request))
 
     @sanic_app.route('/abc/')
     def hello_world(request):
