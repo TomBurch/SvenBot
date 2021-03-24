@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from nacl.encoding import HexEncoder
 from nacl.exceptions import BadSignatureError
 from nacl.signing import VerifyKey
+from sanic.exceptions import abort
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -23,7 +24,10 @@ class InteractionResponseType:
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5
 
 def verify_request(request):
-    logging.info(request)
+    logging.fatal(request)
+    logging.fatal(request.headers)
+    logging.fatal(request.body)
+    logging.fatal(request.body.decode())
     signature = request.headers.get("X-Signature-Ed25519")
     timestamp = request.headers.get("X-Signature-Timestamp")
     if signature is None or timestamp is None or not verify_key(request.body.decode(), signature, timestamp):
@@ -31,7 +35,7 @@ def verify_request(request):
 
 def verify_key(raw_body, signature, timestamp):
     message = timestamp + raw_body
-
+    
     try:
         VerifyKey(bytes.fromhex(PUBLIC_KEY)).verify(message.encode(), bytes.fromhex(signature))
         return True
