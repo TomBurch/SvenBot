@@ -2,7 +2,7 @@ import unittest
 import os
 from datetime import datetime
 
-from sanic import exceptions
+from fastapi import HTTPException
 from httpx import Response
 import pytest
 
@@ -115,12 +115,10 @@ async def test_rolesNoBotRole(httpx_mock):
         status_code = 200
     )
 
-    with pytest.raises(exceptions.NotFound) as e2:
-        with pytest.raises(RuntimeError) as e1:
+    with pytest.raises(HTTPException) as e2:
+        with pytest.raises(RuntimeError, match = "Unable to find bot's role") as e1:
             interaction = Interaction("roles", memberNoRole)
             reply = await handle_interaction(interaction)
-        assert e1.match("Unable to find bot's role")
-    assert e2.match("Error executing 'roles'")
 
 @pytest.mark.asyncio
 async def test_members(httpx_mock):

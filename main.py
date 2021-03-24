@@ -11,9 +11,9 @@ import logging
 from datetime import datetime, timedelta
 from pytz import timezone
 
-from sanic import Sanic
-from sanic.response import json, text
-from sanic.exceptions import abort
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
+import uvicorn
 
 import utility
 from utility import InteractionType, InteractionResponseType
@@ -138,32 +138,31 @@ async def handle_interaction(request):
 
         except Exception as e:
             logging.error(f"Error executing '{command}':\n{str(e)})")
-            abort(404, f"Error executing '{command}'")
+            raise HTTPException(status_code = 500, detail = f"Error executing '{command}'")
         
-        abort(404, f"'{command}' is not a known command")
+        raise HTTPException(status_code = 501, detail = f"'{command}' is not a known command")
     else:
-        abort(404, "Not an application command")
+        raise HTTPException(status_code = 400, detail = "Not an application command")
 
 def app():
-    sanic_app = Sanic(__name__)
+    fast_app = FastAPI()
 
-    @sanic_app.route('/interaction/', methods=['POST'])
-    async def interaction(request):
-        await request.receive_body()
-        utility.verify_request(request)
+    @fast_app.post('/interaction/')
+    async def interaction(request: Request):
+        await utility.verify_request(request)
 
         if request.json.get("type") == InteractionType.PING:
-            return json({'type': InteractionResponseType.PONG})
+            return JSONResponse({'type': InteractionResponseType.PONG})
 
-        return json(await handle_interaction(request))
+        return JSONResponse(await handle_interaction(request))
 
-    @sanic_app.route('/abc/')
-    def hello_world(request):
-        return text("Hello, World!")
+    @fast_app.get('/abc/')
+    def hello_world():
+        return {"message", "Hello, World!"}
 
-    return sanic_app
+    return fast_app
 
 app = app()
 
 if __name__ == "__main__":
-    app.run(debug = True, host='0.0.0.0')
+    uvicorn.run(app, host='0.0.0.0', port = 8000)

@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from nacl.encoding import HexEncoder
 from nacl.exceptions import BadSignatureError
 from nacl.signing import VerifyKey
-from sanic.exceptions import abort
+from fastapi import HTTPException
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -23,11 +23,12 @@ class InteractionResponseType:
     CHANNEL_MESSAGE_WITH_SOURCE = 4
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5
 
-def verify_request(request):
+async def verify_request(request):
     signature = request.headers.get("X-Signature-Ed25519")
     timestamp = request.headers.get("X-Signature-Timestamp")
-    if signature is None or timestamp is None or not verify_key(request.body, signature, timestamp):
-        abort(401, "Bad request signature")
+    body = await request.body()
+    if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
+        raise HTTPException(status_code = 401, detail = "Bad request signature")
 
 def verify_key(body, signature, timestamp):
     message = timestamp.encode() + body
