@@ -23,7 +23,7 @@ class InteractionResponseType:
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5
 
 def verify_request(request):
-    logger.info(request)
+    logging.info(request)
     signature = request.headers.get("X-Signature-Ed25519")
     timestamp = request.headers.get("X-Signature-Timestamp")
     if signature is None or timestamp is None or not verify_key(request.body.decode(), signature, timestamp):
