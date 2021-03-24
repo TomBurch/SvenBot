@@ -23,16 +23,17 @@ class InteractionResponseType:
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5
 
 def verify_request(request):
+    logger.info(request)
     signature = request.headers.get("X-Signature-Ed25519")
     timestamp = request.headers.get("X-Signature-Timestamp")
-    if signature is None or timestamp is None or not verify_key(request.body, signature, timestamp):
+    if signature is None or timestamp is None or not verify_key(request.body.decode(), signature, timestamp):
         abort(401, "Bad request signature")
 
 def verify_key(raw_body, signature, timestamp):
-    message = timestamp.encode() + raw_body
+    message = timestamp + raw_body
 
     try:
-        VerifyKey(bytes.fromhex(PUBLIC_KEY)).verify(message, bytes.fromhex(signature))
+        VerifyKey(bytes.fromhex(PUBLIC_KEY)).verify(message.encode(), bytes.fromhex(signature))
         return True
     except Exception as e:
         logging.error(e)
