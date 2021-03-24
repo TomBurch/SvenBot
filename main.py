@@ -141,6 +141,7 @@ def app():
 
     @sanic_app.route('/interaction/', methods=['POST'])
     async def interaction(request):
+        await request.receive_body()
         utility.verify_request(request)
 
         if request.json.get("type") == InteractionType.PING:
