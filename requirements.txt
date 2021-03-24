@@ -1,3 +1,4 @@
+google-python-cloud-debugger
 gunicorn==20.0.4
 uvicorn==0.13.4
 sanic==21.3.1
