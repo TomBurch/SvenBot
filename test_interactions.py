@@ -7,7 +7,7 @@ from httpx import Response
 import pytest
 
 from main import handle_interaction, execute_optime
-from utility import InteractionType, ImmediateReply, clearMemoizeCache, CLIENT_ID
+from utility import InteractionType, ImmediateReply, CLIENT_ID
 
 class Member(dict):
     def __init__(self, id, name, roles = []):
@@ -33,10 +33,6 @@ arcommGuild = "342006395010547712"
 
 memberNoRole = Member("User234", "TestUser2")
 memberWithRole = Member("User123", "TestUser", [testRole["id"]])
-
-@pytest.fixture(autouse = True)
-def setUp():
-    clearMemoizeCache()
 
 @pytest.mark.asyncio
 async def test_ping():

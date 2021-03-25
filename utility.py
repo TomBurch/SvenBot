@@ -1,6 +1,5 @@
 import logging
 import os
-import cachetools.func
 
 import httpx
 from dotenv import load_dotenv
@@ -121,11 +120,7 @@ async def validateRoleById(guild_id, role_id):
 
     return await validateRole(guild_id, roleMatchingRoleId, roles)
 
-@cachetools.func.ttl_cache(ttl = 40)
 async def getRoles(guild_id):
     url = f"https://discord.com/api/v8/guilds/{guild_id}/roles"
     roles = await get([200], url)
     return roles.json()
-
-def clearMemoizeCache():
-    getRoles.cache_clear()
