@@ -20,17 +20,9 @@ class Role(dict):
         else:
             dict.__init__(self, id = id, name = name, position = position, color = color)
 
-class Interaction():
+class Interaction(dict):
     def __init__(self, name, member = None, options = []):
-        self.json = {
-            "type": InteractionType.APPLICATION_COMMAND,
-            "member": member,
-            "data": {
-                "name": name,
-                "options": options
-            },
-            "guild_id" : "342006395010547712"
-        }
+        dict.__init__(self, type = InteractionType.APPLICATION_COMMAND, member = member, data = {"name": name, "options": options}, guild_id = "342006395010547712")
 
 botRole = Role("SvenBotRoleId", "SvenBot", 3, botId = CLIENT_ID)
 invalidRole = Role("RoleId789", "InvalidRole", 1, color = 10)

@@ -88,17 +88,17 @@ def execute_optime(today, modifier):
     except ValueError:
         return "Optime modifier is too large"
 
-async def handle_interaction(request):
-    if (request.json.get("type") == InteractionType.APPLICATION_COMMAND):
-        data = request.json["data"]
+async def handle_interaction(interact):
+    if (interact.get("type") == InteractionType.APPLICATION_COMMAND):
+        data = interact["data"]
         command = data["name"]
         
         try:
             options = data.get("options")
-            member = request.json["member"]
+            member = interact["member"]
             user = member["user"]
             username = user["username"]
-            guild_id = request.json["guild_id"]
+            guild_id = interact["guild_id"]
 
             logging.info(f"'{username}' executing '{command}'")
             
@@ -151,10 +151,11 @@ def app():
     async def interaction(request: Request):
         await utility.verify_request(request)
 
-        if request.json.get("type") == InteractionType.PING:
+        interact = await request.json()
+        if interact.get("type") == InteractionType.PING:
             return JSONResponse({'type': InteractionResponseType.PONG})
 
-        return JSONResponse(await handle_interaction(request))
+        return JSONResponse(await handle_interaction(interact))
 
     @fast_app.get('/abc/')
     def hello_world():
