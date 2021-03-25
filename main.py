@@ -1,66 +1,57 @@
+try:
+  import googleclouddebugger
+  googleclouddebugger.enable(
+    breakpoint_enable_canary=True
+  )
+except ImportError:
+  pass
+
 import os
 import logging
-import requests
 from datetime import datetime, timedelta
 from pytz import timezone
 
-import google.cloud.logging
-from flask import Flask, jsonify, abort, request
-from flask_caching import Cache
-from discord_interactions import verify_key_decorator, InteractionType, InteractionResponseType
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
+import uvicorn
+
 import utility
-from dotenv import load_dotenv
+from utility import InteractionType, InteractionResponseType
 
-load_dotenv()
-PUBLIC_KEY = os.getenv("PUBLIC_KEY")
-CLIENT_ID = os.getenv("CLIENT_ID")
-
-cache = Cache(config = {'CACHE_TYPE': 'SimpleCache'})
-
-app = Flask(__name__)
-cache.init_app(app)
-
-def execute_role(roles, role_id, guild_id, user_id):
+async def execute_role(roles, role_id, guild_id, user_id):
     url = f"https://discord.com/api/v8/guilds/{guild_id}/members/{user_id}/roles/{role_id}"
+
+    if not await utility.validateRoleById(guild_id, role_id):
+        logging.warning(f"Role <@&{role_id}> is restricted (validation)")
+        return f"<@{user_id}> Role <@&{role_id}> is restricted"
     
     if role_id in roles:
-        r = utility.req(requests.delete, [204, 403], url)
+        r = await utility.delete([204, 403], url)
         reply = f"<@{user_id}> You've left <@&{role_id}>"
     else:
-        r = utility.req(requests.put, [204, 403], url)
+        r = await utility.put([204, 403], url)
         reply = f"<@{user_id}> You've joined <@&{role_id}>"
 
     if r.status_code == 403:
+        logging.warning(f"Role <@&{role_id}> is restricted (403)")
         return f"<@{user_id}> Role <@&{role_id}> is restricted"
 
     return reply
 
-def execute_roles(guild_id):
-    url = f"https://discord.com/api/v8/guilds/{guild_id}/roles"
-    r = utility.req(requests.get, [200], url)
-    roles = r.json()
-
-    botPosition = -1
-    for role in roles:
-        if role.get("tags", {}).get("bot_id") is not None:
-            if role["tags"]["bot_id"] == CLIENT_ID:
-                botPosition = role["position"]
-    
-    if botPosition == -1:
-        return "ERROR: Unable to find bot's role"
+async def execute_roles(guild_id):
+    roles = await utility.getRoles(guild_id)
 
     joinableRoles = []
     for role in roles:
-        logging.info(role.get("color"))
-        if utility.validateRole(guild_id, role, botPosition):
+        if await utility.validateRole(guild_id, role, roles):
             joinableRoles.append(role["name"])
 
     joinableRoles = sorted(joinableRoles)
     return "```\n{}\n```".format("\n".join(joinableRoles))
 
-def execute_members(role_id, guild_id):
+async def execute_members(role_id, guild_id):
     url = f"https://discord.com/api/v8/guilds/{guild_id}/members"
-    r = utility.req(requests.get, [200], url, params = {"limit": 200})
+    r = await utility.get([200], url, params = {"limit": 200})
     members = r.json()
     reply = ""
 
@@ -97,17 +88,17 @@ def execute_optime(today, modifier):
     except ValueError:
         return "Optime modifier is too large"
 
-def handle_interaction(request):
-    if (request.json.get("type") == InteractionType.APPLICATION_COMMAND):
-        data = request.json["data"]
+async def handle_interaction(interact):
+    if (interact.get("type") == InteractionType.APPLICATION_COMMAND):
+        data = interact["data"]
         command = data["name"]
         
         try:
             options = data.get("options")
-            member = request.json["member"]
+            member = interact["member"]
             user = member["user"]
             username = user["username"]
-            guild_id = request.json["guild_id"]
+            guild_id = interact["guild_id"]
 
             logging.info(f"'{username}' executing '{command}'")
             
@@ -118,17 +109,17 @@ def handle_interaction(request):
                 roles = member["roles"]
                 role_id = options[0]["value"]
                 user_id = user["id"]
-                reply = execute_role(roles, role_id, guild_id, user_id)
+                reply = await execute_role(roles, role_id, guild_id, user_id)
 
                 return utility.ImmediateReply(reply, mentions = ["users"])
 
             elif command == "roles":
-                reply = execute_roles(guild_id)
+                reply = await execute_roles(guild_id)
                 return utility.ImmediateReply(reply, mentions = [])
 
             elif command == "members":
                 role_id = options[0]["value"]
-                reply = execute_members(role_id, guild_id)
+                reply = await execute_members(role_id, guild_id)
                 return utility.ImmediateReply(reply, mentions = [])
 
             elif command == "myroles":
@@ -147,24 +138,32 @@ def handle_interaction(request):
 
         except Exception as e:
             logging.error(f"Error executing '{command}':\n{str(e)})")
-            abort(404, f"Error executing '{command}'")
+            raise HTTPException(status_code = 500, detail = f"Error executing '{command}'")
         
-        abort(404, f"'{command}' is not a known command")
+        raise HTTPException(status_code = 501, detail = f"'{command}' is not a known command")
     else:
-        abort(404, "Not an application command")
+        raise HTTPException(status_code = 400, detail = "Not an application command")
 
-@app.route('/interaction/', methods=['POST'])
-@verify_key_decorator(PUBLIC_KEY)
-def interaction():
-    return jsonify(handle_interaction(request))
+def app():
+    fast_app = FastAPI()
 
-@app.route('/abc/')
-def hello_world():
-    return "Hello, World!"
+    @fast_app.post('/interaction/')
+    async def interaction(request: Request):
+        await utility.verify_request(request)
+
+        interact = await request.json()
+        if interact.get("type") == InteractionType.PING:
+            return JSONResponse({'type': InteractionResponseType.PONG})
+
+        return JSONResponse(await handle_interaction(interact))
+
+    @fast_app.get('/abc/')
+    def hello_world():
+        return {"message", "Hello, World!"}
+
+    return fast_app
+
+app = app()
 
 if __name__ == "__main__":
-    client = google.cloud.logging.Client()
-    client.get_default_handler()
-    client.setup_logging()
-
-    app.run(debug = True, host='0.0.0.0')
+    uvicorn.run(app, host='0.0.0.0', port = 8000)
