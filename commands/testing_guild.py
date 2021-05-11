@@ -1,8 +1,8 @@
 import requests
 
-from command_utility import ApplicationCommandOptionType, APP_URL, HEADERS
+from command_utility import ApplicationCommandOptionType, APP_URL, HEADERS, CLIENT_ID
 
-url = f"{APP_URL}/guilds/333316787603243018/commands"
+url = f"{APP_URL}/guilds/342006395010547712/commands"
 
 commands = [
     {
@@ -18,6 +18,16 @@ commands = [
     {
         "name": "myroles",
         "description": "Get a list of roles you're in"
+    },
+    {
+        "name": "optime",
+        "description": "Time until optime",
+        "options": [{
+            "name": "modifier",
+            "description": "Modifier",
+            "type": ApplicationCommandOptionType.INTEGER,
+            "required": False
+        }]
     },
     {
         "name": "role",
