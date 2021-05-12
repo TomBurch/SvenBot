@@ -5,8 +5,8 @@ from command_utility import ApplicationCommandOptionType, APP_URL, HEADERS, CLIE
 url = f"{APP_URL}/guilds/342006395010547712/commands"
 STAFF_ROLE_ID = 365987804519333888
 
-update = ["addrole"]
-staff = ["addrole"]
+update = []
+staff = ["addrole", "removerole"]
 
 commands = [
     {
@@ -17,6 +17,17 @@ commands = [
             "name": "name",
             "description": "Name",
             "type": ApplicationCommandOptionType.STRING,
+            "required": True, 
+        }]
+    },
+        {
+        "name": "removerole",
+        "description": "Remove an existing role",
+        "default_permission": False,
+        "options": [{
+            "role": "role",
+            "description": "Role",
+            "type": ApplicationCommandOptionType.ROLE,
             "required": True, 
         }]
     },

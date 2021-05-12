@@ -102,6 +102,18 @@ async def execute_addrole(guild_id, name):
 
     return f"<@&{role_id}> added"
 
+async def execute_removerole(guild_id, role):
+    if await utility.validateRole(guild_id, role):
+        roleId = role["id"]
+        roleName = role["name"]
+        url = f"https://discord.com/api/v8/guilds/{guild_id}/roles/{roleId}"
+
+        await utility.delete([204], url)
+        return f"**{roleName}** deleted"
+    else:
+        return "Role is restricted"
+
+
 
 async def handle_interaction(interact):
     if (interact.get("type") == InteractionType.APPLICATION_COMMAND):
@@ -130,17 +142,17 @@ async def handle_interaction(interact):
 
             elif command == "roles":
                 reply = await execute_roles(guild_id)
-                return utility.ImmediateReply(reply, mentions = [])
+                return utility.ImmediateReply(reply)
 
             elif command == "members":
                 role_id = options[0]["value"]
                 reply = await execute_members(role_id, guild_id)
-                return utility.ImmediateReply(reply, mentions = [])
+                return utility.ImmediateReply(reply)
 
             elif command == "myroles":
                 roles = member["roles"]
                 reply = execute_myroles(roles)
-                return utility.ImmediateReply(reply, mentions = [], ephemeral = True)
+                return utility.ImmediateReply(reply, ephemeral = True)
 
             elif command == "optime":
                 if options is not None and len(options) > 0:
@@ -154,7 +166,12 @@ async def handle_interaction(interact):
             elif command == "addrole":
                 name = options[0]["value"]
                 reply = await execute_addrole(guild_id, name)
-                return utility.ImmediateReply(reply, mentions = [])
+                return utility.ImmediateReply(reply)
+
+            elif command == "removerole":
+                role = options[0]["value"]
+                reply = await execute_removerole(guild_id, role)
+                return utility.ImmediateReply(reply)
 
         except Exception as e:
             logging.error(f"Error executing '{command}':\n{str(e)})")

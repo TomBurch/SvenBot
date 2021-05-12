@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 
 import httpx
 from dotenv import load_dotenv
@@ -79,7 +80,7 @@ class Reply(dict):
         dict.__init__(self, type = _type, data = data)
 
 class ImmediateReply(Reply):
-    def __init__(self, content, mentions = None, ephemeral = False):
+    def __init__(self, content, mentions = [], ephemeral = False):
         super().__init__(InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, content, mentions, ephemeral)
 
 def basicValidation(role, botPosition):
@@ -130,3 +131,24 @@ async def getRoles(guild_id):
     url = f"https://discord.com/api/v8/guilds/{guild_id}/roles"
     roles = await get([200], url)
     return roles.json()
+
+async def findRole(guild_id, query, autocomplete = False):
+    query = query.lower()
+    roles = await getRoles(guild_id)
+    candidate = None
+
+    for role in roles:
+        roleName = role["name"].lower()
+        if roleName == query:
+            candidate = role
+            break
+
+        if autocomplete and re.match(re.escape(query), roleName):
+            candidate = role
+
+    if candidate is not None:
+        if await validateRole(guild_id, candidate, roles):
+            logging.info(candidate["name"] + " is reserved")
+            return candidate
+    
+    return None

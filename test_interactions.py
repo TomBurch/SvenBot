@@ -27,6 +27,7 @@ class Interaction(dict):
 botRole = Role("SvenBotRoleId", "SvenBot", 3, botId = CLIENT_ID)
 invalidRole = Role("RoleId789", "InvalidRole", 1, color = 10)
 testRole = Role("RoleId456", "TestRole", 2)
+roleNotInGuild = (Role("RoleId123", "RoleNotInGuild", 5))
 
 roles = [botRole, testRole, invalidRole]
 arcommGuild = "342006395010547712"
@@ -169,6 +170,33 @@ async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
     reply = await handle_interaction(interaction)
 
     assert reply == ImmediateReply(f"<@&{roleId}> {replyType}", mentions = [])
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("httpx_mock, role, sendsDelete, replyType", [
+                        (None, testRole, True, "**TestRole** deleted"),
+                        (None, invalidRole, False, "Role is restricted")
+                        ], indirect=["httpx_mock"])
+async def test_removerole(httpx_mock, role, sendsDelete, replyType):
+    roleId = role["id"]
+
+    httpx_mock.add_response(
+        method = "GET",
+        url = f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
+        json = roles,
+        status_code = 200
+    )
+
+    if sendsDelete:
+        httpx_mock.add_response(
+            method = "DELETE",
+            url = f"https://discord.com/api/v8/guilds/342006395010547712/roles/{roleId}",
+            status_code = 204
+        )
+
+    interaction = Interaction("removerole", memberNoRole, options = [{"value": role}])
+    reply = await handle_interaction(interaction)
+
+    assert reply == ImmediateReply(replyType, mentions = [])
 
 if __name__ == "__main__":
     pytest.main()
