@@ -6,6 +6,16 @@ url = f"{APP_URL}/guilds/342006395010547712/commands"
 
 commands = [
     {
+        "name": "addrole",
+        "description": "Add a new role",
+        "options": [{
+            "name": "name",
+            "description": "Name",
+            "type": ApplicationCommandOptionType.STRING,
+            "required": True,
+        }]
+    },
+    {
         "name": "members",
         "description": "Get a list of members in a role",
         "options": [{
@@ -26,7 +36,7 @@ commands = [
             "name": "modifier",
             "description": "Modifier",
             "type": ApplicationCommandOptionType.INTEGER,
-            "required": False
+            "required": False,
         }]
     },
     {

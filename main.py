@@ -88,6 +88,21 @@ def execute_optime(today, modifier):
     except ValueError:
         return "Optime modifier is too large"
 
+async def execute_addrole(guild_id, name):
+    roles = await utility.getRoles(guild_id)
+
+    for role in roles:
+        if role["name"].lower() == name.lower():
+            role_id = role["id"]
+            return f"<@&{role_id}> already exists"
+
+    url = f"https://discord.com/api/v8/guilds/{guild_id}/roles"
+    r = await utility.post([200], url, params = {"name": name, "mentionable": True})
+    role_id = r.json()["id"]
+
+    return f"<@&{role_id}> added"
+
+
 async def handle_interaction(interact):
     if (interact.get("type") == InteractionType.APPLICATION_COMMAND):
         data = interact["data"]
@@ -135,6 +150,11 @@ async def handle_interaction(interact):
 
                 reply = execute_optime(datetime.now(tz = timezone('Europe/London')), modifier)
                 return utility.ImmediateReply(reply)
+
+            elif command == "addrole":
+                name = options[0]["value"]
+                reply = await execute_addrole(guild_id, name)
+                return utility.ImmediateReply(reply, mentions = [])
 
         except Exception as e:
             logging.error(f"Error executing '{command}':\n{str(e)})")

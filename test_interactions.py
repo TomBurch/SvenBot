@@ -126,9 +126,7 @@ async def test_members(httpx_mock):
     assert reply == ImmediateReply(f"```\n{username}\n```", mentions = [])
 
 @pytest.mark.asyncio
-async def test_myroles(httpx_mock):
-    userId = memberWithRole["user"]["id"]
-
+async def test_myroles():
     interaction = Interaction("myroles", memberWithRole)
     reply = await handle_interaction(interaction)
 
@@ -145,6 +143,32 @@ async def test_optime():
 
     interaction = Interaction("optime", memberNoRole)
     await handle_interaction(interaction)
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("httpx_mock, roleName, roleId, sendsPost, replyType", [
+                        (None, "NewRole", "NewRoleId", True, "added"),
+                        (None, "TestRole", "RoleId456", False, "already exists")
+                        ], indirect=["httpx_mock"])
+async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
+    httpx_mock.add_response(
+        method = "GET",
+        url = f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
+        json = roles,
+        status_code = 200
+    )
+
+    if sendsPost:
+        httpx_mock.add_response(
+            method = "POST",
+            url = f"https://discord.com/api/v8/guilds/342006395010547712/roles?name={roleName}&mentionable=true",
+            json = Role(roleId, roleName, 4),
+            status_code = 200
+        )
+
+    interaction = Interaction("addrole", memberNoRole, options = [{"value": roleName}])
+    reply = await handle_interaction(interaction)
+
+    assert reply == ImmediateReply(f"<@&{roleId}> {replyType}", mentions = [])
 
 if __name__ == "__main__":
     pytest.main()

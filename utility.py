@@ -62,6 +62,10 @@ async def put(statuses, url, params = None):
     async with httpx.AsyncClient() as client:
         return await req(client.put, statuses, url, params)
 
+async def post(statuses, url, params = None):
+    async with httpx.AsyncClient() as client:
+        return await req(client.post, statuses, url, params)
+
 class Reply(dict):
     def __init__(self, _type, content, mentions = None, ephemeral = False):
         data = {"content": content}
