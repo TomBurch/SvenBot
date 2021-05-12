@@ -3,8 +3,6 @@ import os
 
 import httpx
 from dotenv import load_dotenv
-from nacl.encoding import HexEncoder
-from nacl.exceptions import BadSignatureError
 from nacl.signing import VerifyKey
 from fastapi import HTTPException
 

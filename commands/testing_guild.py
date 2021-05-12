@@ -3,18 +3,21 @@ import requests
 from command_utility import ApplicationCommandOptionType, APP_URL, HEADERS, CLIENT_ID
 
 url = f"{APP_URL}/guilds/342006395010547712/commands"
+STAFF_ROLE_ID = 365987804519333888
 
 update = ["addrole"]
+staff = ["addrole"]
 
 commands = [
     {
         "name": "addrole",
         "description": "Add a new role",
+        "default_permission": False,
         "options": [{
             "name": "name",
             "description": "Name",
             "type": ApplicationCommandOptionType.STRING,
-            "required": True,
+            "required": True, 
         }]
     },
     {
@@ -58,7 +61,32 @@ commands = [
 ]
 
 if __name__ == "__main__":
+    r = requests.get(url, headers = HEADERS)
+    print(r.status_code, r.reason, r.text)
+    currentCommands = r.json()
+
     for command in commands:
+        commandId = next((c["id"] for c in currentCommands if c["name"] == command["name"]), None)
+        print("===================")
+        print(command["name"])
+        print(f"commandId = {commandId}")
+
         if command["name"] in update:
+            print("update queued")
             r = requests.post(url, headers = HEADERS, json = command)
             print(r.status_code, r.reason, r.text)
+
+            if command["name"] in staff:
+                if commandId is not None:
+                    print("adding staff permisions")
+                    permissions = {
+                        "permissions": [{
+                                "id": STAFF_ROLE_ID,
+                                "type": 1,
+                                "permission": True
+                            }]
+                    }
+                    r = requests.put(f"{url}/{commandId}/permissions", headers = HEADERS, json = permissions)
+                    print(r.status_code, r.reason, r.text)
+                else:
+                    print("ERROR commandId is NONE")
