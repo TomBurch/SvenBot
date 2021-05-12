@@ -102,18 +102,14 @@ async def execute_addrole(guild_id, name):
 
     return f"<@&{role_id}> added"
 
-async def execute_removerole(guild_id, role):
-    if await utility.validateRole(guild_id, role):
-        roleId = role["id"]
-        roleName = role["name"]
-        url = f"https://discord.com/api/v8/guilds/{guild_id}/roles/{roleId}"
+async def execute_removerole(guild_id, role_id):
+    if await utility.validateRoleById(guild_id, role_id):
+        url = f"https://discord.com/api/v8/guilds/{guild_id}/roles/{role_id}"
 
         await utility.delete([204], url)
-        return f"**{roleName}** deleted"
+        return "Role deleted"
     else:
         return "Role is restricted"
-
-
 
 async def handle_interaction(interact):
     if (interact.get("type") == InteractionType.APPLICATION_COMMAND):
@@ -169,8 +165,8 @@ async def handle_interaction(interact):
                 return utility.ImmediateReply(reply)
 
             elif command == "removerole":
-                role = options[0]["value"]
-                reply = await execute_removerole(guild_id, role)
+                role_id = options[0]["value"]
+                reply = await execute_removerole(guild_id, role_id)
                 return utility.ImmediateReply(reply)
 
         except Exception as e:

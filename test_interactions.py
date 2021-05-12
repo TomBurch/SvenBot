@@ -173,7 +173,7 @@ async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("httpx_mock, role, sendsDelete, replyType", [
-                        (None, testRole, True, "**TestRole** deleted"),
+                        (None, testRole, True, "Role deleted"),
                         (None, invalidRole, False, "Role is restricted")
                         ], indirect=["httpx_mock"])
 async def test_removerole(httpx_mock, role, sendsDelete, replyType):
@@ -193,7 +193,7 @@ async def test_removerole(httpx_mock, role, sendsDelete, replyType):
             status_code = 204
         )
 
-    interaction = Interaction("removerole", memberNoRole, options = [{"value": role}])
+    interaction = Interaction("removerole", memberNoRole, options = [{"value": roleId}])
     reply = await handle_interaction(interaction)
 
     assert reply == ImmediateReply(replyType, mentions = [])

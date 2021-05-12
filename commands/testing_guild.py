@@ -20,12 +20,12 @@ commands = [
             "required": True, 
         }]
     },
-        {
+    {
         "name": "removerole",
         "description": "Remove an existing role",
         "default_permission": False,
         "options": [{
-            "role": "role",
+            "name": "role",
             "description": "Role",
             "type": ApplicationCommandOptionType.ROLE,
             "required": True, 
