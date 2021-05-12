@@ -4,6 +4,8 @@ from command_utility import ApplicationCommandOptionType, APP_URL, HEADERS, CLIE
 
 url = f"{APP_URL}/guilds/342006395010547712/commands"
 
+update = ["addrole"]
+
 commands = [
     {
         "name": "addrole",
@@ -57,5 +59,6 @@ commands = [
 
 if __name__ == "__main__":
     for command in commands:
-        r = requests.post(url, headers = HEADERS, json = command)
-        print(r.status_code, r.reason, r.text)
+        if command["name"] in update:
+            r = requests.post(url, headers = HEADERS, json = command)
+            print(r.status_code, r.reason, r.text)

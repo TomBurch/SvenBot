@@ -97,7 +97,7 @@ async def execute_addrole(guild_id, name):
             return f"<@&{role_id}> already exists"
 
     url = f"https://discord.com/api/v8/guilds/{guild_id}/roles"
-    r = await utility.post([200], url, params = {"name": name, "mentionable": True})
+    r = await utility.post([200], url, json = {"name": name, "mentionable": True})
     role_id = r.json()["id"]
 
     return f"<@&{role_id}> added"

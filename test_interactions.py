@@ -160,7 +160,7 @@ async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
     if sendsPost:
         httpx_mock.add_response(
             method = "POST",
-            url = f"https://discord.com/api/v8/guilds/342006395010547712/roles?name={roleName}&mentionable=true",
+            url = f"https://discord.com/api/v8/guilds/342006395010547712/roles",
             json = Role(roleId, roleName, 4),
             status_code = 200
         )

@@ -43,8 +43,12 @@ headers = {
     "Authorization": f"Bot {BOT_TOKEN}"
 }
 
-async def req(function, statuses, url, params = None):
-    r = await function(url, headers = headers, params = params)
+async def req(function, statuses, url, params = None, json = None):
+    if json is not None:
+        r = await function(url, headers = headers, params = params, json = json)
+    else:
+        r = await function(url, headers = headers, params = params)
+
     if r.status_code not in statuses:
         logging.error(f"Received unexpected status code {r.status_code} (expected {statuses})\n{r.reason}\n{r.text}")
         raise RuntimeError(f"Req error: {r.text}")
@@ -62,9 +66,9 @@ async def put(statuses, url, params = None):
     async with httpx.AsyncClient() as client:
         return await req(client.put, statuses, url, params)
 
-async def post(statuses, url, params = None):
+async def post(statuses, url, params = None, json = None):
     async with httpx.AsyncClient() as client:
-        return await req(client.post, statuses, url, params)
+        return await req(client.post, statuses, url, params, json)
 
 class Reply(dict):
     def __init__(self, _type, content, mentions = None, ephemeral = False):
