@@ -6,7 +6,6 @@ try:
 except ImportError:
   pass
 
-import os
 import logging
 from datetime import datetime, timedelta
 from pytz import timezone
