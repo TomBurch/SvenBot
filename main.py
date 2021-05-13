@@ -88,6 +88,29 @@ def execute_optime(today, modifier):
     except ValueError:
         return "Optime modifier is too large"
 
+async def execute_addrole(guild_id, name):
+    roles = await utility.getRoles(guild_id)
+
+    for role in roles:
+        if role["name"].lower() == name.lower():
+            role_id = role["id"]
+            return f"<@&{role_id}> already exists"
+
+    url = f"https://discord.com/api/v8/guilds/{guild_id}/roles"
+    r = await utility.post([200], url, json = {"name": name, "mentionable": True})
+    role_id = r.json()["id"]
+
+    return f"<@&{role_id}> added"
+
+async def execute_removerole(guild_id, role_id):
+    if await utility.validateRoleById(guild_id, role_id):
+        url = f"https://discord.com/api/v8/guilds/{guild_id}/roles/{role_id}"
+
+        await utility.delete([204], url)
+        return "Role deleted"
+    else:
+        return "Role is restricted"
+
 async def handle_interaction(interact):
     if (interact.get("type") == InteractionType.APPLICATION_COMMAND):
         data = interact["data"]
@@ -115,17 +138,17 @@ async def handle_interaction(interact):
 
             elif command == "roles":
                 reply = await execute_roles(guild_id)
-                return utility.ImmediateReply(reply, mentions = [])
+                return utility.ImmediateReply(reply)
 
             elif command == "members":
                 role_id = options[0]["value"]
                 reply = await execute_members(role_id, guild_id)
-                return utility.ImmediateReply(reply, mentions = [])
+                return utility.ImmediateReply(reply)
 
             elif command == "myroles":
                 roles = member["roles"]
                 reply = execute_myroles(roles)
-                return utility.ImmediateReply(reply, mentions = [], ephemeral = True)
+                return utility.ImmediateReply(reply, ephemeral = True)
 
             elif command == "optime":
                 if options is not None and len(options) > 0:
@@ -134,6 +157,16 @@ async def handle_interaction(interact):
                     modifier = 0
 
                 reply = execute_optime(datetime.now(tz = timezone('Europe/London')), modifier)
+                return utility.ImmediateReply(reply)
+
+            elif command == "addrole":
+                name = options[0]["value"]
+                reply = await execute_addrole(guild_id, name)
+                return utility.ImmediateReply(reply)
+
+            elif command == "removerole":
+                role_id = options[0]["value"]
+                reply = await execute_removerole(guild_id, role_id)
                 return utility.ImmediateReply(reply)
 
         except Exception as e:

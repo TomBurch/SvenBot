@@ -1,10 +1,9 @@
 import logging
 import os
+import re
 
 import httpx
 from dotenv import load_dotenv
-from nacl.encoding import HexEncoder
-from nacl.exceptions import BadSignatureError
 from nacl.signing import VerifyKey
 from fastapi import HTTPException
 
@@ -43,8 +42,12 @@ headers = {
     "Authorization": f"Bot {BOT_TOKEN}"
 }
 
-async def req(function, statuses, url, params = None):
-    r = await function(url, headers = headers, params = params)
+async def req(function, statuses, url, params = None, json = None):
+    if json is not None:
+        r = await function(url, headers = headers, params = params, json = json)
+    else:
+        r = await function(url, headers = headers, params = params)
+
     if r.status_code not in statuses:
         logging.error(f"Received unexpected status code {r.status_code} (expected {statuses})\n{r.reason}\n{r.text}")
         raise RuntimeError(f"Req error: {r.text}")
@@ -62,6 +65,10 @@ async def put(statuses, url, params = None):
     async with httpx.AsyncClient() as client:
         return await req(client.put, statuses, url, params)
 
+async def post(statuses, url, params = None, json = None):
+    async with httpx.AsyncClient() as client:
+        return await req(client.post, statuses, url, params, json)
+
 class Reply(dict):
     def __init__(self, _type, content, mentions = None, ephemeral = False):
         data = {"content": content}
@@ -73,7 +80,7 @@ class Reply(dict):
         dict.__init__(self, type = _type, data = data)
 
 class ImmediateReply(Reply):
-    def __init__(self, content, mentions = None, ephemeral = False):
+    def __init__(self, content, mentions = [], ephemeral = False):
         super().__init__(InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, content, mentions, ephemeral)
 
 def basicValidation(role, botPosition):
@@ -124,3 +131,24 @@ async def getRoles(guild_id):
     url = f"https://discord.com/api/v8/guilds/{guild_id}/roles"
     roles = await get([200], url)
     return roles.json()
+
+async def findRole(guild_id, query, autocomplete = False):
+    query = query.lower()
+    roles = await getRoles(guild_id)
+    candidate = None
+
+    for role in roles:
+        roleName = role["name"].lower()
+        if roleName == query:
+            candidate = role
+            break
+
+        if autocomplete and re.match(re.escape(query), roleName):
+            candidate = role
+
+    if candidate is not None:
+        if await validateRole(guild_id, candidate, roles):
+            logging.info(candidate["name"] + " is reserved")
+            return candidate
+    
+    return None
