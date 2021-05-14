@@ -2,8 +2,8 @@ import requests
 
 from command_utility import ApplicationCommandOptionType, APP_URL, HEADERS
 
-url = f"{APP_URL}/guilds/342006395010547712/commands"
-STAFF_ROLE_ID = 365987804519333888
+url = f"{APP_URL}/guilds/240160552867987475/commands"
+STAFF_ROLE_ID = 324227354329219072
 
 update = []
 staff = ["addrole", "removerole"]

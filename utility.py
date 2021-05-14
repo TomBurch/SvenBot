@@ -91,6 +91,7 @@ def colourValidation(role, botPosition):
 
 role_validate_funcs = {
     "342006395010547712": colourValidation,
+    "240160552867987475": colourValidation,
     "333316787603243018": basicValidation
 }
 

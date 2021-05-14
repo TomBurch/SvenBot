@@ -17,13 +17,15 @@ import uvicorn
 import utility
 from utility import InteractionType, InteractionResponseType
 
-async def execute_role(roles, role_id, guild_id, user_id):
-    url = f"https://discord.com/api/v8/guilds/{guild_id}/members/{user_id}/roles/{role_id}"
+GUILD_URL = "https://discord.com/api/v8/guilds"
 
+async def execute_role(roles, role_id, guild_id, user_id):
     if not await utility.validateRoleById(guild_id, role_id):
         logging.warning(f"Role <@&{role_id}> is restricted (validation)")
         return f"<@{user_id}> Role <@&{role_id}> is restricted"
     
+    url = f"{GUILD_URL}/{guild_id}/members/{user_id}/roles/{role_id}"
+
     if role_id in roles:
         r = await utility.delete([204, 403], url)
         reply = f"<@{user_id}> You've left <@&{role_id}>"
@@ -49,7 +51,8 @@ async def execute_roles(guild_id):
     return "```\n{}\n```".format("\n".join(joinableRoles))
 
 async def execute_members(role_id, guild_id):
-    url = f"https://discord.com/api/v8/guilds/{guild_id}/members"
+    url = f"{GUILD_URL}/{guild_id}/members"
+
     r = await utility.get([200], url, params = {"limit": 200})
     members = r.json()
     reply = ""
@@ -95,7 +98,7 @@ async def execute_addrole(guild_id, name):
             role_id = role["id"]
             return f"<@&{role_id}> already exists"
 
-    url = f"https://discord.com/api/v8/guilds/{guild_id}/roles"
+    url = f"{GUILD_URL}/{guild_id}/roles"
     r = await utility.post([200], url, json = {"name": name, "mentionable": True})
     role_id = r.json()["id"]
 
@@ -103,7 +106,7 @@ async def execute_addrole(guild_id, name):
 
 async def execute_removerole(guild_id, role_id):
     if await utility.validateRoleById(guild_id, role_id):
-        url = f"https://discord.com/api/v8/guilds/{guild_id}/roles/{role_id}"
+        url = f"{GUILD_URL}/{guild_id}/roles/{role_id}"
 
         await utility.delete([204], url)
         return "Role deleted"
