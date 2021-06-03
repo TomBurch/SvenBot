@@ -221,8 +221,11 @@ def app():
 
     @fast_app.post('/archub/{type}', status_code = HTTP_204_NO_CONTENT)
     async def archub(request: Request, response: Response, type: str):
-        options = await request.json()
-        response.status_code = await handle_archub(type, options)
+        try:
+            options = await request.json()
+            response.status_code = await handle_archub(type, options)
+        except Exception as e:
+            logging.error(f"Error executing '{type}':\n{str(e)})")
 
     @fast_app.get('/abc/')
     def hello_world():
