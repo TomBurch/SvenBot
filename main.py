@@ -10,7 +10,7 @@ import logging
 from datetime import datetime, timedelta
 from pytz import timezone
 
-from fastapi import FastAPI, Request, Response, HTTPException
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from starlette.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
 import uvicorn
@@ -200,7 +200,7 @@ async def handle_archub(type, options):
         message = f"**{actor}** has updated **{mission}**\n{url}"
     else:
         await utility.sendMessage(ARCHUB_CHANNEL, f"**{type}** is not a valid archub endpoint")
-        return HTTP_400_BAD_REQUEST
+        raise HTTPException(status_code = HTTP_400_BAD_REQUEST, detail = f"**{type}** is not a valid archub endpoint")
 
     await utility.sendMessage(ARCHUB_CHANNEL, message)
     return HTTP_204_NO_CONTENT
@@ -219,13 +219,14 @@ def app():
 
         return JSONResponse(await handle_interaction(interact))
 
-    @fast_app.post('/archub/{type}', status_code = HTTP_204_NO_CONTENT)
-    async def archub(request: Request, response: Response, type: str):
+    @fast_app.post('/archub/{type}')
+    async def archub(request: Request, type: str):
         try:
             options = await request.json()
-            response.status_code = await handle_archub(type, options)
+            return await handle_archub(type, options)
         except Exception as e:
             logging.error(f"Error executing '{type}':\n{str(e)})")
+            raise HTTPException(status_code = HTTP_500_INTERNAL_SERVER_ERROR, detail = f"Error executing '{type}'")
 
     @fast_app.get('/abc/')
     def hello_world():
