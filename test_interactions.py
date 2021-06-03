@@ -1,9 +1,6 @@
-import unittest
-import os
 from datetime import datetime
 
 from fastapi import HTTPException
-from httpx import Response
 import pytest
 
 from main import handle_interaction, execute_optime

@@ -6,11 +6,19 @@ import httpx
 from dotenv import load_dotenv
 from nacl.signing import VerifyKey
 from fastapi import HTTPException
+from google.cloud import datastore
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CLIENT_ID = os.getenv("CLIENT_ID")
 PUBLIC_KEY = os.getenv("PUBLIC_KEY")
+
+GUILD_URL = "https://discord.com/api/v8/guilds"
+CHANNELS_URL = "https://discord.com/api/v8/channels"
+
+ARCHUB_CHANNEL = 703618484386398349
+
+DATASTORE = datastore.Client()
 
 class InteractionType:
     PING = 1
@@ -38,18 +46,18 @@ def verify_key(body, signature, timestamp):
         logging.error(e)
         return False
 
-headers = {
+DEFAULT_HEADERS = {
     "Authorization": f"Bot {BOT_TOKEN}"
 }
 
 async def req(function, statuses, url, params = None, json = None):
     if json is not None:
-        r = await function(url, headers = headers, params = params, json = json)
+        r = await function(url, headers = DEFAULT_HEADERS, params = params, json = json)
     else:
-        r = await function(url, headers = headers, params = params)
+        r = await function(url, headers = DEFAULT_HEADERS, params = params)
 
     if r.status_code not in statuses:
-        logging.error(f"Received unexpected status code {r.status_code} (expected {statuses})\n{r.reason}\n{r.text}")
+        logging.error(f"Received unexpected status code {r.status_code} (expected {statuses})\n{r.text}")
         raise RuntimeError(f"Req error: {r.text}")
     return r
 
@@ -68,6 +76,12 @@ async def put(statuses, url, params = None):
 async def post(statuses, url, params = None, json = None):
     async with httpx.AsyncClient() as client:
         return await req(client.post, statuses, url, params, json)
+
+async def sendMessage(channel_id, message):
+    url = f"{CHANNELS_URL}/{channel_id}/messages"
+    json = {"content": message}
+    async with httpx.AsyncClient() as client:
+        return await req(client.post, [200], url, json = json)
 
 class Reply(dict):
     def __init__(self, _type, content, mentions = None, ephemeral = False):
@@ -129,7 +143,7 @@ async def validateRoleById(guild_id, role_id):
     return await validateRole(guild_id, roleMatchingRoleId, roles)
 
 async def getRoles(guild_id):
-    url = f"https://discord.com/api/v8/guilds/{guild_id}/roles"
+    url = f"{GUILD_URL}/{guild_id}/roles"
     roles = await get([200], url)
     return roles.json()
 
@@ -153,3 +167,10 @@ async def findRole(guild_id, query, autocomplete = False):
             return candidate
     
     return None
+
+async def getDiscordId(steamId):
+    query = DATASTORE.query(kind = "DiscordIdentifier")
+    query.add_filter("SteamID", "=", steamId)
+    results = list(query.fetch(limit = 1))
+    discordId = results[0]["DiscordID"] if len(results) > 0 else None
+    return discordId

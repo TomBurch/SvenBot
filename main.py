@@ -10,14 +10,13 @@ import logging
 from datetime import datetime, timedelta
 from pytz import timezone
 
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, Response, HTTPException
 from fastapi.responses import JSONResponse
+from starlette.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
 import uvicorn
 
 import utility
-from utility import InteractionType, InteractionResponseType
-
-GUILD_URL = "https://discord.com/api/v8/guilds"
+from utility import InteractionType, InteractionResponseType, GUILD_URL, ARCHUB_CHANNEL
 
 async def execute_role(roles, role_id, guild_id, user_id):
     if not await utility.validateRoleById(guild_id, role_id):
@@ -27,10 +26,10 @@ async def execute_role(roles, role_id, guild_id, user_id):
     url = f"{GUILD_URL}/{guild_id}/members/{user_id}/roles/{role_id}"
 
     if role_id in roles:
-        r = await utility.delete([204, 403], url)
+        r = await utility.delete([HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN], url)
         reply = f"<@{user_id}> You've left <@&{role_id}>"
     else:
-        r = await utility.put([204, 403], url)
+        r = await utility.put([HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN], url)
         reply = f"<@{user_id}> You've joined <@&{role_id}>"
 
     if r.status_code == 403:
@@ -53,7 +52,7 @@ async def execute_roles(guild_id):
 async def execute_members(role_id, guild_id):
     url = f"{GUILD_URL}/{guild_id}/members"
 
-    r = await utility.get([200], url, params = {"limit": 200})
+    r = await utility.get([HTTP_200_OK], url, params = {"limit": 200})
     members = r.json()
     reply = ""
 
@@ -99,7 +98,7 @@ async def execute_addrole(guild_id, name):
             return f"<@&{role_id}> already exists"
 
     url = f"{GUILD_URL}/{guild_id}/roles"
-    r = await utility.post([200], url, json = {"name": name, "mentionable": True})
+    r = await utility.post([HTTP_200_OK], url, json = {"name": name, "mentionable": True})
     role_id = r.json()["id"]
 
     return f"<@&{role_id}> added"
@@ -108,7 +107,7 @@ async def execute_removerole(guild_id, role_id):
     if await utility.validateRoleById(guild_id, role_id):
         url = f"{GUILD_URL}/{guild_id}/roles/{role_id}"
 
-        await utility.delete([204], url)
+        await utility.delete([HTTP_204_NO_CONTENT], url)
         return "Role deleted"
     else:
         return "Role is restricted"
@@ -173,11 +172,39 @@ async def handle_interaction(interact):
 
         except Exception as e:
             logging.error(f"Error executing '{command}':\n{str(e)})")
-            raise HTTPException(status_code = 500, detail = f"Error executing '{command}'")
+            raise HTTPException(status_code = HTTP_500_INTERNAL_SERVER_ERROR, detail = f"Error executing '{command}'")
         
-        raise HTTPException(status_code = 501, detail = f"'{command}' is not a known command")
+        raise HTTPException(status_code = HTTP_501_NOT_IMPLEMENTED, detail = f"'{command}' is not a known command")
     else:
-        raise HTTPException(status_code = 400, detail = "Not an application command")
+        raise HTTPException(status_code = HTTP_400_BAD_REQUEST, detail = "Not an application command")
+
+async def handle_archub(type, options):
+    mission = options.get("mission")
+    author = options.get("author")
+    actor = options.get("actor")
+    url = options.get("url")
+    message = None
+
+    authorDiscordId = await utility.getDiscordId(options.get("authorId"))
+    tag = f" <@{authorDiscordId}>" if authorDiscordId is not None else ""
+    
+    if type == "publish":
+        message = f"**{author}** has published a new mission called **{mission}**\n{url}"
+    elif type == "note":
+        message = f"**{actor}** has added a note to **{mission}**{tag}\n{url}"
+    elif type == "comment":
+        message = f"**{actor}** has commented on **{mission}**{tag}\n{url}"
+    elif type == "verify":
+        message = f"**{actor}** has verified **{mission}**{tag}\n"
+    elif type == "update":
+        message = f"**{actor}** has updated **{mission}**\n{url}"
+    else:
+        await utility.sendMessage(ARCHUB_CHANNEL, f"**{type}** is not a valid archub endpoint")
+        return HTTP_400_BAD_REQUEST
+
+    await utility.sendMessage(ARCHUB_CHANNEL, message)
+    return HTTP_204_NO_CONTENT
+
 
 def app():
     fast_app = FastAPI()
@@ -191,6 +218,11 @@ def app():
             return JSONResponse({'type': InteractionResponseType.PONG})
 
         return JSONResponse(await handle_interaction(interact))
+
+    @fast_app.post('/archub/{type}', status_code = HTTP_204_NO_CONTENT)
+    async def archub(request: Request, response: Response, type: str):
+        options = await request.json()
+        response.status_code = await handle_archub(type, options)
 
     @fast_app.get('/abc/')
     def hello_world():
