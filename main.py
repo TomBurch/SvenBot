@@ -180,7 +180,6 @@ async def handle_interaction(interact):
 
 async def handle_archub(type, options):
     mission = options.get("mission")
-    author = options.get("author")
     actor = options.get("actor")
     url = options.get("url")
     message = None
@@ -189,7 +188,7 @@ async def handle_archub(type, options):
     tag = f" <@{authorDiscordId}>" if authorDiscordId is not None else ""
     
     if type == "publish":
-        message = f"**{author}** has published a new mission called **{mission}**\n{url}"
+        message = f"**{actor}** has published a new mission called **{mission}**\n{url}"
     elif type == "note":
         message = f"**{actor}** has added a note to **{mission}**{tag}\n{url}"
     elif type == "comment":
@@ -221,12 +220,8 @@ def app():
 
     @fast_app.post('/archub/{type}')
     async def archub(request: Request, type: str):
-        try:
-            options = await request.json()
-            return await handle_archub(type, options)
-        except Exception as e:
-            logging.error(f"Error executing '{type}':\n{str(e)})")
-            raise HTTPException(status_code = HTTP_500_INTERNAL_SERVER_ERROR, detail = f"Error executing '{type}'")
+        options = await request.json()
+        return await handle_archub(type, options)
 
     @fast_app.get('/abc/')
     def hello_world():

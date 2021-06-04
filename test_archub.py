@@ -7,7 +7,6 @@ ARCHUB_CHANNEL = 703618484386398349
 
 MOCK_MISSION = "Made Up Mission"
 MOCK_MISSIONID = 258
-MOCK_AUTHOR = "AuthorName"
 MOCK_AUTHORID = 7656198061366009
 MOCK_ACTOR = "ActorName"
 MOCK_ACTORID = 123456789012345
@@ -33,7 +32,6 @@ async def test_known_endpoints(httpx_mock, endpoint, status, content):
     options = {
         "mission": MOCK_MISSION,
         "missionId": MOCK_MISSIONID,
-        "author": MOCK_AUTHOR,
         "authorId": MOCK_AUTHORID,
         "actor": MOCK_ACTOR,
         "actorId": MOCK_ACTORID,
