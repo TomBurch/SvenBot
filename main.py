@@ -10,9 +10,11 @@ import uvicorn
 import utility
 from utility import InteractionType, InteractionResponseType, GUILD_URL
 
+gunicorn_logger = logging.getLogger('gunicorn.error')
+
 async def execute_role(roles, role_id, guild_id, user_id):
     if not await utility.validateRoleById(guild_id, role_id):
-        logging.warning(f"Role <@&{role_id}> is restricted (validation)")
+        gunicorn_logger.warning(f"Role <@&{role_id}> is restricted (validation)")
         return f"<@{user_id}> Role <@&{role_id}> is restricted"
     
     url = f"{GUILD_URL}/{guild_id}/members/{user_id}/roles/{role_id}"
@@ -25,7 +27,7 @@ async def execute_role(roles, role_id, guild_id, user_id):
         reply = f"<@{user_id}> You've joined <@&{role_id}>"
 
     if r.status_code == 403:
-        logging.warning(f"Role <@&{role_id}> is restricted (403)")
+        gunicorn_logger.warning(f"Role <@&{role_id}> is restricted (403)")
         return f"<@{user_id}> Role <@&{role_id}> is restricted"
 
     return reply
@@ -116,7 +118,7 @@ async def handle_interaction(interact):
             username = user["username"]
             guild_id = interact["guild_id"]
 
-            logging.info(f"'{username}' executing '{command}'")
+            gunicorn_logger.info(f"'{username}' executing '{command}'")
             
             if command == "ping":
                 return utility.ImmediateReply("Pong!")
@@ -163,7 +165,7 @@ async def handle_interaction(interact):
                 return utility.ImmediateReply(reply)
 
         except Exception as e:
-            logging.error(f"Error executing '{command}':\n{str(e)})")
+            gunicorn_logger.error(f"Error executing '{command}':\n{str(e)})")
             raise HTTPException(status_code = HTTP_500_INTERNAL_SERVER_ERROR, detail = f"Error executing '{command}'")
         
         raise HTTPException(status_code = HTTP_501_NOT_IMPLEMENTED, detail = f"'{command}' is not a known command")

@@ -33,9 +33,6 @@ async def verify_request(request):
     timestamp = request.headers.get("X-Signature-Timestamp")
     body = await request.body()
     if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
-        gunicorn_logger.info(str(signature))
-        gunicorn_logger.info(str(timestamp))
-        gunicorn_logger.info(str(body))
         raise HTTPException(status_code = 401, detail = "Bad request signature")
 
 def verify_key(body, signature, timestamp):
@@ -45,7 +42,7 @@ def verify_key(body, signature, timestamp):
         VerifyKey(bytes.fromhex(PUBLIC_KEY)).verify(message, bytes.fromhex(signature))
         return True
     except Exception as e:
-        logging.error(e)
+        gunicorn_logger.error(e)
         return False
 
 DEFAULT_HEADERS = {
@@ -59,7 +56,7 @@ async def req(function, statuses, url, params = None, json = None):
         r = await function(url, headers = DEFAULT_HEADERS, params = params)
 
     if r.status_code not in statuses:
-        logging.error(f"Received unexpected status code {r.status_code} (expected {statuses})\n{r.text}")
+        gunicorn_logger.error(f"Received unexpected status code {r.status_code} (expected {statuses})\n{r.text}")
         raise RuntimeError(f"Req error: {r.text}")
     return r
 
@@ -165,7 +162,7 @@ async def findRole(guild_id, query, autocomplete = False):
 
     if candidate is not None:
         if await validateRole(guild_id, candidate, roles):
-            logging.info(candidate["name"] + " is reserved")
+            gunicorn_logger.info(candidate["name"] + " is reserved")
             return candidate
     
     return None
