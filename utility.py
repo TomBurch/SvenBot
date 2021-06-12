@@ -33,7 +33,9 @@ async def verify_request(request):
     timestamp = request.headers.get("X-Signature-Timestamp")
     body = await request.body()
     if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
-        gunicorn_logger.info(signature, timestamp, body)
+        gunicorn_logger.info(str(signature))
+        gunicorn_logger.info(str(timestamp))
+        gunicorn_logger.info(str(body))
         raise HTTPException(status_code = 401, detail = "Bad request signature")
 
 def verify_key(body, signature, timestamp):
