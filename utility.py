@@ -6,7 +6,6 @@ import httpx
 from dotenv import load_dotenv
 from nacl.signing import VerifyKey
 from fastapi import HTTPException
-from google.cloud import datastore
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -17,8 +16,6 @@ GUILD_URL = "https://discord.com/api/v8/guilds"
 CHANNELS_URL = "https://discord.com/api/v8/channels"
 
 ARCHUB_CHANNEL = 703618484386398349
-
-DATASTORE = datastore.Client.from_service_account_json("gcs.json")
 
 class InteractionType:
     PING = 1
@@ -167,10 +164,3 @@ async def findRole(guild_id, query, autocomplete = False):
             return candidate
     
     return None
-
-async def getDiscordId(steamId):
-    query = DATASTORE.query(kind = "DiscordIdentifier")
-    query.add_filter("SteamID", "=", steamId)
-    results = list(query.fetch(limit = 1))
-    discordId = results[0]["DiscordID"] if len(results) > 0 else None
-    return discordId

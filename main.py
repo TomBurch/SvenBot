@@ -8,7 +8,7 @@ from starlette.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQU
 import uvicorn
 
 import utility
-from utility import InteractionType, InteractionResponseType, GUILD_URL, ARCHUB_CHANNEL
+from utility import InteractionType, InteractionResponseType, GUILD_URL
 
 async def execute_role(roles, role_id, guild_id, user_id):
     if not await utility.validateRoleById(guild_id, role_id):
@@ -170,33 +170,6 @@ async def handle_interaction(interact):
     else:
         raise HTTPException(status_code = HTTP_400_BAD_REQUEST, detail = "Not an application command")
 
-async def handle_archub(type, options):
-    mission = options.get("mission")
-    actor = options.get("actor")
-    url = options.get("url")
-    message = None
-
-    authorDiscordId = await utility.getDiscordId(options.get("authorId"))
-    tag = f" <@{authorDiscordId}>" if authorDiscordId is not None else ""
-    
-    if type == "publish":
-        message = f"**{actor}** has published a new mission called **{mission}**\n{url}"
-    elif type == "note":
-        message = f"**{actor}** has added a note to **{mission}**{tag}\n{url}"
-    elif type == "comment":
-        message = f"**{actor}** has commented on **{mission}**{tag}\n{url}"
-    elif type == "verify":
-        message = f"**{actor}** has verified **{mission}**{tag}\n"
-    elif type == "update":
-        message = f"**{actor}** has updated **{mission}**\n{url}"
-    else:
-        await utility.sendMessage(ARCHUB_CHANNEL, f"**{type}** is not a valid archub endpoint")
-        raise HTTPException(status_code = HTTP_400_BAD_REQUEST, detail = f"**{type}** is not a valid archub endpoint")
-
-    await utility.sendMessage(ARCHUB_CHANNEL, message)
-    return HTTP_204_NO_CONTENT
-
-
 def app():
     fast_app = FastAPI()
 
@@ -209,11 +182,6 @@ def app():
             return JSONResponse({'type': InteractionResponseType.PONG})
 
         return JSONResponse(await handle_interaction(interact))
-
-    @fast_app.post('/archub/{type}')
-    async def archub(request: Request, type: str):
-        options = await request.json()
-        return await handle_archub(type, options)
 
     @fast_app.get('/abc/')
     def hello_world():
