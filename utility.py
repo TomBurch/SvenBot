@@ -7,10 +7,17 @@ from dotenv import load_dotenv
 from nacl.signing import VerifyKey
 from fastapi import HTTPException
 
+gunicorn_logger = logging.getLogger('gunicorn.error')
+
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CLIENT_ID = os.getenv("CLIENT_ID")
 PUBLIC_KEY = os.getenv("PUBLIC_KEY")
+
+GUILD_URL = "https://discord.com/api/v8/guilds"
+CHANNELS_URL = "https://discord.com/api/v8/channels"
+
+ARCHUB_CHANNEL = 703618484386398349
 
 class InteractionType:
     PING = 1
@@ -35,21 +42,21 @@ def verify_key(body, signature, timestamp):
         VerifyKey(bytes.fromhex(PUBLIC_KEY)).verify(message, bytes.fromhex(signature))
         return True
     except Exception as e:
-        logging.error(e)
+        gunicorn_logger.error(e)
         return False
 
-headers = {
+DEFAULT_HEADERS = {
     "Authorization": f"Bot {BOT_TOKEN}"
 }
 
 async def req(function, statuses, url, params = None, json = None):
     if json is not None:
-        r = await function(url, headers = headers, params = params, json = json)
+        r = await function(url, headers = DEFAULT_HEADERS, params = params, json = json)
     else:
-        r = await function(url, headers = headers, params = params)
+        r = await function(url, headers = DEFAULT_HEADERS, params = params)
 
     if r.status_code not in statuses:
-        logging.error(f"Received unexpected status code {r.status_code} (expected {statuses})\n{r.reason}\n{r.text}")
+        gunicorn_logger.error(f"Received unexpected status code {r.status_code} (expected {statuses})\n{r.text}")
         raise RuntimeError(f"Req error: {r.text}")
     return r
 
@@ -68,6 +75,12 @@ async def put(statuses, url, params = None):
 async def post(statuses, url, params = None, json = None):
     async with httpx.AsyncClient() as client:
         return await req(client.post, statuses, url, params, json)
+
+async def sendMessage(channel_id, message):
+    url = f"{CHANNELS_URL}/{channel_id}/messages"
+    json = {"content": message}
+    async with httpx.AsyncClient() as client:
+        return await req(client.post, [200], url, json = json)
 
 class Reply(dict):
     def __init__(self, _type, content, mentions = None, ephemeral = False):
@@ -91,6 +104,7 @@ def colourValidation(role, botPosition):
 
 role_validate_funcs = {
     "342006395010547712": colourValidation,
+    "240160552867987475": colourValidation,
     "333316787603243018": basicValidation
 }
 
@@ -128,7 +142,7 @@ async def validateRoleById(guild_id, role_id):
     return await validateRole(guild_id, roleMatchingRoleId, roles)
 
 async def getRoles(guild_id):
-    url = f"https://discord.com/api/v8/guilds/{guild_id}/roles"
+    url = f"{GUILD_URL}/{guild_id}/roles"
     roles = await get([200], url)
     return roles.json()
 
@@ -148,7 +162,7 @@ async def findRole(guild_id, query, autocomplete = False):
 
     if candidate is not None:
         if await validateRole(guild_id, candidate, roles):
-            logging.info(candidate["name"] + " is reserved")
+            gunicorn_logger.info(candidate["name"] + " is reserved")
             return candidate
     
     return None
