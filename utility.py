@@ -18,7 +18,7 @@ CHANNELS_URL = "https://discord.com/api/v8/channels"
 
 ARCHUB_CHANNEL = 703618484386398349
 
-DATASTORE = datastore.Client.from_service_account_json("svenbot-307222-85e690384dfa.json")
+DATASTORE = datastore.Client.from_service_account_json("gcs.json")
 
 class InteractionType:
     PING = 1
