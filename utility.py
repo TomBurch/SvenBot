@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 from nacl.signing import VerifyKey
 from fastapi import HTTPException
 
+gunicorn_logger = logging.getLogger('gunicorn.error')
+
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CLIENT_ID = os.getenv("CLIENT_ID")
@@ -31,6 +33,7 @@ async def verify_request(request):
     timestamp = request.headers.get("X-Signature-Timestamp")
     body = await request.body()
     if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
+        gunicorn_logger.info(signature, timestamp, body)
         raise HTTPException(status_code = 401, detail = "Bad request signature")
 
 def verify_key(body, signature, timestamp):
