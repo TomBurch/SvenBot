@@ -14,6 +14,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 CLIENT_ID = os.getenv("CLIENT_ID")
 PUBLIC_KEY = os.getenv("PUBLIC_KEY")
 
+ARCHUB_URL = "https://arcomm.co.uk/api/v1"
 GUILD_URL = "https://discord.com/api/v8/guilds"
 CHANNELS_URL = "https://discord.com/api/v8/channels"
 
