@@ -4,11 +4,11 @@ from pytz import timezone
 
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
-from starlette.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
 import uvicorn
 
 import utility
-from utility import InteractionType, InteractionResponseType, GUILD_URL
+from utility import InteractionType, InteractionResponseType, ARCHUB_URL, GUILD_URL
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
@@ -106,6 +106,16 @@ async def execute_removerole(guild_id, role_id):
     else:
         return "Role is restricted"
 
+async def execute_subscribe(user_id, mission_id):
+    url = f"{ARCHUB_URL}/missions/{mission_id}/subscribe?discord_id={user_id}"
+    r = await utility.post([HTTP_201_CREATED, HTTP_204_NO_CONTENT], url)
+    missionUrl = f"https://arcomm.co.uk/missions/{mission_id}"
+
+    if r.status_code == HTTP_201_CREATED:
+        return f"You are now subscribed to {missionUrl}"
+
+    return f"You are no longer subscribed to {missionUrl}"
+
 async def handle_interaction(interact):
     if (interact.get("type") == InteractionType.APPLICATION_COMMAND):
         data = interact["data"]
@@ -162,6 +172,12 @@ async def handle_interaction(interact):
             elif command == "removerole":
                 role_id = options[0]["value"]
                 reply = await execute_removerole(guild_id, role_id)
+                return utility.ImmediateReply(reply)
+
+            elif command == "subscribe":
+                user_id = user["id"]
+                mission_id = options[0]["value"]
+                reply = await execute_subscribe(user_id, mission_id)
                 return utility.ImmediateReply(reply)
 
         except Exception as e:

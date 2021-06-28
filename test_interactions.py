@@ -195,5 +195,26 @@ async def test_removerole(httpx_mock, role, sendsDelete, replyType):
 
     assert reply == ImmediateReply(replyType, mentions = [])
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize("httpx_mock, statusCode, replyType", [
+                        (None, 201, "You are now subscribed to"),
+                        (None, 204, "You are no longer subscribed to")
+                        ], indirect=["httpx_mock"])
+async def test_subscribe(httpx_mock, statusCode, replyType):
+    missionId = 900
+    userId = memberNoRole["user"]["id"]
+
+    httpx_mock.add_response(
+        method = "POST",
+        url = f"https://arcomm.co.uk/api/v1/missions/{missionId}/subscribe?discord_id={userId}",
+        status_code = statusCode
+    )
+
+    interaction = Interaction("subscribe", memberNoRole, options = [{"value": missionId}])
+    reply = await handle_interaction(interaction)
+    expected = f"{replyType} https://arcomm.co.uk/missions/{missionId}"
+
+    assert reply == ImmediateReply(expected, mentions = [])
+
 if __name__ == "__main__":
     pytest.main()

@@ -69,6 +69,16 @@ commands = [
         "name": "roles",
         "description": "Get a list of roles you can join"
     },
+    {
+        "name": "subscribe",
+        "description": "(Un)subscribe to mission notifications",
+        "options": [{
+            "name": "mission",
+            "description": "The mission ID",
+            "type": ApplicationCommandOptionType.INTEGER,
+            "required": True,
+        }]
+    }
 ]
 
 if __name__ == "__main__":
