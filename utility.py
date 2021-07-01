@@ -10,6 +10,7 @@ from fastapi import HTTPException
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
 load_dotenv()
+ARCHUB_TOKEN = os.getenv("ARCHUB_TOKEN")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CLIENT_ID = os.getenv("CLIENT_ID")
 PUBLIC_KEY = os.getenv("PUBLIC_KEY")
@@ -50,11 +51,15 @@ DEFAULT_HEADERS = {
     "Authorization": f"Bot {BOT_TOKEN}"
 }
 
-async def req(function, statuses, url, params = None, json = None):
+ARCHUB_HEADERS = {
+    "Authorization": f"Bearer {ARCHUB_TOKEN}"
+}
+
+async def req(function, statuses, url, params = None, json = None, headers = DEFAULT_HEADERS):
     if json is not None:
-        r = await function(url, headers = DEFAULT_HEADERS, params = params, json = json)
+        r = await function(url, headers = headers, params = params, json = json)
     else:
-        r = await function(url, headers = DEFAULT_HEADERS, params = params)
+        r = await function(url, headers = headers, params = params)
 
     if r.status_code not in statuses:
         gunicorn_logger.error(f"Received unexpected status code {r.status_code} (expected {statuses})\n{r.text}")
@@ -73,9 +78,9 @@ async def put(statuses, url, params = None):
     async with httpx.AsyncClient() as client:
         return await req(client.put, statuses, url, params)
 
-async def post(statuses, url, params = None, json = None):
+async def post(statuses, url, params = None, json = None, headers = DEFAULT_HEADERS):
     async with httpx.AsyncClient() as client:
-        return await req(client.post, statuses, url, params, json)
+        return await req(client.post, statuses, url, params, json, headers)
 
 async def sendMessage(channel_id, message):
     url = f"{CHANNELS_URL}/{channel_id}/messages"

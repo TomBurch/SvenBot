@@ -8,7 +8,7 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT,
 import uvicorn
 
 import utility
-from utility import InteractionType, InteractionResponseType, ARCHUB_URL, GUILD_URL
+from utility import InteractionType, InteractionResponseType, ARCHUB_URL, GUILD_URL, ARCHUB_HEADERS
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
@@ -108,7 +108,7 @@ async def execute_removerole(guild_id, role_id):
 
 async def execute_subscribe(user_id, mission_id):
     url = f"{ARCHUB_URL}/missions/{mission_id}/subscribe?discord_id={user_id}"
-    r = await utility.post([HTTP_201_CREATED, HTTP_204_NO_CONTENT], url)
+    r = await utility.post([HTTP_201_CREATED, HTTP_204_NO_CONTENT], url, headers = ARCHUB_HEADERS)
     missionUrl = f"https://arcomm.co.uk/missions/{mission_id}"
 
     if r.status_code == HTTP_201_CREATED:

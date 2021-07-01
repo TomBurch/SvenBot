@@ -4,7 +4,7 @@ from fastapi import HTTPException
 import pytest
 
 from main import handle_interaction, execute_optime
-from utility import InteractionType, ImmediateReply, CLIENT_ID
+from utility import ARCHUB_HEADERS, InteractionType, ImmediateReply, CLIENT_ID
 
 class Member(dict):
     def __init__(self, id, name, roles = []):
@@ -207,7 +207,8 @@ async def test_subscribe(httpx_mock, statusCode, replyType):
     httpx_mock.add_response(
         method = "POST",
         url = f"https://arcomm.co.uk/api/v1/missions/{missionId}/subscribe?discord_id={userId}",
-        status_code = statusCode
+        status_code = statusCode,
+        match_headers = ARCHUB_HEADERS
     )
 
     interaction = Interaction("subscribe", memberNoRole, options = [{"value": missionId}])
