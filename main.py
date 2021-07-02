@@ -227,7 +227,6 @@ async def verify_request(request: Request, call_next):
     gunicorn_logger.error(await request.json())
     response = await call_next(request)
     gunicorn_logger.error(response.status_code)
-    gunicorn_logger.error(await response.stream_response()))
     return response
 
 def verify_key(body, signature, timestamp):
