@@ -196,7 +196,7 @@ def app():
     @fast_app.post('/interaction/')
     async def interact(request: Request):
     #async def interact(headers = Header(...), interaction: Interaction = Body(...)):
-        await utility.verify_request(request.headers)
+        await utility.verify_request(request)
 
         interaction = await request.json()
         if interaction.get("type") == InteractionType.PING:
