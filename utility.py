@@ -1,11 +1,14 @@
+from enum import IntEnum
 import logging
 import os
 import re
+from typing import Any, Optional
 
 import httpx
 from dotenv import load_dotenv
 from nacl.signing import VerifyKey
 from fastapi import HTTPException
+from pydantic import BaseModel
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
@@ -21,18 +24,40 @@ CHANNELS_URL = "https://discord.com/api/v8/channels"
 
 ARCHUB_CHANNEL = 703618484386398349
 
-class InteractionType:
+class InteractionType(IntEnum):
     PING = 1
     APPLICATION_COMMAND = 2
+    MESSAGE_COMPONENT = 3
 
-class InteractionResponseType:
+class InteractionResponseType(IntEnum):
     PONG = 1
     CHANNEL_MESSAGE_WITH_SOURCE = 4
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5
 
-async def verify_request(request):
-    signature = request.headers.get("X-Signature-Ed25519")
-    timestamp = request.headers.get("X-Signature-Timestamp")
+class Command(BaseModel):
+    id: int
+    name: str
+    resolved: Any
+    options: Any
+    custom_id: str
+    component_type: int
+
+class Interaction(BaseModel):
+    id: int
+    application_id: int
+    type: InteractionType
+    data: Command
+    guild_id: Optional[int]
+    channel_id: Optional[int]
+    member: Any
+    user: Any
+    token: str
+    version: int
+    message: Any
+
+async def verify_request(headers):
+    signature = headers.get("X-Signature-Ed25519")
+    timestamp = headers.get("X-Signature-Timestamp")
     body = await request.body()
     if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
         raise HTTPException(status_code = 401, detail = "Bad request signature")

@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timedelta
+from IPython.utils import data
 from pytz import timezone
 
 from fastapi import FastAPI, Request, HTTPException
@@ -7,8 +8,10 @@ from fastapi.responses import JSONResponse
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
 import uvicorn
 
+from fastapi import FastAPI, Header, Body
+
 import utility
-from utility import InteractionType, InteractionResponseType, ARCHUB_URL, GUILD_URL, ARCHUB_HEADERS
+from utility import Interaction, InteractionType, InteractionResponseType, ARCHUB_URL, GUILD_URL, ARCHUB_HEADERS
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
@@ -192,14 +195,15 @@ def app():
     fast_app = FastAPI()
 
     @fast_app.post('/interaction/')
-    async def interaction(request: Request):
-        await utility.verify_request(request)
+    async def interact(request: Request):
+    #async def interact(headers = Header(...), interaction: Interaction = Body(...)):
+        await utility.verify_request(request.headers)
 
-        interact = await request.json()
-        if interact.get("type") == InteractionType.PING:
+        interaction = await request.json()
+        if request.type == InteractionType.PING:
             return JSONResponse({'type': InteractionResponseType.PONG})
 
-        return JSONResponse(await handle_interaction(interact))
+        return JSONResponse(await handle_interaction(interaction))
 
     @fast_app.get('/abc/')
     def hello_world():
