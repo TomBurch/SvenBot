@@ -221,7 +221,8 @@ async def verify_request(request: Request, call_next):
     if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
         raise HTTPException(status_code = 401, detail = "Bad request signature")
 
-    await call_next(request)
+    response = await call_next(request)
+    return response
 
 def verify_key(body, signature, timestamp):
     message = timestamp.encode() + body
