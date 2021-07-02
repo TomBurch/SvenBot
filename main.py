@@ -199,7 +199,7 @@ def app():
 
     @fast_app.post('/interaction/')
     #async def interact(request: Request):
-    async def interact(interaction: Interaction = Body(...)):
+    async def interact(interaction: Interaction):
         #await utility.verify_request(request)
 
         #interaction = await request.json()
