@@ -195,6 +195,26 @@ async def handle_interaction(interaction):
         gunicorn_logger.error(interaction.type)
         raise HTTPException(status_code = HTTP_400_BAD_REQUEST, detail = "Not an application command")
 
+class ValidDiscordRequest():
+    async def __call__(self, request: Request):
+        signature = request.headers.get("X-Signature-Ed25519")
+        timestamp = request.headers.get("X-Signature-Timestamp")
+        body = await request.body()
+        if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
+            raise HTTPException(status_code = 401, detail = "Bad request signature")
+
+        return True
+
+def verify_key(body, signature, timestamp):
+    message = timestamp.encode() + body
+
+    try:
+        VerifyKey(bytes.fromhex(PUBLIC_KEY)).verify(message, bytes.fromhex(signature))
+        return True
+    except Exception as e:
+        gunicorn_logger.error(e)
+        return False
+
 def app():
     fast_app = FastAPI()
 
@@ -218,26 +238,6 @@ def app():
     return fast_app
 
 app = app()
-
-class ValidDiscordRequest():
-    async def __call__(self, request: Request):
-        signature = request.headers.get("X-Signature-Ed25519")
-        timestamp = request.headers.get("X-Signature-Timestamp")
-        body = await request.body()
-        if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
-            raise HTTPException(status_code = 401, detail = "Bad request signature")
-
-        return True
-
-def verify_key(body, signature, timestamp):
-    message = timestamp.encode() + body
-
-    try:
-        VerifyKey(bytes.fromhex(PUBLIC_KEY)).verify(message, bytes.fromhex(signature))
-        return True
-    except Exception as e:
-        gunicorn_logger.error(e)
-        return False
 
 if __name__ == "__main__":
     uvicorn.run(app, host='0.0.0.0', port = 8000)
