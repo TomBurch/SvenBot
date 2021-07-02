@@ -55,9 +55,9 @@ class Interaction(BaseModel):
     version: int
     message: Any
 
-async def verify_request(headers):
-    signature = headers.get("X-Signature-Ed25519")
-    timestamp = headers.get("X-Signature-Timestamp")
+async def verify_request(request):
+    signature = request.headers.get("X-Signature-Ed25519")
+    timestamp = request.headers.get("X-Signature-Timestamp")
     body = await request.body()
     if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
         raise HTTPException(status_code = 401, detail = "Bad request signature")
