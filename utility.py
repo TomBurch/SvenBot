@@ -6,8 +6,6 @@ from typing import Any, Optional
 
 import httpx
 from dotenv import load_dotenv
-from nacl.signing import VerifyKey
-from fastapi import HTTPException
 from pydantic import BaseModel
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
@@ -54,23 +52,6 @@ class Interaction(BaseModel):
     token: str
     version: int
     message: Any
-
-async def verify_request(request):
-    signature = request.headers.get("X-Signature-Ed25519")
-    timestamp = request.headers.get("X-Signature-Timestamp")
-    body = await request.body()
-    if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
-        raise HTTPException(status_code = 401, detail = "Bad request signature")
-
-def verify_key(body, signature, timestamp):
-    message = timestamp.encode() + body
-
-    try:
-        VerifyKey(bytes.fromhex(PUBLIC_KEY)).verify(message, bytes.fromhex(signature))
-        return True
-    except Exception as e:
-        gunicorn_logger.error(e)
-        return False
 
 DEFAULT_HEADERS = {
     "Authorization": f"Bot {BOT_TOKEN}"

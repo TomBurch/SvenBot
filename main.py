@@ -4,13 +4,14 @@ from pytz import timezone
 
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
+from nacl.signing import VerifyKey
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
 import uvicorn
 
 from fastapi import FastAPI, Header, Body
 
 import utility
-from utility import Interaction, InteractionType, InteractionResponseType, ARCHUB_URL, GUILD_URL, ARCHUB_HEADERS
+from utility import Interaction, InteractionType, InteractionResponseType, PUBLIC_KEY, ARCHUB_URL, GUILD_URL, ARCHUB_HEADERS
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
@@ -196,7 +197,7 @@ def app():
     @fast_app.post('/interaction/')
     async def interact(request: Request):
     #async def interact(headers = Header(...), interaction: Interaction = Body(...)):
-        await utility.verify_request(request)
+        #await utility.verify_request(request)
 
         interaction = await request.json()
         if interaction.get("type") == InteractionType.PING:
@@ -211,6 +212,26 @@ def app():
     return fast_app
 
 app = app()
+
+@app.middleware("http")
+async def verify_request(request: Request, call_next):
+    signature = request.headers.get("X-Signature-Ed25519")
+    timestamp = request.headers.get("X-Signature-Timestamp")
+    body = await request.body()
+    if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
+        raise HTTPException(status_code = 401, detail = "Bad request signature")
+
+    await call_next(request)
+
+def verify_key(body, signature, timestamp):
+    message = timestamp.encode() + body
+
+    try:
+        VerifyKey(bytes.fromhex(PUBLIC_KEY)).verify(message, bytes.fromhex(signature))
+        return True
+    except Exception as e:
+        gunicorn_logger.error(e)
+        return False
 
 if __name__ == "__main__":
     uvicorn.run(app, host='0.0.0.0', port = 8000)
