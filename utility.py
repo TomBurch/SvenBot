@@ -33,20 +33,20 @@ class InteractionResponseType(IntEnum):
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5
 
 class Command(BaseModel):
-    id: int
+    id: str
     name: str
     resolved: Any
     options: Any
-    custom_id: str
-    component_type: int
+    custom_id: Any
+    component_type: Any
 
 class Interaction(BaseModel):
-    id: int
-    application_id: int
+    id: str
+    application_id: str
     type: InteractionType
     data: Command
-    guild_id: Optional[int]
-    channel_id: Optional[int]
+    guild_id: Optional[str]
+    channel_id: Optional[str]
     member: Any
     user: Any
     token: str
