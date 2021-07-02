@@ -195,11 +195,11 @@ def app():
     fast_app = FastAPI()
 
     @fast_app.post('/interaction/')
-    async def interact(request: Request):
-    #async def interact(headers = Header(...), interaction: Interaction = Body(...)):
+    #async def interact(request: Request):
+    async def interact(headers = Header(...), interaction: Interaction = Body(...)):
         #await utility.verify_request(request)
 
-        interaction = await request.json()
+        #interaction = await request.json()
         if interaction.get("type") == InteractionType.PING:
             return JSONResponse({'type': InteractionResponseType.PONG})
 
