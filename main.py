@@ -189,6 +189,9 @@ async def handle_interaction(interaction):
         
         raise HTTPException(status_code = HTTP_501_NOT_IMPLEMENTED, detail = f"'{command}' is not a known command")
     else:
+        gunicorn_logger.error("400 here")
+        gunicorn_logger.error(interaction)
+        gunicorn_logger.error(interaction.type)
         raise HTTPException(status_code = HTTP_400_BAD_REQUEST, detail = "Not an application command")
 
 def app():
