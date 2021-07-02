@@ -196,10 +196,12 @@ def app():
 
     @fast_app.post('/interaction/')
     #async def interact(request: Request):
-    async def interact(headers = Header(...), interaction: Interaction = Body(...)):
+    async def interact(interaction: Interaction = Body(...)):
         #await utility.verify_request(request)
 
         #interaction = await request.json()
+        gunicorn_logger.error("Received interaction")
+        gunicorn_logger.error(interaction)
         if interaction.type == InteractionType.PING:
             return JSONResponse({'type': InteractionResponseType.PONG})
 
@@ -221,7 +223,9 @@ async def verify_request(request: Request, call_next):
     if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
         raise HTTPException(status_code = 401, detail = "Bad request signature")
 
+    gunicorn_logger.error("Calling next")
     response = await call_next(request)
+    gunicorn_logger.error(response)
     return response
 
 def verify_key(body, signature, timestamp):
