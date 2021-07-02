@@ -119,17 +119,17 @@ async def execute_subscribe(user_id, mission_id):
 
     return f"You are no longer subscribed to {missionUrl}"
 
-async def handle_interaction(interact):
-    if (interact.get("type") == InteractionType.APPLICATION_COMMAND):
-        data = interact["data"]
-        command = data["name"]
+async def handle_interaction(interaction):
+    if (interaction.type == InteractionType.APPLICATION_COMMAND):
+        data = interaction.data
+        command = data.name
         
         try:
             options = data.get("options")
-            member = interact["member"]
+            member = interaction["member"]
             user = member["user"]
             username = user["username"]
-            guild_id = interact["guild_id"]
+            guild_id = interaction["guild_id"]
 
             gunicorn_logger.info(f"'{username}' executing '{command}'")
             
@@ -227,7 +227,7 @@ async def verify_request(request: Request, call_next):
     gunicorn_logger.error(await request.json())
     response = await call_next(request)
     gunicorn_logger.error(response.status_code)
-    gunicorn_logger.error(response.body)
+    gunicorn_logger.error(await response.stream_response()))
     return response
 
 def verify_key(body, signature, timestamp):
