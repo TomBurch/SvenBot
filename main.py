@@ -224,6 +224,7 @@ async def verify_request(request: Request, call_next):
         raise HTTPException(status_code = 401, detail = "Bad request signature")
 
     gunicorn_logger.error("Calling next")
+    gunicorn_logger.error(await request.json())
     response = await call_next(request)
     gunicorn_logger.error(response)
     return response
