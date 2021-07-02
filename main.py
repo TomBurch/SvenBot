@@ -200,7 +200,7 @@ def app():
         #await utility.verify_request(request)
 
         #interaction = await request.json()
-        if interaction.get("type") == InteractionType.PING:
+        if interaction.type == InteractionType.PING:
             return JSONResponse({'type': InteractionResponseType.PONG})
 
         return JSONResponse(await handle_interaction(interaction))
