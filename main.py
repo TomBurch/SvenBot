@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timedelta
+from fastapi.params import Depends
 from pytz import timezone
 
 from fastapi import FastAPI, Request, HTTPException
@@ -8,7 +9,7 @@ from nacl.signing import VerifyKey
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
 import uvicorn
 
-from fastapi import FastAPI, Header, Body
+from fastapi import FastAPI, Body
 
 import utility
 from utility import Interaction, InteractionType, InteractionResponseType, PUBLIC_KEY, ARCHUB_URL, GUILD_URL, ARCHUB_HEADERS
@@ -199,7 +200,7 @@ def app():
 
     @fast_app.post('/interaction/')
     #async def interact(request: Request):
-    async def interact(interaction: Interaction = Body(...)):
+    async def interact(interaction: Interaction = Body(...), valid: bool = Depends(ValidDiscordRequest())):
         #await utility.verify_request(request)
 
         #interaction = await request.json()
@@ -218,19 +219,15 @@ def app():
 
 app = app()
 
-@app.middleware("http")
-async def verify_request(request: Request, call_next):
-    signature = request.headers.get("X-Signature-Ed25519")
-    timestamp = request.headers.get("X-Signature-Timestamp")
-    body = await request.body()
-    if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
-        raise HTTPException(status_code = 401, detail = "Bad request signature")
+class ValidDiscordRequest():
+    async def __call__(self, request: Request):
+        signature = request.headers.get("X-Signature-Ed25519")
+        timestamp = request.headers.get("X-Signature-Timestamp")
+        body = await request.body()
+        if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
+            raise HTTPException(status_code = 401, detail = "Bad request signature")
 
-    gunicorn_logger.error("Calling next")
-    gunicorn_logger.error(await request.json())
-    response = await call_next(request)
-    gunicorn_logger.error(response.status_code)
-    return response
+        return True
 
 def verify_key(body, signature, timestamp):
     message = timestamp.encode() + body
