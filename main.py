@@ -126,11 +126,11 @@ async def handle_interaction(interaction):
         command = data.name
         
         try:
-            options = data.get("options")
-            member = interaction["member"]
-            user = member["user"]
-            username = user["username"]
-            guild_id = interaction["guild_id"]
+            options = data.options
+            member = interaction.member
+            user = member.user
+            username = user.username
+            guild_id = interaction.guild_id
 
             gunicorn_logger.info(f"'{username}' executing '{command}'")
             
@@ -138,9 +138,9 @@ async def handle_interaction(interaction):
                 return utility.ImmediateReply("Pong!")
 
             elif command == "role":
-                roles = member["roles"]
+                roles = member.roles
                 role_id = options[0]["value"]
-                user_id = user["id"]
+                user_id = user.id
                 reply = await execute_role(roles, role_id, guild_id, user_id)
 
                 return utility.ImmediateReply(reply, mentions = ["users"])
@@ -155,7 +155,7 @@ async def handle_interaction(interaction):
                 return utility.ImmediateReply(reply)
 
             elif command == "myroles":
-                roles = member["roles"]
+                roles = member.roles
                 reply = execute_myroles(roles)
                 return utility.ImmediateReply(reply, ephemeral = True)
 
@@ -179,7 +179,7 @@ async def handle_interaction(interaction):
                 return utility.ImmediateReply(reply)
 
             elif command == "subscribe":
-                user_id = user["id"]
+                user_id = user.id
                 mission_id = options[0]["value"]
                 reply = await execute_subscribe(user_id, mission_id)
                 return utility.ImmediateReply(reply)
@@ -221,11 +221,6 @@ def app():
     @fast_app.post('/interaction/')
     #async def interact(request: Request):
     async def interact(interaction: Interaction = Body(...), valid: bool = Depends(ValidDiscordRequest())):
-        #await utility.verify_request(request)
-
-        #interaction = await request.json()
-        gunicorn_logger.error("Received interaction")
-        gunicorn_logger.error(interaction)
         if interaction.type == InteractionType.PING:
             return JSONResponse({'type': InteractionResponseType.PONG})
 
