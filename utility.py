@@ -2,8 +2,7 @@ from enum import IntEnum
 import logging
 import os
 import re
-from typing import Any, Optional
-from fastapi.openapi.models import Discriminator
+from typing import Any, Optional, List
 
 import httpx
 from dotenv import load_dotenv
@@ -33,6 +32,17 @@ class InteractionResponseType(IntEnum):
     CHANNEL_MESSAGE_WITH_SOURCE = 4
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5
 
+class OptionType(IntEnum):
+    SUB_COMMAND = 1
+    SUB_COMMAND_GROUP = 2
+    STRING = 3
+    INTEGER = 4
+    BOOLEAN = 5
+    USER = 6
+    CHANNEL = 7
+    ROLE = 8
+    MENTIONABLE = 9
+
 class User(BaseModel):
     id: str
     username: str
@@ -59,11 +69,19 @@ class Member(BaseModel):
     pending: Any
     permissions: Optional[str]
 
+class Option(BaseModel):
+    name: str
+    type: OptionType
+    value: Any
+    options: Optional[List['Option']]
+
+Option.update_forward_refs()
+
 class Command(BaseModel):
     id: str
     name: str
     resolved: Any
-    options: Any
+    options: Optional[List[Option]]
     custom_id: Any
     component_type: Any
 

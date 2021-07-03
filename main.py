@@ -6,7 +6,7 @@ from pytz import timezone
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from nacl.signing import VerifyKey
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
 import uvicorn
 
 from fastapi import FastAPI, Body
@@ -139,7 +139,7 @@ async def handle_interaction(interaction):
 
             elif command == "role":
                 roles = member.roles
-                role_id = options[0]["value"]
+                role_id = options[0].value
                 user_id = user.id
                 reply = await execute_role(roles, role_id, guild_id, user_id)
 
@@ -150,7 +150,7 @@ async def handle_interaction(interaction):
                 return utility.ImmediateReply(reply)
 
             elif command == "members":
-                role_id = options[0]["value"]
+                role_id = options[0].value
                 reply = await execute_members(role_id, guild_id)
                 return utility.ImmediateReply(reply)
 
@@ -161,7 +161,7 @@ async def handle_interaction(interaction):
 
             elif command == "optime":
                 if options is not None and len(options) > 0:
-                    modifier = options[0]["value"]
+                    modifier = options[0].value
                 else:
                     modifier = 0
 
@@ -169,18 +169,18 @@ async def handle_interaction(interaction):
                 return utility.ImmediateReply(reply)
 
             elif command == "addrole":
-                name = options[0]["value"]
+                name = options[0].value
                 reply = await execute_addrole(guild_id, name)
                 return utility.ImmediateReply(reply)
 
             elif command == "removerole":
-                role_id = options[0]["value"]
+                role_id = options[0].value
                 reply = await execute_removerole(guild_id, role_id)
                 return utility.ImmediateReply(reply)
 
             elif command == "subscribe":
                 user_id = user.id
-                mission_id = options[0]["value"]
+                mission_id = options[0].value
                 reply = await execute_subscribe(user_id, mission_id)
                 return utility.ImmediateReply(reply)
 
@@ -190,9 +190,6 @@ async def handle_interaction(interaction):
         
         raise HTTPException(status_code = HTTP_501_NOT_IMPLEMENTED, detail = f"'{command}' is not a known command")
     else:
-        gunicorn_logger.error("400 here")
-        gunicorn_logger.error(interaction)
-        gunicorn_logger.error(interaction.type)
         raise HTTPException(status_code = HTTP_400_BAD_REQUEST, detail = "Not an application command")
 
 class ValidDiscordRequest():
@@ -201,7 +198,7 @@ class ValidDiscordRequest():
         timestamp = request.headers.get("X-Signature-Timestamp")
         body = await request.body()
         if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
-            raise HTTPException(status_code = 401, detail = "Bad request signature")
+            raise HTTPException(status_code = HTTP_401_UNAUTHORIZED, detail = "Bad request signature")
 
         return True
 
@@ -219,7 +216,6 @@ def app():
     fast_app = FastAPI()
 
     @fast_app.post('/interaction/')
-    #async def interact(request: Request):
     async def interact(interaction: Interaction = Body(...), valid: bool = Depends(ValidDiscordRequest())):
         if interaction.type == InteractionType.PING:
             return JSONResponse({'type': InteractionResponseType.PONG})

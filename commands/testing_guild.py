@@ -1,6 +1,7 @@
+from utility import OptionType, DEFAULT_HEADERS
 import requests
 
-from command_utility import ApplicationCommandOptionType, APP_URL, HEADERS
+from command_utility import APP_URL
 
 url = f"{APP_URL}/guilds/342006395010547712/commands"
 STAFF_ROLE_ID = 365987804519333888
@@ -16,7 +17,7 @@ commands = [
         "options": [{
             "name": "name",
             "description": "Name",
-            "type": ApplicationCommandOptionType.STRING,
+            "type": OptionType.STRING,
             "required": True, 
         }]
     },
@@ -27,7 +28,7 @@ commands = [
         "options": [{
             "name": "role",
             "description": "Role",
-            "type": ApplicationCommandOptionType.ROLE,
+            "type": OptionType.ROLE,
             "required": True, 
         }]
     },
@@ -37,7 +38,7 @@ commands = [
         "options": [{
             "name": "role",
             "description": "The role",
-            "type": ApplicationCommandOptionType.ROLE,
+            "type": OptionType.ROLE,
             "required": True,
         }]
     },
@@ -51,7 +52,7 @@ commands = [
         "options": [{
             "name": "modifier",
             "description": "Modifier",
-            "type": ApplicationCommandOptionType.INTEGER,
+            "type": OptionType.INTEGER,
             "required": False,
         }]
     },
@@ -61,7 +62,7 @@ commands = [
         "options": [{
             "name": "role",
             "description": "The role",
-            "type": ApplicationCommandOptionType.ROLE,
+            "type": OptionType.ROLE,
             "required": True,
         }]
     },
@@ -72,7 +73,7 @@ commands = [
 ]
 
 if __name__ == "__main__":
-    r = requests.get(url, headers = HEADERS)
+    r = requests.get(url, headers = DEFAULT_HEADERS)
     print(r.status_code, r.reason, r.text)
     currentCommands = r.json()
 
@@ -84,7 +85,7 @@ if __name__ == "__main__":
 
         if command["name"] in update:
             print("update queued")
-            r = requests.post(url, headers = HEADERS, json = command)
+            r = requests.post(url, headers = DEFAULT_HEADERS, json = command)
             print(r.status_code, r.reason, r.text)
 
             if command["name"] in staff:
@@ -97,7 +98,7 @@ if __name__ == "__main__":
                                 "permission": True
                             }]
                     }
-                    r = requests.put(f"{url}/{commandId}/permissions", headers = HEADERS, json = permissions)
+                    r = requests.put(f"{url}/{commandId}/permissions", headers = DEFAULT_HEADERS, json = permissions)
                     print(r.status_code, r.reason, r.text)
                 else:
                     print("ERROR commandId is NONE")

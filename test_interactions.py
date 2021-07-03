@@ -4,7 +4,7 @@ from fastapi import HTTPException
 import pytest
 
 from main import handle_interaction, execute_optime
-from utility import ARCHUB_HEADERS, Interaction, Member, InteractionType, ImmediateReply, CLIENT_ID
+from utility import ARCHUB_HEADERS, Interaction, Member, Option, OptionType, InteractionType, ImmediateReply, CLIENT_ID
 
 class MockMember(dict):
     def __init__(self, id, name, roles = []):
@@ -68,7 +68,7 @@ async def test_role(httpx_mock, user, role, roleMethod, roleStatus, replyType):
             status_code = roleStatus
         )
 
-    interaction = Interaction(**MockRequest("role", user, options = [{"value": roleId}]))
+    interaction = Interaction(**MockRequest("role", user, options = [{"value": roleId, "name": "role", "type": OptionType.ROLE}]))
     reply = await handle_interaction(interaction)
 
     if replyType == "Left":
@@ -119,7 +119,7 @@ async def test_members(httpx_mock):
         status_code = 200
     )
 
-    interaction = Interaction(**MockRequest("members", memberNoRole, options = [{"value": roleId}]))
+    interaction = Interaction(**MockRequest("members", memberNoRole, options = [{"value": roleId, "name": "role", "type": OptionType.ROLE}]))
     reply = await handle_interaction(interaction)
 
     username = memberWithRole.user.username
@@ -165,7 +165,7 @@ async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
             status_code = 200
         )
 
-    interaction = Interaction(**MockRequest("addrole", memberNoRole, options = [{"value": roleName}]))
+    interaction = Interaction(**MockRequest("addrole", memberNoRole, options = [{"value": roleName, "name": "name", "type": OptionType.STRING}]))
     reply = await handle_interaction(interaction)
 
     assert reply == ImmediateReply(f"<@&{roleId}> {replyType}", mentions = [])
@@ -192,7 +192,7 @@ async def test_removerole(httpx_mock, role, sendsDelete, replyType):
             status_code = 204
         )
 
-    interaction = Interaction(**MockRequest("removerole", memberNoRole, options = [{"value": roleId}]))
+    interaction = Interaction(**MockRequest("removerole", memberNoRole, options = [{"value": roleId, "name": "role", "type": OptionType.ROLE}]))
     reply = await handle_interaction(interaction)
 
     assert reply == ImmediateReply(replyType, mentions = [])
@@ -213,7 +213,7 @@ async def test_subscribe(httpx_mock, statusCode, replyType):
         match_headers = ARCHUB_HEADERS
     )
 
-    interaction = Interaction(**MockRequest("subscribe", memberNoRole, options = [{"value": missionId}]))
+    interaction = Interaction(**MockRequest("subscribe", memberNoRole, options = [Option(**{"value": missionId, "name": "subscribe", "type": OptionType.INTEGER})]))
     reply = await handle_interaction(interaction)
     expected = f"{replyType} https://arcomm.co.uk/missions/{missionId}"
 
