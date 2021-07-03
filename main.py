@@ -197,6 +197,9 @@ class ValidDiscordRequest():
         signature = request.headers.get("X-Signature-Ed25519")
         timestamp = request.headers.get("X-Signature-Timestamp")
         body = await request.body()
+        gunicorn_logger.error(signature)
+        gunicorn_logger.error(timestamp)
+        gunicorn_logger.error(body)
         if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
             raise HTTPException(status_code = HTTP_401_UNAUTHORIZED, detail = "Bad request signature")
 
