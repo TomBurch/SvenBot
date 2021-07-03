@@ -2,13 +2,15 @@ import logging
 from datetime import datetime, timedelta
 from pytz import timezone
 
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
+from fastapi import FastAPI, Body, Request, HTTPException
+from fastapi.params import Depends
+from nacl.signing import VerifyKey
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
 import uvicorn
 
 import utility
-from utility import InteractionType, InteractionResponseType, ARCHUB_URL, GUILD_URL, ARCHUB_HEADERS
+from utility import PUBLIC_KEY, ARCHUB_URL, GUILD_URL, ARCHUB_HEADERS
+from models import Interaction, InteractionType, InteractionResponseType, Response
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
@@ -116,17 +118,17 @@ async def execute_subscribe(user_id, mission_id):
 
     return f"You are no longer subscribed to {missionUrl}"
 
-async def handle_interaction(interact):
-    if (interact.get("type") == InteractionType.APPLICATION_COMMAND):
-        data = interact["data"]
-        command = data["name"]
+async def handle_interaction(interaction):
+    if (interaction.type == InteractionType.APPLICATION_COMMAND):
+        data = interaction.data
+        command = data.name
         
         try:
-            options = data.get("options")
-            member = interact["member"]
-            user = member["user"]
-            username = user["username"]
-            guild_id = interact["guild_id"]
+            options = data.options
+            member = interaction.member
+            user = member.user
+            username = user.username
+            guild_id = interaction.guild_id
 
             gunicorn_logger.info(f"'{username}' executing '{command}'")
             
@@ -134,9 +136,9 @@ async def handle_interaction(interact):
                 return utility.ImmediateReply("Pong!")
 
             elif command == "role":
-                roles = member["roles"]
-                role_id = options[0]["value"]
-                user_id = user["id"]
+                roles = member.roles
+                role_id = options[0].value
+                user_id = user.id
                 reply = await execute_role(roles, role_id, guild_id, user_id)
 
                 return utility.ImmediateReply(reply, mentions = ["users"])
@@ -146,18 +148,18 @@ async def handle_interaction(interact):
                 return utility.ImmediateReply(reply)
 
             elif command == "members":
-                role_id = options[0]["value"]
+                role_id = options[0].value
                 reply = await execute_members(role_id, guild_id)
                 return utility.ImmediateReply(reply)
 
             elif command == "myroles":
-                roles = member["roles"]
+                roles = member.roles
                 reply = execute_myroles(roles)
                 return utility.ImmediateReply(reply, ephemeral = True)
 
             elif command == "optime":
                 if options is not None and len(options) > 0:
-                    modifier = options[0]["value"]
+                    modifier = options[0].value
                 else:
                     modifier = 0
 
@@ -165,18 +167,18 @@ async def handle_interaction(interact):
                 return utility.ImmediateReply(reply)
 
             elif command == "addrole":
-                name = options[0]["value"]
+                name = options[0].value
                 reply = await execute_addrole(guild_id, name)
                 return utility.ImmediateReply(reply)
 
             elif command == "removerole":
-                role_id = options[0]["value"]
+                role_id = options[0].value
                 reply = await execute_removerole(guild_id, role_id)
                 return utility.ImmediateReply(reply)
 
             elif command == "subscribe":
-                user_id = user["id"]
-                mission_id = options[0]["value"]
+                user_id = user.id
+                mission_id = options[0].value
                 reply = await execute_subscribe(user_id, mission_id)
                 return utility.ImmediateReply(reply)
 
@@ -188,18 +190,37 @@ async def handle_interaction(interact):
     else:
         raise HTTPException(status_code = HTTP_400_BAD_REQUEST, detail = "Not an application command")
 
+class ValidDiscordRequest():
+    async def __call__(self, request: Request):
+        signature = request.headers.get("X-Signature-Ed25519")
+        timestamp = request.headers.get("X-Signature-Timestamp")
+        body = await request.body()
+
+        if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
+            raise HTTPException(status_code = HTTP_401_UNAUTHORIZED, detail = "Bad request signature")
+
+        return True
+
+def verify_key(body, signature, timestamp):
+    message = timestamp.encode() + body
+
+    try:
+        VerifyKey(bytes.fromhex(PUBLIC_KEY)).verify(message, bytes.fromhex(signature))
+        return True
+    except Exception as e:
+        gunicorn_logger.error(e)
+        return False
+
 def app():
     fast_app = FastAPI()
 
-    @fast_app.post('/interaction/')
-    async def interaction(request: Request):
-        await utility.verify_request(request)
+    @fast_app.post('/interaction/', response_model = Response)
+    async def interact(interaction: Interaction = Body(...), valid: bool = Depends(ValidDiscordRequest())):
+        if interaction.type == InteractionType.PING:
+            return Response(type = InteractionResponseType.PONG)
 
-        interact = await request.json()
-        if interact.get("type") == InteractionType.PING:
-            return JSONResponse({'type': InteractionResponseType.PONG})
-
-        return JSONResponse(await handle_interaction(interact))
+        response = await handle_interaction(interaction)
+        return response
 
     @fast_app.get('/abc/')
     def hello_world():
