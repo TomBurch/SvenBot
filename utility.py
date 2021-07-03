@@ -1,10 +1,10 @@
-import config
-from models import InteractionResponseType, Response, ResponseData
-
 import logging
 import re
 
 import httpx
+
+import config
+from models import InteractionResponseType, Response, ResponseData
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 

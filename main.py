@@ -1,18 +1,16 @@
 import logging
 from datetime import datetime, timedelta
-from fastapi.params import Depends
 from pytz import timezone
 
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Body, Request, HTTPException
+from fastapi.params import Depends
 from nacl.signing import VerifyKey
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
 import uvicorn
 
-from fastapi import FastAPI, Body
-
 import utility
-from models import Interaction, InteractionType, InteractionResponseType, Response
 from utility import PUBLIC_KEY, ARCHUB_URL, GUILD_URL, ARCHUB_HEADERS
+from models import Interaction, InteractionType, InteractionResponseType, Response
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 

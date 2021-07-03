@@ -7,10 +7,6 @@ from main import handle_interaction, execute_optime
 from models import Interaction, Member, Option, OptionType, InteractionType
 from utility import ARCHUB_HEADERS, ImmediateReply, CLIENT_ID
 
-class MockMember(dict):
-    def __init__(self, id, name, roles = []):
-        dict.__init__(self, user = {"id": id, "username": name, "discriminator": "4042"}, roles = roles)
-
 class Role(dict):
     def __init__(self, id, name, position, color = 0, botId = None):
         if botId is not None:
@@ -31,8 +27,8 @@ roleNotInGuild = Role("RoleId123", "RoleNotInGuild", 5)
 roles = [botRole, testRole, invalidRole]
 arcommGuild = "342006395010547712"
 
-memberNoRole = Member(**MockMember("User234", "TestUser2"))
-memberWithRole = Member(**MockMember("User123", "TestUser", [testRole["id"]]))
+memberNoRole = Member(user = {"id": "User234", "username": "TestUser2", "discriminator": "4042"}, roles = [])
+memberWithRole = Member(user = {"id": "User123", "username": "TestUser", "discriminator": "3124"}, roles = [testRole["id"]])
 
 @pytest.mark.asyncio
 async def test_ping():
@@ -69,7 +65,7 @@ async def test_role(httpx_mock, user, role, roleMethod, roleStatus, replyType):
             status_code = roleStatus
         )
 
-    interaction = Interaction(**MockRequest("role", user, options = [{"value": roleId, "name": "role", "type": OptionType.ROLE}]))
+    interaction = Interaction(**MockRequest("role", user, options = [Option(value = roleId, name = "role", type = OptionType.ROLE)]))
     reply = await handle_interaction(interaction)
 
     if replyType == "Left":
@@ -120,7 +116,7 @@ async def test_members(httpx_mock):
         status_code = 200
     )
 
-    interaction = Interaction(**MockRequest("members", memberNoRole, options = [{"value": roleId, "name": "role", "type": OptionType.ROLE}]))
+    interaction = Interaction(**MockRequest("members", memberNoRole, options = [Option(value = roleId, name = "role", type = OptionType.ROLE)]))
     reply = await handle_interaction(interaction)
 
     username = memberWithRole.user.username
@@ -166,7 +162,7 @@ async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
             status_code = 200
         )
 
-    interaction = Interaction(**MockRequest("addrole", memberNoRole, options = [{"value": roleName, "name": "name", "type": OptionType.STRING}]))
+    interaction = Interaction(**MockRequest("addrole", memberNoRole, options = [Option(value = roleName, name = "name", type = OptionType.STRING)]))
     reply = await handle_interaction(interaction)
 
     assert reply == ImmediateReply(f"<@&{roleId}> {replyType}", mentions = [])
@@ -193,7 +189,7 @@ async def test_removerole(httpx_mock, role, sendsDelete, replyType):
             status_code = 204
         )
 
-    interaction = Interaction(**MockRequest("removerole", memberNoRole, options = [{"value": roleId, "name": "role", "type": OptionType.ROLE}]))
+    interaction = Interaction(**MockRequest("removerole", memberNoRole, options = [Option(value = roleId, name = "role", type = OptionType.ROLE)]))
     reply = await handle_interaction(interaction)
 
     assert reply == ImmediateReply(replyType, mentions = [])
@@ -214,7 +210,7 @@ async def test_subscribe(httpx_mock, statusCode, replyType):
         match_headers = ARCHUB_HEADERS
     )
 
-    interaction = Interaction(**MockRequest("subscribe", memberNoRole, options = [Option(**{"value": missionId, "name": "subscribe", "type": OptionType.INTEGER})]))
+    interaction = Interaction(**MockRequest("subscribe", memberNoRole, options = [Option(value = missionId, name = "subscribe", type = OptionType.INTEGER)]))
     reply = await handle_interaction(interaction)
     expected = f"{replyType} https://arcomm.co.uk/missions/{missionId}"
 
