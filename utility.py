@@ -1,20 +1,17 @@
-from enum import IntEnum
+import config
+from models import InteractionResponseType, Response, ResponseData
+
 import logging
-import os
 import re
-from typing import Any, Optional, List
 
 import httpx
-from dotenv import load_dotenv
-from pydantic import BaseModel
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
-load_dotenv()
-ARCHUB_TOKEN = os.getenv("ARCHUB_TOKEN")
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-CLIENT_ID = os.getenv("CLIENT_ID")
-PUBLIC_KEY = os.getenv("PUBLIC_KEY")
+ARCHUB_TOKEN = config.settings.ARCHUB_TOKEN
+BOT_TOKEN = config.settings.BOT_TOKEN
+CLIENT_ID = config.settings.CLIENT_ID
+PUBLIC_KEY = config.settings.PUBLIC_KEY
 
 ARCHUB_URL = "https://arcomm.co.uk/api/v1"
 GUILD_URL = "https://discord.com/api/v8/guilds"
@@ -22,82 +19,6 @@ CHANNELS_URL = "https://discord.com/api/v8/channels"
 APP_URL = f"https://discord.com/api/v8/applications/{CLIENT_ID}"
 
 ARCHUB_CHANNEL = 703618484386398349
-
-class InteractionType(IntEnum):
-    PING = 1
-    APPLICATION_COMMAND = 2
-    MESSAGE_COMPONENT = 3
-
-class InteractionResponseType(IntEnum):
-    PONG = 1
-    CHANNEL_MESSAGE_WITH_SOURCE = 4
-    DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5
-
-class OptionType(IntEnum):
-    SUB_COMMAND = 1
-    SUB_COMMAND_GROUP = 2
-    STRING = 3
-    INTEGER = 4
-    BOOLEAN = 5
-    USER = 6
-    CHANNEL = 7
-    ROLE = 8
-    MENTIONABLE = 9
-
-class User(BaseModel):
-    id: str
-    username: str
-    discriminator: str
-    avatar: Any
-    bot: Optional[bool]
-    system: Any
-    mfa_enabled: Any
-    locale: Any
-    verified: Any
-    email: Any
-    flags: Any
-    premium_type: Any
-    public_flags: Any
-
-class Member(BaseModel):
-    user: Optional[User]
-    nick: Optional[str]
-    roles: Any
-    joined_at: Any
-    premium_since: Any
-    deaf: Any
-    mute: Any
-    pending: Any
-    permissions: Optional[str]
-
-class Option(BaseModel):
-    name: str
-    type: OptionType
-    value: Any
-    options: Optional[List['Option']]
-
-Option.update_forward_refs()
-
-class Command(BaseModel):
-    id: str
-    name: str
-    resolved: Any
-    options: Optional[List[Option]]
-    custom_id: Any
-    component_type: Any
-
-class Interaction(BaseModel):
-    id: str
-    application_id: str
-    type: InteractionType
-    data: Command
-    guild_id: Optional[str]
-    channel_id: Optional[str]
-    member: Optional[Member]
-    user: Optional[User]
-    token: str
-    version: int
-    message: Any
 
 DEFAULT_HEADERS = {
     "Authorization": f"Bot {BOT_TOKEN}"
@@ -140,19 +61,12 @@ async def sendMessage(channel_id, message):
     async with httpx.AsyncClient() as client:
         return await req(client.post, [200], url, json = json)
 
-class Reply(dict):
-    def __init__(self, _type, content, mentions = None, ephemeral = False):
-        data = {"content": content}
-        if mentions is not None:
-            data["allowed_mentions"] = {"parse": mentions}
-        if ephemeral:
-            data["flags"] = 64
-
-        dict.__init__(self, type = _type, data = data)
-
-class ImmediateReply(Reply):
-    def __init__(self, content, mentions = [], ephemeral = False):
-        super().__init__(InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, content, mentions, ephemeral)
+def ImmediateReply(content, mentions = [], ephemeral = False):
+    data = ResponseData(content = content, allowed_mentions = {"parse": mentions})
+    if ephemeral:
+        data.flags = 64
+    
+    return Response(type = InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data = data)
 
 def basicValidation(role, botPosition):
     return role.get("tags", {}).get("bot_id") is None and role["position"] < botPosition

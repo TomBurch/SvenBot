@@ -4,7 +4,8 @@ from fastapi import HTTPException
 import pytest
 
 from main import handle_interaction, execute_optime
-from utility import ARCHUB_HEADERS, Interaction, Member, Option, OptionType, InteractionType, ImmediateReply, CLIENT_ID
+from models import Interaction, Member, Option, OptionType, InteractionType
+from utility import ARCHUB_HEADERS, ImmediateReply, CLIENT_ID
 
 class MockMember(dict):
     def __init__(self, id, name, roles = []):

@@ -4,7 +4,6 @@ from fastapi.params import Depends
 from pytz import timezone
 
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse
 from nacl.signing import VerifyKey
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
 import uvicorn
@@ -12,7 +11,8 @@ import uvicorn
 from fastapi import FastAPI, Body
 
 import utility
-from utility import Interaction, InteractionType, InteractionResponseType, PUBLIC_KEY, ARCHUB_URL, GUILD_URL, ARCHUB_HEADERS
+from models import Interaction, InteractionType, InteractionResponseType, Response
+from utility import PUBLIC_KEY, ARCHUB_URL, GUILD_URL, ARCHUB_HEADERS
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
@@ -216,12 +216,13 @@ def verify_key(body, signature, timestamp):
 def app():
     fast_app = FastAPI()
 
-    @fast_app.post('/interaction/')
+    @fast_app.post('/interaction/', response_model = Response)
     async def interact(interaction: Interaction = Body(...), valid: bool = Depends(ValidDiscordRequest())):
         if interaction.type == InteractionType.PING:
-            return JSONResponse({'type': InteractionResponseType.PONG})
+            return Response(type = InteractionResponseType.PONG)
 
-        return JSONResponse(await handle_interaction(interaction))
+        response = await handle_interaction(interaction)
+        return response
 
     @fast_app.get('/abc/')
     def hello_world():
