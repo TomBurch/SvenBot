@@ -19,6 +19,7 @@ PUBLIC_KEY = os.getenv("PUBLIC_KEY")
 ARCHUB_URL = "https://arcomm.co.uk/api/v1"
 GUILD_URL = "https://discord.com/api/v8/guilds"
 CHANNELS_URL = "https://discord.com/api/v8/channels"
+APP_URL = f"https://discord.com/api/v8/applications/{CLIENT_ID}"
 
 ARCHUB_CHANNEL = 703618484386398349
 
