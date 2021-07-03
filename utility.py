@@ -3,6 +3,7 @@ import logging
 import os
 import re
 from typing import Any, Optional
+from fastapi.openapi.models import Discriminator
 
 import httpx
 from dotenv import load_dotenv
@@ -32,6 +33,32 @@ class InteractionResponseType(IntEnum):
     CHANNEL_MESSAGE_WITH_SOURCE = 4
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5
 
+class User(BaseModel):
+    id: str
+    username: str
+    discriminator: str
+    avatar: Any
+    bot: Optional[bool]
+    system: Any
+    mfa_enabled: Any
+    locale: Any
+    verified: Any
+    email: Any
+    flags: Any
+    premium_type: Any
+    public_flags: Any
+
+class Member(BaseModel):
+    user: Optional[User]
+    nick: Optional[str]
+    roles: Any
+    joined_at: Any
+    premium_since: Any
+    deaf: Any
+    mute: Any
+    pending: Any
+    permissions: Optional[str]
+
 class Command(BaseModel):
     id: str
     name: str
@@ -47,8 +74,8 @@ class Interaction(BaseModel):
     data: Command
     guild_id: Optional[str]
     channel_id: Optional[str]
-    member: Any
-    user: Any
+    member: Optional[Member]
+    user: Optional[User]
     token: str
     version: int
     message: Any
