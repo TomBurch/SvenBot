@@ -77,6 +77,42 @@ commands = [
             "type": OptionType.INTEGER,
             "required": True,
         }]
+    },
+    {
+        "name": "ticket",
+        "description": "Create a github ticket",
+        "options": [{
+            "name": "repo",
+            "description": "Target repo",
+            "type": OptionType.STRING,
+            "required": True,
+            "choices": [
+                {
+                    "name": "arc_misc",
+                    "value": "ARCOMM/arc_misc"
+                },
+                {
+                    "name": "archub",
+                    "value": "ARCOMM/ARCHUB"
+                },
+                {
+                    "name": "svenbot",
+                    "value": "TomBurch/SvenBot"
+                }
+            ]
+        }, 
+        {
+            "name": "title",
+            "description": "Ticket title",
+            "type": OptionType.STRING,
+            "required": True,  
+        }, 
+        {
+            "name": "body",
+            "description": "Ticket description",
+            "type": OptionType.STRING,
+            "required": True,  
+        }]
     }
 ]
 

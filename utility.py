@@ -12,6 +12,7 @@ ARCHUB_TOKEN = config.settings.ARCHUB_TOKEN
 BOT_TOKEN = config.settings.BOT_TOKEN
 CLIENT_ID = config.settings.CLIENT_ID
 PUBLIC_KEY = config.settings.PUBLIC_KEY
+GITHUB_TOKEN = config.settings.GITHUB_TOKEN
 
 ARCHUB_URL = "https://arcomm.co.uk/api/v1"
 GUILD_URL = "https://discord.com/api/v8/guilds"
@@ -26,6 +27,10 @@ DEFAULT_HEADERS = {
 
 ARCHUB_HEADERS = {
     "Authorization": f"Bearer {ARCHUB_TOKEN}"
+}
+
+GITHUB_HEADERS = {
+    "Authorization": f"Bearer {GITHUB_TOKEN}"
 }
 
 async def req(function, statuses, url, params = None, json = None, headers = DEFAULT_HEADERS):
