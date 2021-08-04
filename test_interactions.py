@@ -212,7 +212,7 @@ async def test_subscribe(httpx_mock, statusCode, replyType):
 
     interaction = Interaction(**MockRequest("subscribe", memberNoRole, options = [Option(value = missionId, name = "subscribe", type = OptionType.INTEGER)]))
     reply = await handle_interaction(interaction)
-    expected = f"{replyType} https://arcomm.co.uk/missions/{missionId}"
+    expected = f"{replyType} https://arcomm.co.uk/hub/missions/{missionId}"
 
     assert reply == ImmediateReply(expected, mentions = [])
 
