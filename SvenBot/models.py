@@ -3,10 +3,12 @@ from typing import Any, Optional, List
 
 from pydantic import BaseModel
 
+
 class InteractionResponseType(IntEnum):
     PONG = 1
     CHANNEL_MESSAGE_WITH_SOURCE = 4
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5
+
 
 class ResponseData(BaseModel):
     tts: Optional[bool]
@@ -16,14 +18,17 @@ class ResponseData(BaseModel):
     flags: Optional[int]
     components: Any
 
+
 class Response(BaseModel):
     type: InteractionResponseType
     data: Optional[ResponseData]
+
 
 class InteractionType(IntEnum):
     PING = 1
     APPLICATION_COMMAND = 2
     MESSAGE_COMPONENT = 3
+
 
 class OptionType(IntEnum):
     SUB_COMMAND = 1
@@ -35,6 +40,7 @@ class OptionType(IntEnum):
     CHANNEL = 7
     ROLE = 8
     MENTIONABLE = 9
+
 
 class User(BaseModel):
     id: str
@@ -51,6 +57,7 @@ class User(BaseModel):
     premium_type: Any
     public_flags: Any
 
+
 class Member(BaseModel):
     user: Optional[User]
     nick: Optional[str]
@@ -62,13 +69,16 @@ class Member(BaseModel):
     pending: Any
     permissions: Optional[str]
 
+
 class Option(BaseModel):
     name: str
     type: OptionType
     value: Any
     options: Optional[List['Option']]
 
+
 Option.update_forward_refs()
+
 
 class Command(BaseModel):
     id: str
@@ -77,6 +87,7 @@ class Command(BaseModel):
     options: Optional[List[Option]]
     custom_id: Any
     component_type: Any
+
 
 class Interaction(BaseModel):
     id: str

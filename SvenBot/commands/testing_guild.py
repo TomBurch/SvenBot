@@ -1,5 +1,7 @@
-from utility import OptionType, DEFAULT_HEADERS, APP_URL
 import requests
+
+from SvenBot.models import OptionType
+from SvenBot.utility import DEFAULT_HEADERS, APP_URL
 
 url = f"{APP_URL}/guilds/342006395010547712/commands"
 STAFF_ROLE_ID = 365987804519333888

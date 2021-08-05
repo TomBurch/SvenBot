@@ -1,24 +1,33 @@
 import logging
 from datetime import datetime, timedelta
-from pytz import timezone
 
+import uvicorn
 from fastapi import FastAPI, Body, Request, HTTPException
 from fastapi.params import Depends
 from nacl.signing import VerifyKey
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
-import uvicorn
+from pytz import timezone
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, \
+    HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
 
-import utility
-from utility import PUBLIC_KEY, ARCHUB_URL, GUILD_URL, ARCHUB_HEADERS
-from models import Interaction, InteractionType, InteractionResponseType, Response
+import sys
+import os
+
+PACKAGE_PARENT = '..'
+SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
+sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
+
+from SvenBot import utility
+from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType
+from SvenBot.utility import GUILD_URL, ARCHUB_URL, ARCHUB_HEADERS, PUBLIC_KEY
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
+
 
 async def execute_role(roles, role_id, guild_id, user_id):
     if not await utility.validateRoleById(guild_id, role_id):
         gunicorn_logger.warning(f"Role <@&{role_id}> is restricted (validation)")
         return f"<@{user_id}> Role <@&{role_id}> is restricted"
-    
+
     url = f"{GUILD_URL}/{guild_id}/members/{user_id}/roles/{role_id}"
 
     if role_id in roles:
@@ -34,6 +43,7 @@ async def execute_role(roles, role_id, guild_id, user_id):
 
     return reply
 
+
 async def execute_roles(guild_id):
     roles = await utility.getRoles(guild_id)
 
@@ -45,33 +55,36 @@ async def execute_roles(guild_id):
     joinableRoles = sorted(joinableRoles)
     return "```\n{}\n```".format("\n".join(joinableRoles))
 
+
 async def execute_members(role_id, guild_id):
     url = f"{GUILD_URL}/{guild_id}/members"
 
-    r = await utility.get([HTTP_200_OK], url, params = {"limit": 200})
+    r = await utility.get([HTTP_200_OK], url, params={"limit": 200})
     members = r.json()
     reply = ""
 
     for member in members:
         if role_id in member["roles"]:
             reply += member["user"]["username"] + "\n"
-    
+
     return f"```\n{reply}```"
+
 
 def execute_myroles(roles):
     reply = ""
 
     for role_id in roles:
         reply += f"<@&{role_id}>\n"
-    
+
     return reply
+
 
 def execute_optime(today, modifier):
     try:
         opday = today
-        opday = opday.replace(hour = 18 + modifier, minute = 0, second = 0)
+        opday = opday.replace(hour=18 + modifier, minute=0, second=0)
         if today > opday:
-            opday = opday + timedelta(days = 1)
+            opday = opday + timedelta(days=1)
 
         if modifier == 0:
             modifierString = ""
@@ -85,6 +98,7 @@ def execute_optime(today, modifier):
     except ValueError:
         return "Optime modifier is too large"
 
+
 async def execute_addrole(guild_id, name):
     roles = await utility.getRoles(guild_id)
 
@@ -94,10 +108,11 @@ async def execute_addrole(guild_id, name):
             return f"<@&{role_id}> already exists"
 
     url = f"{GUILD_URL}/{guild_id}/roles"
-    r = await utility.post([HTTP_200_OK], url, json = {"name": name, "mentionable": True})
+    r = await utility.post([HTTP_200_OK], url, json={"name": name, "mentionable": True})
     role_id = r.json()["id"]
 
     return f"<@&{role_id}> added"
+
 
 async def execute_removerole(guild_id, role_id):
     if await utility.validateRoleById(guild_id, role_id):
@@ -108,9 +123,10 @@ async def execute_removerole(guild_id, role_id):
     else:
         return "Role is restricted"
 
+
 async def execute_subscribe(user_id, mission_id):
     url = f"{ARCHUB_URL}/missions/{mission_id}/subscribe?discord_id={user_id}"
-    r = await utility.post([HTTP_201_CREATED, HTTP_204_NO_CONTENT], url, headers = ARCHUB_HEADERS)
+    r = await utility.post([HTTP_201_CREATED, HTTP_204_NO_CONTENT], url, headers=ARCHUB_HEADERS)
     missionUrl = f"https://arcomm.co.uk/hub/missions/{mission_id}"
 
     if r.status_code == HTTP_201_CREATED:
@@ -118,11 +134,12 @@ async def execute_subscribe(user_id, mission_id):
 
     return f"You are no longer subscribed to {missionUrl}"
 
+
 async def handle_interaction(interaction):
-    if (interaction.type == InteractionType.APPLICATION_COMMAND):
+    if interaction.type == InteractionType.APPLICATION_COMMAND:
         data = interaction.data
         command = data.name
-        
+
         try:
             options = data.options
             member = interaction.member
@@ -131,7 +148,7 @@ async def handle_interaction(interaction):
             guild_id = interaction.guild_id
 
             gunicorn_logger.info(f"'{username}' executing '{command}'")
-            
+
             if command == "ping":
                 return utility.ImmediateReply("Pong!")
 
@@ -141,7 +158,7 @@ async def handle_interaction(interaction):
                 user_id = user.id
                 reply = await execute_role(roles, role_id, guild_id, user_id)
 
-                return utility.ImmediateReply(reply, mentions = ["users"])
+                return utility.ImmediateReply(reply, mentions=["users"])
 
             elif command == "roles":
                 reply = await execute_roles(guild_id)
@@ -155,7 +172,7 @@ async def handle_interaction(interaction):
             elif command == "myroles":
                 roles = member.roles
                 reply = execute_myroles(roles)
-                return utility.ImmediateReply(reply, ephemeral = True)
+                return utility.ImmediateReply(reply, ephemeral=True)
 
             elif command == "optime":
                 if options is not None and len(options) > 0:
@@ -163,7 +180,7 @@ async def handle_interaction(interaction):
                 else:
                     modifier = 0
 
-                reply = execute_optime(datetime.now(tz = timezone('Europe/London')), modifier)
+                reply = execute_optime(datetime.now(tz=timezone('Europe/London')), modifier)
                 return utility.ImmediateReply(reply)
 
             elif command == "addrole":
@@ -184,22 +201,24 @@ async def handle_interaction(interaction):
 
         except Exception as e:
             gunicorn_logger.error(f"Error executing '{command}':\n{str(e)})")
-            raise HTTPException(status_code = HTTP_500_INTERNAL_SERVER_ERROR, detail = f"Error executing '{command}'")
-        
-        raise HTTPException(status_code = HTTP_501_NOT_IMPLEMENTED, detail = f"'{command}' is not a known command")
-    else:
-        raise HTTPException(status_code = HTTP_400_BAD_REQUEST, detail = "Not an application command")
+            raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error executing '{command}'")
 
-class ValidDiscordRequest():
+        raise HTTPException(status_code=HTTP_501_NOT_IMPLEMENTED, detail=f"'{command}' is not a known command")
+    else:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Not an application command")
+
+
+class ValidDiscordRequest:
     async def __call__(self, request: Request):
         signature = request.headers.get("X-Signature-Ed25519")
         timestamp = request.headers.get("X-Signature-Timestamp")
         body = await request.body()
 
         if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
-            raise HTTPException(status_code = HTTP_401_UNAUTHORIZED, detail = "Bad request signature")
+            raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Bad request signature")
 
         return True
+
 
 def verify_key(body, signature, timestamp):
     message = timestamp.encode() + body
@@ -211,13 +230,14 @@ def verify_key(body, signature, timestamp):
         gunicorn_logger.error(e)
         return False
 
+
 def app():
     fast_app = FastAPI()
 
-    @fast_app.post('/interaction/', response_model = Response)
+    @fast_app.post('/interaction/', response_model=Response)
     async def interact(interaction: Interaction = Body(...), valid: bool = Depends(ValidDiscordRequest())):
         if interaction.type == InteractionType.PING:
-            return Response(type = InteractionResponseType.PONG)
+            return Response(type=InteractionResponseType.PONG)
 
         response = await handle_interaction(interaction)
         return response
@@ -228,7 +248,8 @@ def app():
 
     return fast_app
 
+
 app = app()
 
 if __name__ == "__main__":
-    uvicorn.run(app, host='0.0.0.0', port = 8000)
+    uvicorn.run(app, host='0.0.0.0', port=8000)
