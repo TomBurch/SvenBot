@@ -3,9 +3,9 @@ from datetime import datetime
 from fastapi import HTTPException
 import pytest
 
-from SvenBot.main import handle_interaction, execute_optime
-from SvenBot.models import InteractionType, Member, Interaction, Option, OptionType
-from SvenBot.utility import CLIENT_ID, ImmediateReply, ARCHUB_HEADERS
+from ..main import handle_interaction, execute_optime
+from ..models import InteractionType, Member, Interaction, Option, OptionType
+from ..utility import CLIENT_ID, ImmediateReply, ARCHUB_HEADERS
 
 
 class Role(dict):
@@ -17,7 +17,7 @@ class Role(dict):
 
 class MockRequest(dict):
     def __init__(self, name, member = None, options = []):
-        dict.__init__(self, type = InteractionType.APPLICATION_COMMAND, member = member, data = {"name": name, "options": options, "id": "MockCommandId"}, 
+        dict.__init__(self, type = InteractionType.APPLICATION_COMMAND, member = member, data = {"name": name, "options": options, "id": "MockCommandId"},
                     guild_id = "342006395010547712", version = 1, token = "MockToken", application_id = "MockAppId", id = "MockRequestId")
 
 botRole = Role("SvenBotRoleId", "SvenBot", 3, botId = CLIENT_ID)

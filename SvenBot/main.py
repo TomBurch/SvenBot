@@ -1,17 +1,17 @@
 import logging
 from datetime import datetime, timedelta
-from pytz import timezone
 
+import uvicorn
 from fastapi import FastAPI, Body, Request, HTTPException
 from fastapi.params import Depends
 from nacl.signing import VerifyKey
+from pytz import timezone
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, \
     HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
-import uvicorn
 
-from SvenBot import utility
-from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType
-from SvenBot.utility import GUILD_URL, ARCHUB_URL, ARCHUB_HEADERS, PUBLIC_KEY
+from . import utility
+from .models import InteractionType, Response, Interaction, InteractionResponseType
+from .utility import GUILD_URL, ARCHUB_URL, ARCHUB_HEADERS, PUBLIC_KEY
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 

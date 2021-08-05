@@ -3,8 +3,8 @@ import re
 
 import httpx
 
-from SvenBot import config
-from SvenBot.models import InteractionResponseType, ResponseData, Response
+from . import config
+from .models import InteractionResponseType, ResponseData, Response
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
