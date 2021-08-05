@@ -1,5 +1,5 @@
-from pydantic import BaseSettings
 from dotenv import load_dotenv
+from pydantic import BaseSettings
 
 load_dotenv()
 
@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     BOT_TOKEN: str
     CLIENT_ID: str
     PUBLIC_KEY: str
+    GITHUB_TOKEN: str
 
     class Config:
         env_file = ".env"

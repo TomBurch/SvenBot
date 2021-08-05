@@ -18,7 +18,7 @@ sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 from SvenBot import utility
 from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType
-from SvenBot.utility import GUILD_URL, ARCHUB_URL, ARCHUB_HEADERS, PUBLIC_KEY
+from SvenBot.utility import GUILD_URL, ARCHUB_URL, ARCHUB_HEADERS, PUBLIC_KEY, GITHUB_HEADERS
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
@@ -135,6 +135,18 @@ async def execute_subscribe(user_id, mission_id):
     return f"You are no longer subscribed to {missionUrl}"
 
 
+async def execute_ticket(repo, title, body, member):
+    title = "{}: {}".format(member.user.username if (member.nick is None) else member.nick, title)
+    json = {"title": title,
+            "body": body}
+
+    repoUrl = f"https://api.github.com/repos/{repo}/issues"
+    r = await utility.post([HTTP_201_CREATED], repoUrl, json = json, headers = GITHUB_HEADERS)
+    createdUrl = r.json()["html_url"]
+
+    return f"Ticket created at: {createdUrl}"
+
+
 async def handle_interaction(interaction):
     if interaction.type == InteractionType.APPLICATION_COMMAND:
         data = interaction.data
@@ -197,6 +209,13 @@ async def handle_interaction(interaction):
                 user_id = user.id
                 mission_id = options[0].value
                 reply = await execute_subscribe(user_id, mission_id)
+                return utility.ImmediateReply(reply)
+
+            elif command == "ticket":
+                repo = options[0].value
+                title = options[1].value
+                body = options[2].value
+                reply = await execute_ticket(repo, title, body, member)
                 return utility.ImmediateReply(reply)
 
         except Exception as e:

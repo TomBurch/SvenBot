@@ -2,10 +2,11 @@ from datetime import datetime
 
 from fastapi import HTTPException
 import pytest
+from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_200_OK
 
 from SvenBot.main import handle_interaction, execute_optime
 from SvenBot.models import InteractionType, Member, Interaction, Option, OptionType
-from SvenBot.utility import CLIENT_ID, ImmediateReply, ARCHUB_HEADERS
+from SvenBot.utility import CLIENT_ID, ImmediateReply, ARCHUB_HEADERS, GITHUB_HEADERS
 
 
 class Role(dict):
@@ -62,7 +63,7 @@ async def test_role(httpx_mock, user, role, roleMethod, roleStatus, replyType):
         method="GET",
         url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
         json=roles,
-        status_code=200
+        status_code=HTTP_200_OK
     )
 
     if roleMethod is not None:
@@ -92,7 +93,7 @@ async def test_roles(httpx_mock):
         method="GET",
         url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
         json=roles,
-        status_code=200
+        status_code=HTTP_200_OK
     )
 
     interaction = Interaction(**MockRequest("roles", memberWithRole))
@@ -107,7 +108,7 @@ async def test_rolesNoBotRole(httpx_mock):
         method="GET",
         url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
         json=[testRole, invalidRole],
-        status_code=200
+        status_code=HTTP_200_OK
     )
 
     with pytest.raises(HTTPException) as e2:
@@ -124,7 +125,7 @@ async def test_members(httpx_mock):
         method="GET",
         url=f"https://discord.com/api/v8/guilds/{arcommGuild}/members?limit=200",
         json=[memberWithRole.dict()],
-        status_code=200
+        status_code=HTTP_200_OK
     )
 
     interaction = Interaction(
@@ -166,7 +167,7 @@ async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
         method="GET",
         url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
         json=roles,
-        status_code=200
+        status_code=HTTP_200_OK
     )
 
     if sendsPost:
@@ -174,7 +175,7 @@ async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
             method="POST",
             url=f"https://discord.com/api/v8/guilds/342006395010547712/roles",
             json=Role(roleId, roleName, 4),
-            status_code=200
+            status_code=HTTP_200_OK
         )
 
     interaction = Interaction(
@@ -196,14 +197,14 @@ async def test_removerole(httpx_mock, role, sendsDelete, replyType):
         method="GET",
         url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
         json=roles,
-        status_code=200
+        status_code=HTTP_200_OK
     )
 
     if sendsDelete:
         httpx_mock.add_response(
             method="DELETE",
             url=f"https://discord.com/api/v8/guilds/342006395010547712/roles/{roleId}",
-            status_code=204
+            status_code=HTTP_204_NO_CONTENT
         )
 
     interaction = Interaction(
@@ -215,8 +216,8 @@ async def test_removerole(httpx_mock, role, sendsDelete, replyType):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("httpx_mock, statusCode, replyType", [
-    (None, 201, "You are now subscribed to"),
-    (None, 204, "You are no longer subscribed to")
+    (None, HTTP_201_CREATED, "You are now subscribed to"),
+    (None, HTTP_204_NO_CONTENT, "You are no longer subscribed to")
 ], indirect=["httpx_mock"])
 async def test_subscribe(httpx_mock, statusCode, replyType):
     missionId = 900
@@ -233,6 +234,30 @@ async def test_subscribe(httpx_mock, statusCode, replyType):
         Option(value=missionId, name="subscribe", type=OptionType.INTEGER)]))
     reply = await handle_interaction(interaction)
     expected = f"{replyType} https://arcomm.co.uk/hub/missions/{missionId}"
+
+    assert reply == ImmediateReply(expected, mentions=[])
+
+
+@pytest.mark.asyncio
+async def test_ticket(httpx_mock):
+    createdUrl = "https://github.com/ARCOMM/ArcommBot/issues/64"
+
+    httpx_mock.add_response(
+        method="POST",
+        url=f"https://api.github.com/repos/TomBurch/SvenBot/issues",
+        json={"html_url": createdUrl},
+        status_code=HTTP_201_CREATED,
+        match_headers=GITHUB_HEADERS
+    )
+
+    options = [
+        Option(value="TomBurch/SvenBot", name="repo", type=OptionType.STRING),
+        Option(value="Test title", name="title", type=OptionType.STRING),
+        Option(value="Test body", name="body", type=OptionType.STRING)
+    ]
+    interaction = Interaction(**MockRequest("ticket", memberNoRole, options=options))
+    reply = await handle_interaction(interaction)
+    expected = f"Ticket created at: {createdUrl}"
 
     assert reply == ImmediateReply(expected, mentions=[])
 
