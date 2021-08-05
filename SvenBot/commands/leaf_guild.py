@@ -1,5 +1,7 @@
-from utility import OptionType, DEFAULT_HEADERS, APP_URL
 import requests
+
+from SvenBot.models import OptionType
+from SvenBot.utility import APP_URL, DEFAULT_HEADERS
 
 url = f"{APP_URL}/guilds/333316787603243018/commands"
 

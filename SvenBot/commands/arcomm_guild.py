@@ -1,5 +1,7 @@
-from utility import OptionType, DEFAULT_HEADERS, APP_URL
 import requests
+
+from SvenBot.models import OptionType
+from SvenBot.utility import APP_URL, DEFAULT_HEADERS
 
 url = f"{APP_URL}/guilds/240160552867987475/commands"
 STAFF_ROLE_ID = 324227354329219072
@@ -98,7 +100,7 @@ if __name__ == "__main__":
 
             if command["name"] in staff:
                 if commandId is not None:
-                    print("adding staff permisions")
+                    print("adding staff permissions")
                     permissions = {
                         "permissions": [{
                                 "id": STAFF_ROLE_ID,

@@ -3,8 +3,8 @@ import re
 
 import httpx
 
-import config
-from models import InteractionResponseType, Response, ResponseData
+from SvenBot import config
+from SvenBot.models import InteractionResponseType, ResponseData, Response
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
@@ -28,51 +28,61 @@ ARCHUB_HEADERS = {
     "Authorization": f"Bearer {ARCHUB_TOKEN}"
 }
 
-async def req(function, statuses, url, params = None, json = None, headers = DEFAULT_HEADERS):
+
+async def req(function, statuses, url, params=None, json=None, headers=DEFAULT_HEADERS):
     if json is not None:
-        r = await function(url, headers = headers, params = params, json = json)
+        r = await function(url, headers=headers, params=params, json=json)
     else:
-        r = await function(url, headers = headers, params = params)
+        r = await function(url, headers=headers, params=params)
 
     if r.status_code not in statuses:
         gunicorn_logger.error(f"Received unexpected status code {r.status_code} (expected {statuses})\n{r.text}")
         raise RuntimeError(f"Req error: {r.text}")
     return r
 
-async def get(statuses, url, params = None):
+
+async def get(statuses, url, params=None):
     async with httpx.AsyncClient() as client:
         return await req(client.get, statuses, url, params)
 
-async def delete(statuses, url, params = None):
+
+async def delete(statuses, url, params=None):
     async with httpx.AsyncClient() as client:
         return await req(client.delete, statuses, url, params)
 
-async def put(statuses, url, params = None):
+
+async def put(statuses, url, params=None):
     async with httpx.AsyncClient() as client:
         return await req(client.put, statuses, url, params)
 
-async def post(statuses, url, params = None, json = None, headers = DEFAULT_HEADERS):
+
+async def post(statuses, url, params=None, json=None, headers=DEFAULT_HEADERS):
     async with httpx.AsyncClient() as client:
         return await req(client.post, statuses, url, params, json, headers)
+
 
 async def sendMessage(channel_id, message):
     url = f"{CHANNELS_URL}/{channel_id}/messages"
     json = {"content": message}
     async with httpx.AsyncClient() as client:
-        return await req(client.post, [200], url, json = json)
+        return await req(client.post, [200], url, json=json)
 
-def ImmediateReply(content, mentions = [], ephemeral = False):
-    data = ResponseData(content = content, allowed_mentions = {"parse": mentions})
+
+def ImmediateReply(content, mentions=[], ephemeral=False):
+    data = ResponseData(content=content, allowed_mentions={"parse": mentions})
     if ephemeral:
         data.flags = 64
-    
-    return Response(type = InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data = data)
+
+    return Response(type=InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data=data)
+
 
 def basicValidation(role, botPosition):
     return role.get("tags", {}).get("bot_id") is None and role["position"] < botPosition
 
+
 def colourValidation(role, botPosition):
-    return basicValidation(role, botPosition) and role["color"] == 0 
+    return basicValidation(role, botPosition) and role["color"] == 0
+
 
 role_validate_funcs = {
     "342006395010547712": colourValidation,
@@ -80,7 +90,8 @@ role_validate_funcs = {
     "333316787603243018": basicValidation
 }
 
-async def validateRole(guild_id, role, roles = None):
+
+async def validateRole(guild_id, role, roles=None):
     if roles is None:
         roles = await getRoles(guild_id)
 
@@ -90,7 +101,7 @@ async def validateRole(guild_id, role, roles = None):
             if r["tags"]["bot_id"] == CLIENT_ID:
                 botPosition = r["position"]
                 break
-    
+
     if botPosition == -1:
         raise RuntimeError("Unable to find bot's role")
 
@@ -100,6 +111,7 @@ async def validateRole(guild_id, role, roles = None):
     else:
         return role_validate(role, botPosition)
 
+
 async def validateRoleById(guild_id, role_id):
     roleMatchingRoleId = None
     roles = await getRoles(guild_id)
@@ -107,18 +119,20 @@ async def validateRoleById(guild_id, role_id):
         if r["id"] == role_id:
             roleMatchingRoleId = r
             break
-    
+
     if roleMatchingRoleId is None:
         raise RuntimeError("Unable to find role")
 
     return await validateRole(guild_id, roleMatchingRoleId, roles)
+
 
 async def getRoles(guild_id):
     url = f"{GUILD_URL}/{guild_id}/roles"
     roles = await get([200], url)
     return roles.json()
 
-async def findRole(guild_id, query, autocomplete = False):
+
+async def findRole(guild_id, query, autocomplete=False):
     query = query.lower()
     roles = await getRoles(guild_id)
     candidate = None
@@ -136,5 +150,5 @@ async def findRole(guild_id, query, autocomplete = False):
         if await validateRole(guild_id, candidate, roles):
             gunicorn_logger.info(candidate["name"] + " is reserved")
             return candidate
-    
+
     return None
