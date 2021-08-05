@@ -1,7 +1,7 @@
 import requests
 
-from ..models import OptionType
-from ..utility import APP_URL, DEFAULT_HEADERS
+from SvenBot.models import OptionType
+from SvenBot.utility import APP_URL, DEFAULT_HEADERS
 
 url = f"{APP_URL}/guilds/240160552867987475/commands"
 STAFF_ROLE_ID = 324227354329219072
@@ -79,6 +79,43 @@ commands = [
             "type": OptionType.INTEGER,
             "required": True,
         }]
+    },
+    {
+        "name": "ticket",
+        "description": "Create a github ticket",
+        "options": [{
+            "name": "repo",
+            "description": "Target repo",
+            "type": OptionType.STRING,
+            "required": True,
+            "choices": [
+                {
+                    "name": "arc_misc",
+                    "value": "ARCOMM/arc_misc"
+                },
+                {
+                    "name": "archub",
+                    "value": "ARCOMM/ARCHUB"
+                },
+                {
+                    "name": "svenbot",
+                    "value": "TomBurch/SvenBot"
+                }
+            ]
+            },
+            {
+                "name": "title",
+                "description": "Ticket title",
+                "type": OptionType.STRING,
+                "required": True,
+            },
+            {
+                "name": "body",
+                "description": "Ticket description",
+                "type": OptionType.STRING,
+                "required": True,
+            }
+        ]
     }
 ]
 
