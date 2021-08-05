@@ -90,12 +90,16 @@ commands = [
             "required": True,
             "choices": [
                 {
+                    "name": "archub",
+                    "value": "ARCOMM/ARCHUB"
+                },
+                {
                     "name": "arc_misc",
                     "value": "ARCOMM/arc_misc"
                 },
                 {
-                    "name": "archub",
-                    "value": "ARCOMM/ARCHUB"
+                    "name": "arcmt",
+                    "value": "ARCOMM/ARCMT"
                 },
                 {
                     "name": "svenbot",
