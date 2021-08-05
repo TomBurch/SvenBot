@@ -9,27 +9,32 @@ from SvenBot.utility import CLIENT_ID, ImmediateReply, ARCHUB_HEADERS
 
 
 class Role(dict):
-    def __init__(self, id, name, position, color = 0, botId = None):
+    def __init__(self, _id, name, position, color=0, botId=None):
         if botId is not None:
-            dict.__init__(self, id = id, name = name, position = position, color = color, tags = {"bot_id": botId})
+            dict.__init__(self, id=_id, name=name, position=position, color=color, tags={"bot_id": botId})
         else:
-            dict.__init__(self, id = id, name = name, position = position, color = color)
+            dict.__init__(self, id=_id, name=name, position=position, color=color)
+
 
 class MockRequest(dict):
-    def __init__(self, name, member = None, options = []):
-        dict.__init__(self, type = InteractionType.APPLICATION_COMMAND, member = member, data = {"name": name, "options": options, "id": "MockCommandId"},
-                    guild_id = "342006395010547712", version = 1, token = "MockToken", application_id = "MockAppId", id = "MockRequestId")
+    def __init__(self, name, member=None, options=[]):
+        dict.__init__(self, type=InteractionType.APPLICATION_COMMAND, member=member,
+                      data={"name": name, "options": options, "id": "MockCommandId"},
+                      guild_id="342006395010547712", version=1, token="MockToken", application_id="MockAppId",
+                      id="MockRequestId")
 
-botRole = Role("SvenBotRoleId", "SvenBot", 3, botId = CLIENT_ID)
-invalidRole = Role("RoleId789", "InvalidRole", 1, color = 10)
+
+botRole = Role("SvenBotRoleId", "SvenBot", 3, botId=CLIENT_ID)
+invalidRole = Role("RoleId789", "InvalidRole", 1, color=10)
 testRole = Role("RoleId456", "TestRole", 2)
 roleNotInGuild = Role("RoleId123", "RoleNotInGuild", 5)
 
 roles = [botRole, testRole, invalidRole]
 arcommGuild = "342006395010547712"
 
-memberNoRole = Member(user = {"id": "User234", "username": "TestUser2", "discriminator": "4042"}, roles = [])
-memberWithRole = Member(user = {"id": "User123", "username": "TestUser", "discriminator": "3124"}, roles = [testRole["id"]])
+memberNoRole = Member(user={"id": "User234", "username": "TestUser2", "discriminator": "4042"}, roles=[])
+memberWithRole = Member(user={"id": "User123", "username": "TestUser", "discriminator": "3124"}, roles=[testRole["id"]])
+
 
 @pytest.mark.asyncio
 async def test_ping():
@@ -39,96 +44,104 @@ async def test_ping():
 
     assert reply == expected
 
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("httpx_mock, user, role, roleMethod, roleStatus, replyType", [
-                        (None, memberWithRole, testRole, "DELETE", 204, "Left"),
-                        (None, memberNoRole, testRole, "PUT", 204, "Joined"),
-                        (None, memberWithRole, testRole, "DELETE", 403, "Restricted"),
-                        (None, memberNoRole, testRole, "PUT", 403, "Restricted"),
-                        (None, memberWithRole, invalidRole, None, None, "Restricted"),
-                        (None, memberNoRole, invalidRole, None, None, "Restricted")
-                        ], indirect=["httpx_mock"])
+    (None, memberWithRole, testRole, "DELETE", 204, "Left"),
+    (None, memberNoRole, testRole, "PUT", 204, "Joined"),
+    (None, memberWithRole, testRole, "DELETE", 403, "Restricted"),
+    (None, memberNoRole, testRole, "PUT", 403, "Restricted"),
+    (None, memberWithRole, invalidRole, None, None, "Restricted"),
+    (None, memberNoRole, invalidRole, None, None, "Restricted")
+], indirect=["httpx_mock"])
 async def test_role(httpx_mock, user, role, roleMethod, roleStatus, replyType):
     userId = user.user.id
     roleId = role["id"]
 
     httpx_mock.add_response(
-        method = "GET",
-        url = f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
-        json = roles,
-        status_code = 200
+        method="GET",
+        url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
+        json=roles,
+        status_code=200
     )
 
     if roleMethod is not None:
-        httpx_mock.add_response(     
-            method = roleMethod,   
-            url = f"https://discord.com/api/v8/guilds/{arcommGuild}/members/{userId}/roles/{roleId}",
-            status_code = roleStatus
+        httpx_mock.add_response(
+            method=roleMethod,
+            url=f"https://discord.com/api/v8/guilds/{arcommGuild}/members/{userId}/roles/{roleId}",
+            status_code=roleStatus
         )
 
-    interaction = Interaction(**MockRequest("role", user, options = [Option(value = roleId, name = "role", type = OptionType.ROLE)]))
+    interaction = Interaction(
+        **MockRequest("role", user, options=[Option(value=roleId, name="role", type=OptionType.ROLE)]))
     reply = await handle_interaction(interaction)
 
     if replyType == "Left":
-        assert reply == ImmediateReply(f"<@{userId}> You've left <@&{roleId}>", mentions = ["users"])
+        assert reply == ImmediateReply(f"<@{userId}> You've left <@&{roleId}>", mentions=["users"])
     elif replyType == "Joined":
-        assert reply == ImmediateReply(f"<@{userId}> You've joined <@&{roleId}>", mentions = ["users"])
+        assert reply == ImmediateReply(f"<@{userId}> You've joined <@&{roleId}>", mentions=["users"])
     elif replyType == "Restricted":
-        assert reply == ImmediateReply(f"<@{userId}> Role <@&{roleId}> is restricted", mentions = ["users"])
+        assert reply == ImmediateReply(f"<@{userId}> Role <@&{roleId}> is restricted", mentions=["users"])
     else:
         assert False
-  
+
+
 @pytest.mark.asyncio
 async def test_roles(httpx_mock):
     httpx_mock.add_response(
-        method = "GET",
-        url = f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
-        json = roles,
-        status_code = 200
+        method="GET",
+        url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
+        json=roles,
+        status_code=200
     )
 
     interaction = Interaction(**MockRequest("roles", memberWithRole))
     reply = await handle_interaction(interaction)
 
-    assert reply == ImmediateReply("```\n{}\n```".format(testRole["name"]), mentions = [])
+    assert reply == ImmediateReply("```\n{}\n```".format(testRole["name"]), mentions=[])
+
 
 @pytest.mark.asyncio
 async def test_rolesNoBotRole(httpx_mock):
     httpx_mock.add_response(
-        method = "GET",
-        url = f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
-        json = [testRole, invalidRole],
-        status_code = 200
+        method="GET",
+        url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
+        json=[testRole, invalidRole],
+        status_code=200
     )
 
     with pytest.raises(HTTPException) as e2:
-        with pytest.raises(RuntimeError, match = "Unable to find bot's role") as e1:
+        with pytest.raises(RuntimeError, match="Unable to find bot's role") as e1:
             interaction = Interaction(**MockRequest("roles", memberNoRole))
-            reply = await handle_interaction(interaction)
+            await handle_interaction(interaction)
+
 
 @pytest.mark.asyncio
 async def test_members(httpx_mock):
     roleId = testRole["id"]
 
     httpx_mock.add_response(
-        method = "GET",
-        url = f"https://discord.com/api/v8/guilds/{arcommGuild}/members?limit=200",
-        json = [memberWithRole.dict()],
-        status_code = 200
+        method="GET",
+        url=f"https://discord.com/api/v8/guilds/{arcommGuild}/members?limit=200",
+        json=[memberWithRole.dict()],
+        status_code=200
     )
 
-    interaction = Interaction(**MockRequest("members", memberNoRole, options = [Option(value = roleId, name = "role", type = OptionType.ROLE)]))
+    interaction = Interaction(
+        **MockRequest("members", memberNoRole, options=[Option(value=roleId, name="role", type=OptionType.ROLE)]))
     reply = await handle_interaction(interaction)
 
     username = memberWithRole.user.username
-    assert reply == ImmediateReply(f"```\n{username}\n```", mentions = [])
+    assert reply == ImmediateReply(f"```\n{username}\n```", mentions=[])
+
 
 @pytest.mark.asyncio
 async def test_myroles():
     interaction = Interaction(**MockRequest("myroles", memberWithRole))
     reply = await handle_interaction(interaction)
 
-    assert reply == ImmediateReply("<@&{}>\n".format(testRole["id"]), mentions = [], ephemeral = True)
+    assert reply == ImmediateReply("<@&{}>\n".format(testRole["id"]), mentions=[], ephemeral=True)
+
 
 @pytest.mark.asyncio
 async def test_optime():
@@ -142,80 +155,87 @@ async def test_optime():
     interaction = Interaction(**MockRequest("optime", memberNoRole))
     await handle_interaction(interaction)
 
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("httpx_mock, roleName, roleId, sendsPost, replyType", [
-                        (None, "NewRole", "NewRoleId", True, "added"),
-                        (None, "TestRole", "RoleId456", False, "already exists")
-                        ], indirect=["httpx_mock"])
+    (None, "NewRole", "NewRoleId", True, "added"),
+    (None, "TestRole", "RoleId456", False, "already exists")
+], indirect=["httpx_mock"])
 async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
     httpx_mock.add_response(
-        method = "GET",
-        url = f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
-        json = roles,
-        status_code = 200
+        method="GET",
+        url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
+        json=roles,
+        status_code=200
     )
 
     if sendsPost:
         httpx_mock.add_response(
-            method = "POST",
-            url = f"https://discord.com/api/v8/guilds/342006395010547712/roles",
-            json = Role(roleId, roleName, 4),
-            status_code = 200
+            method="POST",
+            url=f"https://discord.com/api/v8/guilds/342006395010547712/roles",
+            json=Role(roleId, roleName, 4),
+            status_code=200
         )
 
-    interaction = Interaction(**MockRequest("addrole", memberNoRole, options = [Option(value = roleName, name = "name", type = OptionType.STRING)]))
+    interaction = Interaction(
+        **MockRequest("addrole", memberNoRole, options=[Option(value=roleName, name="name", type=OptionType.STRING)]))
     reply = await handle_interaction(interaction)
 
-    assert reply == ImmediateReply(f"<@&{roleId}> {replyType}", mentions = [])
+    assert reply == ImmediateReply(f"<@&{roleId}> {replyType}", mentions=[])
+
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("httpx_mock, role, sendsDelete, replyType", [
-                        (None, testRole, True, "Role deleted"),
-                        (None, invalidRole, False, "Role is restricted")
-                        ], indirect=["httpx_mock"])
+    (None, testRole, True, "Role deleted"),
+    (None, invalidRole, False, "Role is restricted")
+], indirect=["httpx_mock"])
 async def test_removerole(httpx_mock, role, sendsDelete, replyType):
     roleId = role["id"]
 
     httpx_mock.add_response(
-        method = "GET",
-        url = f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
-        json = roles,
-        status_code = 200
+        method="GET",
+        url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
+        json=roles,
+        status_code=200
     )
 
     if sendsDelete:
         httpx_mock.add_response(
-            method = "DELETE",
-            url = f"https://discord.com/api/v8/guilds/342006395010547712/roles/{roleId}",
-            status_code = 204
+            method="DELETE",
+            url=f"https://discord.com/api/v8/guilds/342006395010547712/roles/{roleId}",
+            status_code=204
         )
 
-    interaction = Interaction(**MockRequest("removerole", memberNoRole, options = [Option(value = roleId, name = "role", type = OptionType.ROLE)]))
+    interaction = Interaction(
+        **MockRequest("removerole", memberNoRole, options=[Option(value=roleId, name="role", type=OptionType.ROLE)]))
     reply = await handle_interaction(interaction)
 
-    assert reply == ImmediateReply(replyType, mentions = [])
+    assert reply == ImmediateReply(replyType, mentions=[])
+
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("httpx_mock, statusCode, replyType", [
-                        (None, 201, "You are now subscribed to"),
-                        (None, 204, "You are no longer subscribed to")
-                        ], indirect=["httpx_mock"])
+    (None, 201, "You are now subscribed to"),
+    (None, 204, "You are no longer subscribed to")
+], indirect=["httpx_mock"])
 async def test_subscribe(httpx_mock, statusCode, replyType):
     missionId = 900
     userId = memberNoRole.user.id
 
     httpx_mock.add_response(
-        method = "POST",
-        url = f"https://arcomm.co.uk/api/v1/missions/{missionId}/subscribe?discord_id={userId}",
-        status_code = statusCode,
-        match_headers = ARCHUB_HEADERS
+        method="POST",
+        url=f"https://arcomm.co.uk/api/v1/missions/{missionId}/subscribe?discord_id={userId}",
+        status_code=statusCode,
+        match_headers=ARCHUB_HEADERS
     )
 
-    interaction = Interaction(**MockRequest("subscribe", memberNoRole, options = [Option(value = missionId, name = "subscribe", type = OptionType.INTEGER)]))
+    interaction = Interaction(**MockRequest("subscribe", memberNoRole, options=[
+        Option(value=missionId, name="subscribe", type=OptionType.INTEGER)]))
     reply = await handle_interaction(interaction)
     expected = f"{replyType} https://arcomm.co.uk/hub/missions/{missionId}"
 
-    assert reply == ImmediateReply(expected, mentions = [])
+    assert reply == ImmediateReply(expected, mentions=[])
+
 
 if __name__ == "__main__":
     pytest.main()

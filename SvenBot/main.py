@@ -136,7 +136,7 @@ async def execute_subscribe(user_id, mission_id):
 
 
 async def handle_interaction(interaction):
-    if (interaction.type == InteractionType.APPLICATION_COMMAND):
+    if interaction.type == InteractionType.APPLICATION_COMMAND:
         data = interaction.data
         command = data.name
 
@@ -208,7 +208,7 @@ async def handle_interaction(interaction):
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Not an application command")
 
 
-class ValidDiscordRequest():
+class ValidDiscordRequest:
     async def __call__(self, request: Request):
         signature = request.headers.get("X-Signature-Ed25519")
         timestamp = request.headers.get("X-Signature-Timestamp")
