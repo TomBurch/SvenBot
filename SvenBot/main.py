@@ -9,9 +9,16 @@ from pytz import timezone
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, \
     HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
 
-from . import utility
-from .models import InteractionType, Response, Interaction, InteractionResponseType
-from .utility import GUILD_URL, ARCHUB_URL, ARCHUB_HEADERS, PUBLIC_KEY
+import sys
+import os
+
+PACKAGE_PARENT = '..'
+SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
+sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
+
+from SvenBot import utility
+from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType
+from SvenBot.utility import GUILD_URL, ARCHUB_URL, ARCHUB_HEADERS, PUBLIC_KEY
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 

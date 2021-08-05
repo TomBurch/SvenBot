@@ -3,9 +3,9 @@ from datetime import datetime
 from fastapi import HTTPException
 import pytest
 
-from ..main import handle_interaction, execute_optime
-from ..models import InteractionType, Member, Interaction, Option, OptionType
-from ..utility import CLIENT_ID, ImmediateReply, ARCHUB_HEADERS
+from SvenBot.main import handle_interaction, execute_optime
+from SvenBot.models import InteractionType, Member, Interaction, Option, OptionType
+from SvenBot.utility import CLIENT_ID, ImmediateReply, ARCHUB_HEADERS
 
 
 class Role(dict):
