@@ -151,7 +151,8 @@ async def test_optime():
     assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), 0) == "Optime starts in 0:00:00!"
     assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), 1) == "Optime +1 starts in 1:00:00!"
     assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), -1) == "Optime -1 starts in 23:00:00!"
-    assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), 7) == "Optime modifier is too large"
+    assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), 7) == "Optime +7 starts in 7:00:00!"
+    assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), -7) == "Optime -7 starts in 17:00:00!"
 
     interaction = Interaction(**MockRequest("optime", memberNoRole))
     await handle_interaction(interaction)
