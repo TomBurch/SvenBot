@@ -82,7 +82,8 @@ def execute_myroles(roles):
 def execute_optime(today, modifier):
     try:
         opday = today
-        opday = opday.replace(hour=18 + modifier, minute=0, second=0)
+        opday = opday.replace(hour=18, minute=0, second=0)
+        opday = opday + timedelta(hours=modifier)
         if today > opday:
             opday = opday + timedelta(days=1)
 
@@ -93,8 +94,8 @@ def execute_optime(today, modifier):
         else:
             modifierString = f" {modifier}"
 
-        timeUntilOptime = opday - today
-        return f"Optime{modifierString} starts in {timeUntilOptime}!"
+        timeUntilOptime = int(opday.timestamp())
+        return f"Optime{modifierString} starts <t:{timeUntilOptime}:R>!"
     except ValueError:
         return "Optime modifier is too large"
 

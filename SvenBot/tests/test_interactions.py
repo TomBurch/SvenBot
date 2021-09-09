@@ -146,12 +146,12 @@ async def test_myroles():
 
 @pytest.mark.asyncio
 async def test_optime():
-    assert execute_optime(datetime(2021, 3, 19, 15, 30), 0) == "Optime starts in 2:30:00!"
-    assert execute_optime(datetime(2021, 3, 19, 19, 30, 42), 0) == "Optime starts in 22:29:18!"
-    assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), 0) == "Optime starts in 0:00:00!"
-    assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), 1) == "Optime +1 starts in 1:00:00!"
-    assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), -1) == "Optime -1 starts in 23:00:00!"
-    assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), 7) == "Optime modifier is too large"
+    assert execute_optime(datetime(2021, 3, 19, 15, 30), 0) == "Optime starts <t:1616176800:R>!"
+    assert execute_optime(datetime(2021, 3, 19, 19, 30, 42), 0) == "Optime starts <t:1616263200:R>!"
+    assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), 0) == "Optime starts <t:1616176800:R>!"
+    assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), 1) == "Optime +1 starts <t:1616180400:R>!"
+    assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), -1) == "Optime -1 starts <t:1616259600:R>!"
+    assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), 7) == "Optime +7 starts <t:1616202000:R>!"
 
     interaction = Interaction(**MockRequest("optime", memberNoRole))
     await handle_interaction(interaction)
