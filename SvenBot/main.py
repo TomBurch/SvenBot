@@ -82,7 +82,7 @@ def execute_myroles(roles):
 def execute_optime(today, modifier):
     try:
         opday = today
-        opday = opday.replace(hour=18 + modifier, minute=0, second=0)
+        opday = opday.replace(hour=18, minute=0, second=0) + timedelta(hours=modifier)
         if today > opday:
             opday = opday + timedelta(days=1)
 
