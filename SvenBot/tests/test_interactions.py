@@ -1,7 +1,9 @@
+import random
 from datetime import datetime
+from unittest import mock
 
-from fastapi import HTTPException
 import pytest
+from fastapi import HTTPException
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_200_OK
 
 from SvenBot.main import handle_interaction, execute_optime
@@ -261,6 +263,20 @@ async def test_ticket(httpx_mock):
     expected = f"Ticket created at: {createdUrl}"
 
     assert reply == ImmediateReply(expected, mentions=[])
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("httpx_mock, coin", [
+    (None, 'Heads'),
+    (None, 'Tails')
+], indirect=["httpx_mock"])
+async def test_cointoss(httpx_mock, coin):
+    interaction = Interaction(**MockRequest("cointoss", memberNoRole))
+
+    with mock.patch.object(random, 'choice') as m:
+        m.return_value = coin
+        reply = await handle_interaction(interaction)
+        assert (reply == ImmediateReply(coin))
 
 
 if __name__ == "__main__":
