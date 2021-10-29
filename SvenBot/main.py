@@ -1,4 +1,7 @@
 import logging
+import os
+import random
+import sys
 from datetime import datetime, timedelta
 
 import uvicorn
@@ -8,9 +11,6 @@ from nacl.signing import VerifyKey
 from pytz import timezone
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, \
     HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
-
-import sys
-import os
 
 PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
@@ -141,10 +141,14 @@ async def execute_ticket(repo, title, body, member):
             "body": body}
 
     repoUrl = f"https://api.github.com/repos/{repo}/issues"
-    r = await utility.post([HTTP_201_CREATED], repoUrl, json = json, headers = GITHUB_HEADERS)
+    r = await utility.post([HTTP_201_CREATED], repoUrl, json=json, headers=GITHUB_HEADERS)
     createdUrl = r.json()["html_url"]
 
     return f"Ticket created at: {createdUrl}"
+
+
+def execute_cointoss():
+    return random.choice(["Heads", "Tails"])
 
 
 async def handle_interaction(interaction):
@@ -216,6 +220,10 @@ async def handle_interaction(interaction):
                 title = options[1].value
                 body = options[2].value
                 reply = await execute_ticket(repo, title, body, member)
+                return utility.ImmediateReply(reply)
+
+            elif command == "cointoss":
+                reply = execute_cointoss()
                 return utility.ImmediateReply(reply)
 
         except Exception as e:

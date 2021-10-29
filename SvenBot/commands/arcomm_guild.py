@@ -22,6 +22,10 @@ commands = [
         }]
     },
     {
+        "name": "cointoss",
+        "description": "Flip a coin"
+    },
+    {
         "name": "removerole",
         "description": "Remove an existing role",
         "default_permission": False,
