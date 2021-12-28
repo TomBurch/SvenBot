@@ -1,4 +1,4 @@
-from main import app
+from main import gunicorn_logger
 
 bind = '0.0.0.0:8000'
 workers = 1
@@ -8,4 +8,4 @@ worker_class = "uvicorn.workers.UvicornWorker"
 
 # Server Hooks
 def on_starting(server):
-    app.logger.info(f"Starting Server {server}")
+    gunicorn_logger.info(f"Starting Server {server}")
