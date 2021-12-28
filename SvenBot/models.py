@@ -93,7 +93,7 @@ class Interaction(BaseModel):
     id: str
     application_id: str
     type: InteractionType
-    data: Command
+    data: Optional[Command]
     guild_id: Optional[str]
     channel_id: Optional[str]
     member: Optional[Member]
