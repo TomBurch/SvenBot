@@ -1,6 +1,6 @@
 from main import gunicorn_logger
 
-bind = '0.0.0.0:8000'
+bind = '0.0.0.0'
 workers = 1
 loglevel = "info"
 worker_class = "uvicorn.workers.UvicornWorker"
