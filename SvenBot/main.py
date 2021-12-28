@@ -242,6 +242,7 @@ class ValidDiscordRequest:
         body = await request.body()
 
         if signature is None or timestamp is None or not verify_key(body, signature, timestamp):
+            gunicorn_logger.error("Returning 401")
             raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Bad request signature")
 
         return True
@@ -269,6 +270,7 @@ def app():
 
     @fast_app.post('/interaction/', response_model=Response)
     async def interact(interaction: Interaction = Body(...), valid: bool = Depends(ValidDiscordRequest())):
+        gunicorn_logger.info(f"Attempting to handle interaction {interaction.type}")
         if interaction.type == InteractionType.PING:
             return Response(type=InteractionResponseType.PONG)
 
