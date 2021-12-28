@@ -4,7 +4,7 @@ bind = '0.0.0.0:8000'
 workers = 1
 loglevel = "info"
 worker_class = "uvicorn.workers.UvicornWorker"
-accesslog = "access"
+accesslog = "./access.txt"
 
 
 # Server Hooks
