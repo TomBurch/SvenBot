@@ -259,6 +259,7 @@ def verify_key(body, signature, timestamp):
         gunicorn_logger.info(f"Key: {PUBLIC_KEY}")
         gunicorn_logger.info(f"Bytes: {b}")
         VerifyKey(bytes.fromhex(PUBLIC_KEY)).verify(message, bytes.fromhex(signature))
+        gunicorn_logger.info("Signature was ok")
         return True
     except Exception as e:
         gunicorn_logger.error(e)
