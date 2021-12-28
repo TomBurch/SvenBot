@@ -255,7 +255,7 @@ def verify_key(body, signature, timestamp):
         gunicorn_logger.info(f"Signature: {signature}")
         gunicorn_logger.info(f"Timestamp: {timestamp}")
         b = bytes.fromhex(PUBLIC_KEY)
-        gunicorn_logger.info(f"Key: {key}")
+        gunicorn_logger.info(f"Key: {PUBLIC_KEY}")
         gunicorn_logger.info(f"Bytes: {b}")
         VerifyKey(bytes.fromhex(PUBLIC_KEY)).verify(message, bytes.fromhex(signature))
         return True
