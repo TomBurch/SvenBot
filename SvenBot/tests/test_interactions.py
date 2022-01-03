@@ -176,7 +176,7 @@ async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
     if sendsPost:
         httpx_mock.add_response(
             method="POST",
-            url=f"https://discord.com/api/v8/guilds/342006395010547712/roles",
+            url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
             json=Role(roleId, roleName, 4),
             status_code=HTTP_200_OK
         )
@@ -277,6 +277,41 @@ async def test_cointoss(httpx_mock, coin):
         m.return_value = coin
         reply = await handle_interaction(interaction)
         assert (reply == ImmediateReply(coin))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("httpx_mock, role, newName, patches, replyType", [
+    (None, testRole, "RandomName", True, "was renamed"),
+    (None, invalidRole, "RandomName", False, "is restricted"),
+    (None, testRole, invalidRole["name"], False, "already exists")
+], indirect=["httpx_mock"])
+async def test_renamerole(httpx_mock, role, newName, patches, replyType):
+    roleId = role["id"]
+
+    httpx_mock.add_response(
+        method="GET",
+        url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
+        json=roles,
+        status_code=HTTP_200_OK
+    )
+
+    if patches:
+        httpx_mock.add_response(
+            method="PATCH",
+            url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles/{roleId}",
+            status_code=HTTP_200_OK,
+        )
+
+    interaction = Interaction(
+        **MockRequest("renamerole", memberNoRole, options=[Option(value=roleId, name="role", type=OptionType.ROLE),
+                                                           Option(value=newName, name="name", type=OptionType.STRING)]))
+    reply = await handle_interaction(interaction)
+
+    if newName == invalidRole["name"]:
+        roleId = invalidRole['id']
+        assert reply == ImmediateReply(f"<@&{roleId}> {replyType}", mentions=[])
+    else:
+        assert reply == ImmediateReply(f"<@&{roleId}> {replyType}", mentions=[])
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ url = f"{APP_URL}/guilds/240160552867987475/commands"
 STAFF_ROLE_ID = 324227354329219072
 
 update = []
-staff = ["addrole", "removerole"]
+staff = ["addrole", "removerole", "renamerole"]
 
 commands = [
     {
@@ -18,7 +18,7 @@ commands = [
             "name": "name",
             "description": "Name",
             "type": OptionType.STRING,
-            "required": True, 
+            "required": True,
         }]
     },
     {
@@ -33,8 +33,27 @@ commands = [
             "name": "role",
             "description": "Role",
             "type": OptionType.ROLE,
-            "required": True, 
+            "required": True,
         }]
+    },
+    {
+        "name": "renamerole",
+        "description": "Rename an existing role",
+        "default_permission": False,
+        "options": [
+            {
+                "name": "role",
+                "description": "Role",
+                "type": OptionType.ROLE,
+                "required": True,
+            },
+            {
+                "name": "name",
+                "description": "New name",
+                "type": OptionType.STRING,
+                "required": True,
+            }
+        ]
     },
     {
         "name": "members",
@@ -110,7 +129,7 @@ commands = [
                     "value": "TomBurch/SvenBot"
                 }
             ]
-            },
+        },
             {
                 "name": "title",
                 "description": "Ticket title",
@@ -128,7 +147,7 @@ commands = [
 ]
 
 if __name__ == "__main__":
-    r = requests.get(url, headers = DEFAULT_HEADERS)
+    r = requests.get(url, headers=DEFAULT_HEADERS)
     print(r.status_code, r.reason, r.text)
     currentCommands = r.json()
 
@@ -140,7 +159,7 @@ if __name__ == "__main__":
 
         if command["name"] in update:
             print("update queued")
-            r = requests.post(url, headers = DEFAULT_HEADERS, json = command)
+            r = requests.post(url, headers=DEFAULT_HEADERS, json=command)
             print(r.status_code, r.reason, r.text)
 
             if command["name"] in staff:
@@ -148,12 +167,12 @@ if __name__ == "__main__":
                     print("adding staff permissions")
                     permissions = {
                         "permissions": [{
-                                "id": STAFF_ROLE_ID,
-                                "type": 1,
-                                "permission": True
-                            }]
+                            "id": STAFF_ROLE_ID,
+                            "type": 1,
+                            "permission": True
+                        }]
                     }
-                    r = requests.put(f"{url}/{commandId}/permissions", headers = DEFAULT_HEADERS, json = permissions)
+                    r = requests.put(f"{url}/{commandId}/permissions", headers=DEFAULT_HEADERS, json=permissions)
                     print(r.status_code, r.reason, r.text)
                 else:
                     print("ERROR commandId is NONE")
