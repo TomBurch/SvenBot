@@ -100,12 +100,10 @@ def execute_optime(today, modifier):
 
 
 async def execute_addrole(guild_id, name):
-    roles = await utility.getRoles(guild_id)
-
-    for role in roles:
-        if role["name"].lower() == name.lower():
-            role_id = role["id"]
-            return f"<@&{role_id}> already exists"
+    existingRole = await utility.findRoleByName(guild_id, name, excludeReserved=False)
+    if existingRole is not None:
+        role_id = existingRole["id"]
+        return f"<@&{role_id}> already exists"
 
     url = f"{GUILD_URL}/{guild_id}/roles"
     r = await utility.post([HTTP_200_OK], url, json={"name": name, "mentionable": True})
@@ -149,6 +147,21 @@ async def execute_ticket(repo, title, body, member):
 
 def execute_cointoss():
     return random.choice(["Heads", "Tails"])
+
+
+async def execute_renamerole(guild_id, role_id, new_name):
+    if not await utility.validateRoleById(guild_id, role_id):
+        return f"<@&{role_id}> is restricted"
+
+    existingRole = await utility.findRoleByName(guild_id, new_name, excludeReserved=False)
+    if existingRole is not None:
+        role_id = existingRole["id"]
+        return f"<@&{role_id}> already exists"
+
+    url = f"{GUILD_URL}/{guild_id}/roles/{role_id}"
+    await utility.patch([HTTP_200_OK], url, json={"name": new_name})
+
+    return f"<@&{role_id}> was renamed"
 
 
 async def handle_interaction(interaction):
@@ -224,6 +237,12 @@ async def handle_interaction(interaction):
 
             elif command == "cointoss":
                 reply = execute_cointoss()
+                return utility.ImmediateReply(reply)
+
+            elif command == "renamerole":
+                role_id = options[0].value
+                new_name = options[1].value
+                reply = await execute_renamerole(guild_id, role_id, new_name)
                 return utility.ImmediateReply(reply)
 
         except Exception as e:

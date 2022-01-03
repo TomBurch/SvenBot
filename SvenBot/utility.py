@@ -66,6 +66,11 @@ async def post(statuses, url, params=None, json=None, headers=DEFAULT_HEADERS):
         return await req(client.post, statuses, url, params, json, headers)
 
 
+async def patch(statuses, url, params=None, json=None):
+    async with httpx.AsyncClient() as client:
+        return await req(client.patch, statuses, url, params, json)
+
+
 async def sendMessage(channel_id, message):
     url = f"{CHANNELS_URL}/{channel_id}/messages"
     json = {"content": message}
@@ -137,7 +142,7 @@ async def getRoles(guild_id):
     return roles.json()
 
 
-async def findRole(guild_id, query, autocomplete=False):
+async def findRoleByName(guild_id, query, autocomplete=False, excludeReserved=True):
     query = query.lower()
     roles = await getRoles(guild_id)
     candidate = None
@@ -151,9 +156,9 @@ async def findRole(guild_id, query, autocomplete=False):
         if autocomplete and re.match(re.escape(query), roleName):
             candidate = role
 
-    if candidate is not None:
+    if excludeReserved and (candidate is not None):
         if await validateRole(guild_id, candidate, roles):
-            gunicorn_logger.info(candidate["name"] + " is reserved")
             return candidate
+        return None
 
-    return None
+    return candidate
