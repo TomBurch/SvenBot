@@ -1,6 +1,6 @@
 import requests
 
-from SvenBot.models import OptionType
+from SvenBot.commands.command_models import *
 from SvenBot.utility import APP_URL, DEFAULT_HEADERS
 
 url = f"{APP_URL}/guilds/240160552867987475/commands"
@@ -10,140 +10,17 @@ update = []
 staff = ["addrole", "removerole", "renamerole"]
 
 commands = [
-    {
-        "name": "addrole",
-        "description": "Add a new role",
-        "default_permission": False,
-        "options": [{
-            "name": "name",
-            "description": "Name",
-            "type": OptionType.STRING,
-            "required": True,
-        }]
-    },
-    {
-        "name": "cointoss",
-        "description": "Flip a coin"
-    },
-    {
-        "name": "removerole",
-        "description": "Remove an existing role",
-        "default_permission": False,
-        "options": [{
-            "name": "role",
-            "description": "Role",
-            "type": OptionType.ROLE,
-            "required": True,
-        }]
-    },
-    {
-        "name": "renamerole",
-        "description": "Rename an existing role",
-        "default_permission": False,
-        "options": [
-            {
-                "name": "role",
-                "description": "Role",
-                "type": OptionType.ROLE,
-                "required": True,
-            },
-            {
-                "name": "name",
-                "description": "New name",
-                "type": OptionType.STRING,
-                "required": True,
-            }
-        ]
-    },
-    {
-        "name": "members",
-        "description": "Get a list of members in a role",
-        "options": [{
-            "name": "role",
-            "description": "The role",
-            "type": OptionType.ROLE,
-            "required": True,
-        }]
-    },
-    {
-        "name": "myroles",
-        "description": "Get a list of roles you're in"
-    },
-    {
-        "name": "optime",
-        "description": "Time until optime",
-        "options": [{
-            "name": "modifier",
-            "description": "Modifier",
-            "type": OptionType.INTEGER,
-            "required": False,
-        }]
-    },
-    {
-        "name": "role",
-        "description": "Join or leave a role",
-        "options": [{
-            "name": "role",
-            "description": "The role",
-            "type": OptionType.ROLE,
-            "required": True,
-        }]
-    },
-    {
-        "name": "roles",
-        "description": "Get a list of roles you can join"
-    },
-    {
-        "name": "subscribe",
-        "description": "(Un)subscribe to mission notifications",
-        "options": [{
-            "name": "mission",
-            "description": "The mission ID",
-            "type": OptionType.INTEGER,
-            "required": True,
-        }]
-    },
-    {
-        "name": "ticket",
-        "description": "Create a github ticket",
-        "options": [{
-            "name": "repo",
-            "description": "Target repo",
-            "type": OptionType.STRING,
-            "required": True,
-            "choices": [
-                {
-                    "name": "archub",
-                    "value": "ARCOMM/ARCHUB"
-                },
-                {
-                    "name": "arc_misc",
-                    "value": "ARCOMM/arc_misc"
-                },
-                {
-                    "name": "arcmt",
-                    "value": "ARCOMM/ARCMT"
-                },
-                {
-                    "name": "svenbot",
-                    "value": "TomBurch/SvenBot"
-                }
-            ]
-        },
-            {
-                "name": "title",
-                "description": "Ticket title",
-                "type": OptionType.STRING,
-                "required": True,
-            },
-            {
-                "name": "body",
-                "description": "Ticket description",
-                "type": OptionType.STRING,
-                "required": True,
-            }
-        ]
-    }
+    addrole,
+    cointoss,
+    removerole,
+    renamerole,
+    members,
+    myroles,
+    optime,
+    role,
+    roles,
+    subscribe,
+    ticket
 ]
 
 if __name__ == "__main__":
@@ -152,17 +29,17 @@ if __name__ == "__main__":
     currentCommands = r.json()
 
     for command in commands:
-        commandId = next((c["id"] for c in currentCommands if c["name"] == command["name"]), None)
+        commandId = next((c["id"] for c in currentCommands if c["name"] == command.name), None)
         print("===================")
-        print(command["name"])
+        print(command.name)
         print(f"commandId = {commandId}")
 
-        if command["name"] in update:
+        if command.name in update:
             print("update queued")
-            r = requests.post(url, headers=DEFAULT_HEADERS, json=command)
+            r = requests.post(url, headers=DEFAULT_HEADERS, json=command.dict())
             print(r.status_code, r.reason, r.text)
 
-            if command["name"] in staff:
+            if command.name in staff:
                 if commandId is not None:
                     print("adding staff permissions")
                     permissions = {
