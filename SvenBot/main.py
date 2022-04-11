@@ -182,11 +182,8 @@ async def handle_interaction(interaction):
                 return utility.ImmediateReply("Pong!")
 
             elif command == "role":
-                roles = member.roles
                 role_id = options[0].value
-                user_id = user.id
-                reply = await execute_role(roles, role_id, guild_id, user_id)
-
+                reply = await execute_role(member.roles, role_id, guild_id, user.id)
                 return utility.ImmediateReply(reply, mentions=["users"])
 
             elif command == "roles":
@@ -199,8 +196,7 @@ async def handle_interaction(interaction):
                 return utility.ImmediateReply(reply)
 
             elif command == "myroles":
-                roles = member.roles
-                reply = execute_myroles(roles)
+                reply = execute_myroles(member.roles)
                 return utility.ImmediateReply(reply, ephemeral=True)
 
             elif command == "optime":
@@ -223,9 +219,8 @@ async def handle_interaction(interaction):
                 return utility.ImmediateReply(reply)
 
             elif command == "subscribe":
-                user_id = user.id
                 mission_id = options[0].value
-                reply = await execute_subscribe(user_id, mission_id)
+                reply = await execute_subscribe(user.id, mission_id)
                 return utility.ImmediateReply(reply)
 
             elif command == "ticket":
