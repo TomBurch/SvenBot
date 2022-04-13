@@ -75,7 +75,7 @@ async def execute_members(interaction: Interaction):
     return f"```\n{reply}```"
 
 
-def execute_myroles(interaction: Interaction):
+async def execute_myroles(interaction: Interaction):
     reply = ""
 
     for role_id in interaction.member.roles:
@@ -84,7 +84,7 @@ def execute_myroles(interaction: Interaction):
     return reply
 
 
-def execute_optime(interaction):
+async def execute_optime(interaction):
     today = datetime.now(tz=timezone('Europe/London'))
     if interaction.data.options is not None and len(interaction.data.options) > 0:
         modifier = interaction.data.options[0].value
@@ -163,7 +163,7 @@ async def execute_ticket(interaction: Interaction):
     return f"Ticket created at: {createdUrl}"
 
 
-def execute_cointoss():
+async def execute_cointoss(interaction: Interaction):
     return random.choice(["Heads", "Tails"])
 
 
@@ -184,67 +184,45 @@ async def execute_renamerole(interaction: Interaction):
     return f"<@&{role_id.value}> was renamed"
 
 
+async def execute_ping(interaction: Interaction):
+    return "Pong!"
+
+
+execute_map = {
+    "addrole": execute_addrole,
+    "cointoss": execute_cointoss,
+    "members": execute_members,
+    "myroles": execute_myroles,
+    "optime": execute_optime,
+    "ping": execute_ping,
+    "removerole": execute_removerole,
+    "renamerole": execute_renamerole,
+    "role": execute_role,
+    "roles": execute_roles,
+    "subscribe": execute_subscribe,
+    "ticket": execute_ticket,
+}
+
+ephemeral = ["myroles"]
+
+
 async def handle_interaction(interaction: Interaction):
-    if interaction.type == InteractionType.APPLICATION_COMMAND:
-        command = interaction.data.name
-
-        try:
-            gunicorn_logger.info(f"'{interaction.member.user.username}' executing '{command}'")
-
-            if command == "ping":
-                return utility.ImmediateReply("Pong!")
-
-            elif command == "role":
-                reply = await execute_role(interaction)
-                return utility.ImmediateReply(reply)
-
-            elif command == "roles":
-                reply = await execute_roles(interaction)
-                return utility.ImmediateReply(reply)
-
-            elif command == "members":
-                reply = await execute_members(interaction)
-                return utility.ImmediateReply(reply)
-
-            elif command == "myroles":
-                reply = execute_myroles(interaction)
-                return utility.ImmediateReply(reply, ephemeral=True)
-
-            elif command == "optime":
-                reply = execute_optime(interaction)
-                return utility.ImmediateReply(reply)
-
-            elif command == "addrole":
-                reply = await execute_addrole(interaction)
-                return utility.ImmediateReply(reply)
-
-            elif command == "removerole":
-                reply = await execute_removerole(interaction)
-                return utility.ImmediateReply(reply)
-
-            elif command == "subscribe":
-                reply = await execute_subscribe(interaction)
-                return utility.ImmediateReply(reply)
-
-            elif command == "ticket":
-                reply = await execute_ticket(interaction)
-                return utility.ImmediateReply(reply)
-
-            elif command == "cointoss":
-                reply = execute_cointoss()
-                return utility.ImmediateReply(reply)
-
-            elif command == "renamerole":
-                reply = await execute_renamerole(interaction)
-                return utility.ImmediateReply(reply)
-
-        except Exception as e:
-            gunicorn_logger.error(f"Error executing '{command}':\n{str(e)})")
-            raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error executing '{command}'")
-
-        raise HTTPException(status_code=HTTP_501_NOT_IMPLEMENTED, detail=f"'{command}' is not a known command")
-    else:
+    if interaction.type != InteractionType.APPLICATION_COMMAND:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Not an application command")
+
+    command = interaction.data.name
+    if command not in execute_map:
+        raise HTTPException(status_code=HTTP_501_NOT_IMPLEMENTED, detail=f"'{command}' is not a known command")
+
+    try:
+        gunicorn_logger.info(f"'{interaction.member.user.username}' executing '{command}'")
+
+        reply = await execute_map[command](interaction)
+        return utility.ImmediateReply(reply, ephemeral=command in ephemeral)
+
+    except Exception as e:
+        gunicorn_logger.error(f"Error executing '{command}':\n{str(e)})")
+        raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error executing '{command}'")
 
 
 class ValidDiscordRequest:
