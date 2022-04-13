@@ -25,22 +25,19 @@ gunicorn_logger = logging.getLogger('gunicorn.error')
 
 async def execute_role(roles, role_id, guild_id, user_id):
     if not await utility.validateRoleById(guild_id, role_id):
-        gunicorn_logger.warning(f"Role <@&{role_id}> is restricted (validation)")
-        return f"<@{user_id}> Role <@&{role_id}> is restricted"
+        return f"<@&{role_id}> is restricted"
 
     url = f"{GUILD_URL}/{guild_id}/members/{user_id}/roles/{role_id}"
 
     if role_id in roles:
         r = await utility.delete([HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN], url)
-        reply = f"<@{user_id}> You've left <@&{role_id}>"
+        reply = f"You've left <@&{role_id}>"
     else:
         r = await utility.put([HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN], url)
-        reply = f"<@{user_id}> You've joined <@&{role_id}>"
+        reply = f"You've joined <@&{role_id}>"
 
-    if r.status_code == 403:
-        gunicorn_logger.warning(f"Role <@&{role_id}> is restricted (403)")
-        return f"<@{user_id}> Role <@&{role_id}> is restricted"
-
+    if r.status_code == HTTP_403_FORBIDDEN:
+        return f"<@&{role_id}> is restricted"
     return reply
 
 
@@ -184,7 +181,7 @@ async def handle_interaction(interaction):
             elif command == "role":
                 role_id = options[0].value
                 reply = await execute_role(member.roles, role_id, guild_id, user.id)
-                return utility.ImmediateReply(reply, mentions=["users"])
+                return utility.ImmediateReply(reply)
 
             elif command == "roles":
                 reply = await execute_roles(guild_id)

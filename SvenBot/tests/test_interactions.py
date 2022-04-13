@@ -8,7 +8,7 @@ from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_200_OK
 
 from SvenBot.main import handle_interaction, execute_optime
 from SvenBot.models import InteractionType, Member, Interaction, Option, OptionType
-from SvenBot.utility import CLIENT_ID, ImmediateReply, ARCHUB_HEADERS, GITHUB_HEADERS
+from SvenBot.utility import CLIENT_ID, ImmediateReply, ARCHUB_HEADERS, GITHUB_HEADERS, GUILD_URL
 
 
 class Role(dict):
@@ -50,12 +50,12 @@ async def test_ping():
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("httpx_mock, user, role, roleMethod, roleStatus, replyType", [
-    (None, memberWithRole, testRole, "DELETE", 204, "Left"),
-    (None, memberNoRole, testRole, "PUT", 204, "Joined"),
-    (None, memberWithRole, testRole, "DELETE", 403, "Restricted"),
-    (None, memberNoRole, testRole, "PUT", 403, "Restricted"),
-    (None, memberWithRole, invalidRole, None, None, "Restricted"),
-    (None, memberNoRole, invalidRole, None, None, "Restricted")
+    (None, memberWithRole, testRole, "DELETE", 204, "left"),
+    (None, memberNoRole, testRole, "PUT", 204, "joined"),
+    (None, memberWithRole, testRole, "DELETE", 403, "restricted"),
+    (None, memberNoRole, testRole, "PUT", 403, "restricted"),
+    (None, memberWithRole, invalidRole, None, None, "restricted"),
+    (None, memberNoRole, invalidRole, None, None, "restricted")
 ], indirect=["httpx_mock"])
 async def test_role(httpx_mock, user, role, roleMethod, roleStatus, replyType):
     userId = user.user.id
@@ -63,7 +63,7 @@ async def test_role(httpx_mock, user, role, roleMethod, roleStatus, replyType):
 
     httpx_mock.add_response(
         method="GET",
-        url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
+        url=f"{GUILD_URL}/{arcommGuild}/roles",
         json=roles,
         status_code=HTTP_200_OK
     )
@@ -71,7 +71,7 @@ async def test_role(httpx_mock, user, role, roleMethod, roleStatus, replyType):
     if roleMethod is not None:
         httpx_mock.add_response(
             method=roleMethod,
-            url=f"https://discord.com/api/v8/guilds/{arcommGuild}/members/{userId}/roles/{roleId}",
+            url=f"{GUILD_URL}/{arcommGuild}/members/{userId}/roles/{roleId}",
             status_code=roleStatus
         )
 
@@ -79,12 +79,10 @@ async def test_role(httpx_mock, user, role, roleMethod, roleStatus, replyType):
         **MockRequest("role", user, options=[Option(value=roleId, name="role", type=OptionType.ROLE)]))
     reply = await handle_interaction(interaction)
 
-    if replyType == "Left":
-        assert reply == ImmediateReply(f"<@{userId}> You've left <@&{roleId}>", mentions=["users"])
-    elif replyType == "Joined":
-        assert reply == ImmediateReply(f"<@{userId}> You've joined <@&{roleId}>", mentions=["users"])
-    elif replyType == "Restricted":
-        assert reply == ImmediateReply(f"<@{userId}> Role <@&{roleId}> is restricted", mentions=["users"])
+    if replyType == "left" or replyType == "joined":
+        assert reply == ImmediateReply(f"You've {replyType} <@&{roleId}>", mentions=[])
+    elif replyType == "restricted":
+        assert reply == ImmediateReply(f"<@&{roleId}> is restricted", mentions=[])
     else:
         assert False
 
@@ -93,7 +91,7 @@ async def test_role(httpx_mock, user, role, roleMethod, roleStatus, replyType):
 async def test_roles(httpx_mock):
     httpx_mock.add_response(
         method="GET",
-        url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
+        url=f"{GUILD_URL}/{arcommGuild}/roles",
         json=roles,
         status_code=HTTP_200_OK
     )
@@ -108,7 +106,7 @@ async def test_roles(httpx_mock):
 async def test_rolesNoBotRole(httpx_mock):
     httpx_mock.add_response(
         method="GET",
-        url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
+        url=f"{GUILD_URL}/{arcommGuild}/roles",
         json=[testRole, invalidRole],
         status_code=HTTP_200_OK
     )
@@ -125,7 +123,7 @@ async def test_members(httpx_mock):
 
     httpx_mock.add_response(
         method="GET",
-        url=f"https://discord.com/api/v8/guilds/{arcommGuild}/members?limit=200",
+        url=f"{GUILD_URL}/{arcommGuild}/members?limit=200",
         json=[memberWithRole.dict()],
         status_code=HTTP_200_OK
     )
@@ -168,7 +166,7 @@ async def test_optime():
 async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
     httpx_mock.add_response(
         method="GET",
-        url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
+        url=f"{GUILD_URL}/{arcommGuild}/roles",
         json=roles,
         status_code=HTTP_200_OK
     )
@@ -176,7 +174,7 @@ async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
     if sendsPost:
         httpx_mock.add_response(
             method="POST",
-            url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
+            url=f"{GUILD_URL}/{arcommGuild}/roles",
             json=Role(roleId, roleName, 4),
             status_code=HTTP_200_OK
         )
@@ -198,7 +196,7 @@ async def test_removerole(httpx_mock, role, sendsDelete, replyType):
 
     httpx_mock.add_response(
         method="GET",
-        url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
+        url=f"{GUILD_URL}/{arcommGuild}/roles",
         json=roles,
         status_code=HTTP_200_OK
     )
@@ -206,7 +204,7 @@ async def test_removerole(httpx_mock, role, sendsDelete, replyType):
     if sendsDelete:
         httpx_mock.add_response(
             method="DELETE",
-            url=f"https://discord.com/api/v8/guilds/342006395010547712/roles/{roleId}",
+            url=f"{GUILD_URL}/{arcommGuild}/roles/{roleId}",
             status_code=HTTP_204_NO_CONTENT
         )
 
@@ -290,7 +288,7 @@ async def test_renamerole(httpx_mock, role, newName, patches, replyType):
 
     httpx_mock.add_response(
         method="GET",
-        url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles",
+        url=f"{GUILD_URL}/{arcommGuild}/roles",
         json=roles,
         status_code=HTTP_200_OK
     )
@@ -298,7 +296,7 @@ async def test_renamerole(httpx_mock, role, newName, patches, replyType):
     if patches:
         httpx_mock.add_response(
             method="PATCH",
-            url=f"https://discord.com/api/v8/guilds/{arcommGuild}/roles/{roleId}",
+            url=f"{GUILD_URL}/{arcommGuild}/roles/{roleId}",
             status_code=HTTP_200_OK,
         )
 
