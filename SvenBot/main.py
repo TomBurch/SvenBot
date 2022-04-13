@@ -84,24 +84,27 @@ def execute_myroles(interaction: Interaction):
     return reply
 
 
-def execute_optime(today, modifier):
-    try:
-        opday = today
-        opday = opday.replace(hour=18, minute=0, second=0) + timedelta(hours=modifier)
-        if today > opday:
-            opday = opday + timedelta(days=1)
+def execute_optime(interaction):
+    today = datetime.now(tz=timezone('Europe/London'))
+    if interaction.data.options is not None and len(interaction.data.options) > 0:
+        modifier = interaction.data.options[0].value
+    else:
+        modifier = 0
 
-        if modifier == 0:
-            modifierString = ""
-        elif modifier > 0:
-            modifierString = f" +{modifier}"
-        else:
-            modifierString = f" {modifier}"
+    opday = today
+    opday = opday.replace(hour=18, minute=0, second=0) + timedelta(hours=modifier)
+    if today > opday:
+        opday = opday + timedelta(days=1)
 
-        timeUntilOptime = opday - today
-        return f"Optime{modifierString} starts in {timeUntilOptime}!"
-    except ValueError:
-        return "Optime modifier is too large"
+    if modifier == 0:
+        modifierString = ""
+    elif modifier > 0:
+        modifierString = f" +{modifier}"
+    else:
+        modifierString = f" {modifier}"
+
+    timeUntilOptime = opday - today
+    return f"Optime{modifierString} starts in {timeUntilOptime}!"
 
 
 async def execute_addrole(interaction: Interaction):
@@ -208,12 +211,7 @@ async def handle_interaction(interaction: Interaction):
                 return utility.ImmediateReply(reply, ephemeral=True)
 
             elif command == "optime":
-                if interaction.data.options is not None and len(interaction.data.options) > 0:
-                    modifier = interaction.data.options[0].value
-                else:
-                    modifier = 0
-
-                reply = execute_optime(datetime.now(tz=timezone('Europe/London')), modifier)
+                reply = execute_optime(interaction)
                 return utility.ImmediateReply(reply)
 
             elif command == "addrole":

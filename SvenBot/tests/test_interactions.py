@@ -4,6 +4,7 @@ from unittest import mock
 
 import pytest
 from fastapi import HTTPException
+from freezegun import freeze_time
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_200_OK
 
 from SvenBot.main import handle_interaction, execute_optime
@@ -144,18 +145,24 @@ async def test_myroles():
     assert reply == ImmediateReply("<@&{}>\n".format(testRole["id"]), mentions=[], ephemeral=True)
 
 
+#@mock.patch('datetime.now')
 @pytest.mark.asyncio
-async def test_optime():
-    assert execute_optime(datetime(2021, 3, 19, 15, 30), 0) == "Optime starts in 2:30:00!"
-    assert execute_optime(datetime(2021, 3, 19, 19, 30, 42), 0) == "Optime starts in 22:29:18!"
-    assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), 0) == "Optime starts in 0:00:00!"
-    assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), 1) == "Optime +1 starts in 1:00:00!"
-    assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), -1) == "Optime -1 starts in 23:00:00!"
-    assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), 7) == "Optime +7 starts in 7:00:00!"
-    assert execute_optime(datetime(2021, 3, 19, 18, 0, 0), -7) == "Optime -7 starts in 17:00:00!"
+@pytest.mark.parametrize("now_mock, modifier, timeUntilOptime", [
+    (datetime(2021, 3, 19, 15, 30), "", "2:30:00"),
+    (datetime(2021, 3, 19, 19, 30, 42), "", "22:29:18"),
+    (datetime(2021, 3, 19, 18, 0, 0), "", "0:00:00"),
+    (datetime(2021, 3, 19, 18, 0, 0), " +1", "1:00:00"),
+    (datetime(2021, 3, 19, 18, 0, 0), " -1", "23:00:00"),
+    (datetime(2021, 3, 19, 18, 0, 0), " +7", "7:00:00"),
+    (datetime(2021, 3, 19, 18, 0, 0), " -7", "17:00:00")
+])
+async def test_optime(now_mock, modifier, timeUntilOptime):
+    with freeze_time(now_mock):
+        options = None if modifier == "" else [Option(value=int(modifier), name="modifier", type=OptionType.INTEGER)]
+        interaction = Interaction(**MockRequest("optime", memberNoRole, options=options))
+        reply = await handle_interaction(interaction)
 
-    interaction = Interaction(**MockRequest("optime", memberNoRole))
-    await handle_interaction(interaction)
+    assert reply == ImmediateReply(f"Optime{modifier} starts in {timeUntilOptime}!", mentions=[])
 
 
 @pytest.mark.asyncio
