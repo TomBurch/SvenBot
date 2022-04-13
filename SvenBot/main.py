@@ -23,25 +23,30 @@ from SvenBot.utility import GUILD_URL, ARCHUB_URL, ARCHUB_HEADERS, PUBLIC_KEY, G
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
 
-async def execute_role(roles, role_id, guild_id, user_id):
-    if not await utility.validateRoleById(guild_id, role_id):
-        return f"<@&{role_id}> is restricted"
+async def execute_role(interaction: Interaction):
+    guild_id = interaction.guild_id
+    user_id = interaction.member.user.id
+    role_id, = interaction.data.options
 
-    url = f"{GUILD_URL}/{guild_id}/members/{user_id}/roles/{role_id}"
+    if not await utility.validateRoleById(guild_id, role_id.value):
+        return f"<@&{role_id.value}> is restricted"
 
-    if role_id in roles:
+    url = f"{GUILD_URL}/{guild_id}/members/{user_id}/roles/{role_id.value}"
+
+    if role_id.value in interaction.member.roles:
         r = await utility.delete([HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN], url)
-        reply = f"You've left <@&{role_id}>"
+        reply = f"You've left <@&{role_id.value}>"
     else:
         r = await utility.put([HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN], url)
-        reply = f"You've joined <@&{role_id}>"
+        reply = f"You've joined <@&{role_id.value}>"
 
     if r.status_code == HTTP_403_FORBIDDEN:
-        return f"<@&{role_id}> is restricted"
+        return f"<@&{role_id.value}> is restricted"
     return reply
 
 
-async def execute_roles(guild_id):
+async def execute_roles(interaction: Interaction):
+    guild_id = interaction.guild_id
     roles = await utility.getRoles(guild_id)
 
     joinableRoles = []
@@ -53,7 +58,10 @@ async def execute_roles(guild_id):
     return "```\n{}\n```".format("\n".join(joinableRoles))
 
 
-async def execute_members(role_id, guild_id):
+async def execute_members(interaction: Interaction):
+    guild_id = interaction.guild_id
+    role_id, = interaction.data.options
+
     url = f"{GUILD_URL}/{guild_id}/members"
 
     r = await utility.get([HTTP_200_OK], url, params={"limit": 200})
@@ -61,57 +69,66 @@ async def execute_members(role_id, guild_id):
     reply = ""
 
     for member in members:
-        if role_id in member["roles"]:
+        if role_id.value in member["roles"]:
             reply += member["user"]["username"] + "\n"
 
     return f"```\n{reply}```"
 
 
-def execute_myroles(roles):
+async def execute_myroles(interaction: Interaction):
     reply = ""
 
-    for role_id in roles:
+    for role_id in interaction.member.roles:
         reply += f"<@&{role_id}>\n"
 
     return reply
 
 
-def execute_optime(today, modifier):
-    try:
-        opday = today
-        opday = opday.replace(hour=18, minute=0, second=0) + timedelta(hours=modifier)
-        if today > opday:
-            opday = opday + timedelta(days=1)
+async def execute_optime(interaction):
+    today = datetime.now(tz=timezone('Europe/London'))
+    if interaction.data.options is not None and len(interaction.data.options) > 0:
+        modifier = interaction.data.options[0].value
+    else:
+        modifier = 0
 
-        if modifier == 0:
-            modifierString = ""
-        elif modifier > 0:
-            modifierString = f" +{modifier}"
-        else:
-            modifierString = f" {modifier}"
+    opday = today
+    opday = opday.replace(hour=18, minute=0, second=0) + timedelta(hours=modifier)
+    if today > opday:
+        opday = opday + timedelta(days=1)
 
-        timeUntilOptime = opday - today
-        return f"Optime{modifierString} starts in {timeUntilOptime}!"
-    except ValueError:
-        return "Optime modifier is too large"
+    if modifier == 0:
+        modifierString = ""
+    elif modifier > 0:
+        modifierString = f" +{modifier}"
+    else:
+        modifierString = f" {modifier}"
+
+    timeUntilOptime = opday - today
+    return f"Optime{modifierString} starts in {timeUntilOptime}!"
 
 
-async def execute_addrole(guild_id, name):
-    existingRole = await utility.findRoleByName(guild_id, name, excludeReserved=False)
+async def execute_addrole(interaction: Interaction):
+    guild_id = interaction.guild_id
+    name, = interaction.data.options
+
+    existingRole = await utility.findRoleByName(guild_id, name.value, excludeReserved=False)
     if existingRole is not None:
         role_id = existingRole["id"]
         return f"<@&{role_id}> already exists"
 
     url = f"{GUILD_URL}/{guild_id}/roles"
-    r = await utility.post([HTTP_200_OK], url, json={"name": name, "mentionable": True})
+    r = await utility.post([HTTP_200_OK], url, json={"name": name.value, "mentionable": True})
     role_id = r.json()["id"]
 
     return f"<@&{role_id}> added"
 
 
-async def execute_removerole(guild_id, role_id):
-    if await utility.validateRoleById(guild_id, role_id):
-        url = f"{GUILD_URL}/{guild_id}/roles/{role_id}"
+async def execute_removerole(interaction: Interaction):
+    guild_id = interaction.guild_id
+    role_id, = interaction.data.options
+
+    if await utility.validateRoleById(guild_id, role_id.value):
+        url = f"{GUILD_URL}/{guild_id}/roles/{role_id.value}"
 
         await utility.delete([HTTP_204_NO_CONTENT], url)
         return "Role deleted"
@@ -119,10 +136,12 @@ async def execute_removerole(guild_id, role_id):
         return "Role is restricted"
 
 
-async def execute_subscribe(user_id, mission_id):
-    url = f"{ARCHUB_URL}/missions/{mission_id}/subscribe?discord_id={user_id}"
+async def execute_subscribe(interaction: Interaction):
+    user_id = interaction.member.user.id
+    mission_id, = interaction.data.options
+    url = f"{ARCHUB_URL}/missions/{mission_id.value}/subscribe?discord_id={user_id}"
     r = await utility.post([HTTP_201_CREATED, HTTP_204_NO_CONTENT], url, headers=ARCHUB_HEADERS)
-    missionUrl = f"https://arcomm.co.uk/hub/missions/{mission_id}"
+    missionUrl = f"https://arcomm.co.uk/hub/missions/{mission_id.value}"
 
     if r.status_code == HTTP_201_CREATED:
         return f"You are now subscribed to {missionUrl}"
@@ -130,120 +149,80 @@ async def execute_subscribe(user_id, mission_id):
     return f"You are no longer subscribed to {missionUrl}"
 
 
-async def execute_ticket(repo, title, body, member):
-    title = "{}: {}".format(member.user.username if (member.nick is None) else member.nick, title)
-    json = {"title": title,
-            "body": body}
+async def execute_ticket(interaction: Interaction):
+    member = interaction.member
+    repo, title, body = interaction.data.options
+    username = member.user.username if (member.nick is None) else member.nick
+    json = {"title": f"{username}: {title.value}",
+            "body": body.value}
 
-    repoUrl = f"https://api.github.com/repos/{repo}/issues"
+    repoUrl = f"https://api.github.com/repos/{repo.value}/issues"
     r = await utility.post([HTTP_201_CREATED], repoUrl, json=json, headers=GITHUB_HEADERS)
     createdUrl = r.json()["html_url"]
 
     return f"Ticket created at: {createdUrl}"
 
 
-def execute_cointoss():
+async def execute_cointoss(interaction: Interaction):
     return random.choice(["Heads", "Tails"])
 
 
-async def execute_renamerole(guild_id, role_id, new_name):
-    if not await utility.validateRoleById(guild_id, role_id):
-        return f"<@&{role_id}> is restricted"
+async def execute_renamerole(interaction: Interaction):
+    guild_id = interaction.guild_id
+    role_id, new_name = interaction.data.options
+    if not await utility.validateRoleById(guild_id, role_id.value):
+        return f"<@&{role_id.value}> is restricted"
 
-    existingRole = await utility.findRoleByName(guild_id, new_name, excludeReserved=False)
+    existingRole = await utility.findRoleByName(guild_id, new_name.value, excludeReserved=False)
     if existingRole is not None:
         role_id = existingRole["id"]
         return f"<@&{role_id}> already exists"
 
-    url = f"{GUILD_URL}/{guild_id}/roles/{role_id}"
-    await utility.patch([HTTP_200_OK], url, json={"name": new_name})
+    url = f"{GUILD_URL}/{guild_id}/roles/{role_id.value}"
+    await utility.patch([HTTP_200_OK], url, json={"name": new_name.value})
 
-    return f"<@&{role_id}> was renamed"
+    return f"<@&{role_id.value}> was renamed"
 
 
-async def handle_interaction(interaction):
-    if interaction.type == InteractionType.APPLICATION_COMMAND:
-        data = interaction.data
-        command = data.name
+async def execute_ping(interaction: Interaction):
+    return "Pong!"
 
-        try:
-            options = data.options
-            member = interaction.member
-            user = member.user
-            username = user.username
-            guild_id = interaction.guild_id
 
-            gunicorn_logger.info(f"'{username}' executing '{command}'")
+execute_map = {
+    "addrole": execute_addrole,
+    "cointoss": execute_cointoss,
+    "members": execute_members,
+    "myroles": execute_myroles,
+    "optime": execute_optime,
+    "ping": execute_ping,
+    "removerole": execute_removerole,
+    "renamerole": execute_renamerole,
+    "role": execute_role,
+    "roles": execute_roles,
+    "subscribe": execute_subscribe,
+    "ticket": execute_ticket,
+}
 
-            if command == "ping":
-                return utility.ImmediateReply("Pong!")
+ephemeral = ["myroles"]
 
-            elif command == "role":
-                role_id = options[0].value
-                reply = await execute_role(member.roles, role_id, guild_id, user.id)
-                return utility.ImmediateReply(reply)
 
-            elif command == "roles":
-                reply = await execute_roles(guild_id)
-                return utility.ImmediateReply(reply)
-
-            elif command == "members":
-                role_id = options[0].value
-                reply = await execute_members(role_id, guild_id)
-                return utility.ImmediateReply(reply)
-
-            elif command == "myroles":
-                reply = execute_myroles(member.roles)
-                return utility.ImmediateReply(reply, ephemeral=True)
-
-            elif command == "optime":
-                if options is not None and len(options) > 0:
-                    modifier = options[0].value
-                else:
-                    modifier = 0
-
-                reply = execute_optime(datetime.now(tz=timezone('Europe/London')), modifier)
-                return utility.ImmediateReply(reply)
-
-            elif command == "addrole":
-                name = options[0].value
-                reply = await execute_addrole(guild_id, name)
-                return utility.ImmediateReply(reply)
-
-            elif command == "removerole":
-                role_id = options[0].value
-                reply = await execute_removerole(guild_id, role_id)
-                return utility.ImmediateReply(reply)
-
-            elif command == "subscribe":
-                mission_id = options[0].value
-                reply = await execute_subscribe(user.id, mission_id)
-                return utility.ImmediateReply(reply)
-
-            elif command == "ticket":
-                repo = options[0].value
-                title = options[1].value
-                body = options[2].value
-                reply = await execute_ticket(repo, title, body, member)
-                return utility.ImmediateReply(reply)
-
-            elif command == "cointoss":
-                reply = execute_cointoss()
-                return utility.ImmediateReply(reply)
-
-            elif command == "renamerole":
-                role_id = options[0].value
-                new_name = options[1].value
-                reply = await execute_renamerole(guild_id, role_id, new_name)
-                return utility.ImmediateReply(reply)
-
-        except Exception as e:
-            gunicorn_logger.error(f"Error executing '{command}':\n{str(e)})")
-            raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error executing '{command}'")
-
-        raise HTTPException(status_code=HTTP_501_NOT_IMPLEMENTED, detail=f"'{command}' is not a known command")
-    else:
+async def handle_interaction(interaction: Interaction):
+    if interaction.type != InteractionType.APPLICATION_COMMAND:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Not an application command")
+
+    command = interaction.data.name
+    if command not in execute_map:
+        raise HTTPException(status_code=HTTP_501_NOT_IMPLEMENTED, detail=f"'{command}' is not a known command")
+
+    try:
+        gunicorn_logger.info(f"'{interaction.member.user.username}' executing '{command}'")
+
+        reply = await execute_map[command](interaction)
+        return utility.ImmediateReply(reply, ephemeral=command in ephemeral)
+
+    except Exception as e:
+        gunicorn_logger.error(f"Error executing '{command}':\n{str(e)})")
+        raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error executing '{command}'")
 
 
 class ValidDiscordRequest:
