@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     PUBLIC_KEY: str
     GITHUB_TOKEN: str
 
+    STAFF_CHANNEL: int
+
+    ADMIN_ROLE: int
+
     class Config:
         env_file = ".env"
 

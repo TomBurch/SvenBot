@@ -14,12 +14,14 @@ CLIENT_ID = config.settings.CLIENT_ID
 PUBLIC_KEY = config.settings.PUBLIC_KEY
 GITHUB_TOKEN = config.settings.GITHUB_TOKEN
 
+STAFF_CHANNEL = config.settings.STAFF_CHANNEL
+
+ADMIN_ROLE = config.settings.ADMIN_ROLE
+
 ARCHUB_URL = "https://arcomm.co.uk/api/v1"
 GUILD_URL = "https://discord.com/api/v8/guilds"
 CHANNELS_URL = "https://discord.com/api/v8/channels"
 APP_URL = f"https://discord.com/api/v8/applications/{CLIENT_ID}"
-
-ARCHUB_CHANNEL = 703618484386398349
 
 DEFAULT_HEADERS = {
     "Authorization": f"Bot {BOT_TOKEN}"
@@ -71,9 +73,9 @@ async def patch(statuses, url, params=None, json=None):
         return await req(client.patch, statuses, url, params, json)
 
 
-async def sendMessage(channel_id, message):
+async def sendMessage(channel_id, message, mentions=[]):
     url = f"{CHANNELS_URL}/{channel_id}/messages"
-    json = {"content": message}
+    json = ResponseData(content = message, allowed_mentions = {"parse": mentions})
     async with httpx.AsyncClient() as client:
         return await req(client.post, [200], url, json=json)
 
