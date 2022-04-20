@@ -5,6 +5,7 @@ import sys
 from datetime import datetime, timedelta
 
 import uvicorn
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI, Body, Request, HTTPException
 from fastapi.params import Depends
 from nacl.signing import VerifyKey
@@ -266,7 +267,24 @@ def app():
     return fast_app
 
 
+async def test_task():
+    gunicorn_logger.info(f"Test task")
+
+
+async def test_task2():
+    gunicorn_logger.info(f"Test task 2")
+
+
 app = app()
+
+
+@app.on_event('startup')
+def init_scheduler():
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(test_task, 'cron', second='*/5')
+    scheduler.add_job(test_task2, 'cron', second='*/10')
+    scheduler.start()
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host='0.0.0.0', port=8000)

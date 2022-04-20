@@ -13,3 +13,4 @@ pynacl==1.4.0
 starlette~=0.13.6
 pydantic~=1.8.2
 freezegun~=1.2.1
+apscheduler~=3.9.1
