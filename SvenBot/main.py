@@ -278,7 +278,7 @@ app = app()
 @app.on_event('startup')
 def init_scheduler():
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(recruit_task, 'cron', day_of_week='mon,wed,fri', hour='18')
+    scheduler.add_job(recruit_task, 'cron', day_of_week='mon,wed,fri', hour='18', minute=5)
     scheduler.start()
 
 
