@@ -269,7 +269,7 @@ def app():
 
 async def recruit_task():
     gunicorn_logger.info(f"Recruit task")
-    await utility.sendMessage(STAFF_CHANNEL, f"<@&{ADMIN_ROLE}> Post recruitment on <https://www.reddit.com/r/FindAUnit>", ["roles"])
+    return await utility.sendMessage(STAFF_CHANNEL, f"<@&{ADMIN_ROLE}> Post recruitment on <https://www.reddit.com/r/FindAUnit>", ["roles"])
 
 
 app = app()
