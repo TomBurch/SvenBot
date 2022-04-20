@@ -75,7 +75,7 @@ async def patch(statuses, url, params=None, json=None):
 
 async def sendMessage(channel_id, message, mentions=[]):
     url = f"{CHANNELS_URL}/{channel_id}/messages"
-    message = ResponseData(content = message, allowed_mentions = {"parse": mentions}).dict()
+    message = ResponseData(content = message, allowed_mentions = {"parse": mentions})
     async with httpx.AsyncClient() as client:
         await req(client.post, [200], url, json=message.dict())
 
