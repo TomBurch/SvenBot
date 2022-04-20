@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from freezegun import freeze_time
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_200_OK
 
-from SvenBot.main import handle_interaction, execute_optime
+from SvenBot.main import handle_interaction
 from SvenBot.models import InteractionType, Member, Interaction, Option, OptionType
 from SvenBot.utility import CLIENT_ID, ImmediateReply, ARCHUB_HEADERS, GITHUB_HEADERS, GUILD_URL
 

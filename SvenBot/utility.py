@@ -2,6 +2,7 @@ import logging
 import re
 
 import httpx
+from starlette.status import HTTP_200_OK
 
 from SvenBot import config
 from SvenBot.models import InteractionResponseType, ResponseData, Response
@@ -14,6 +15,7 @@ CLIENT_ID = config.settings.CLIENT_ID
 PUBLIC_KEY = config.settings.PUBLIC_KEY
 GITHUB_TOKEN = config.settings.GITHUB_TOKEN
 
+TEST_CHANNEL = config.settings.TEST_CHANNEL
 STAFF_CHANNEL = config.settings.STAFF_CHANNEL
 
 ADMIN_ROLE = config.settings.ADMIN_ROLE
@@ -77,7 +79,7 @@ async def sendMessage(channel_id, message, mentions=[]):
     url = f"{CHANNELS_URL}/{channel_id}/messages"
     message = ResponseData(content = message, allowed_mentions = {"parse": mentions})
     async with httpx.AsyncClient() as client:
-        await req(client.post, [200], url, json=message.dict())
+        await req(client.post, [HTTP_200_OK], url, json=message.dict())
 
     return message
 

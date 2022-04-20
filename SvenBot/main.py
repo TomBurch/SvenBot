@@ -19,7 +19,8 @@ sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 from SvenBot import utility
 from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType
-from SvenBot.utility import GUILD_URL, ARCHUB_URL, ARCHUB_HEADERS, PUBLIC_KEY, GITHUB_HEADERS, STAFF_CHANNEL, ADMIN_ROLE
+from SvenBot.utility import GUILD_URL, ARCHUB_URL, ARCHUB_HEADERS, PUBLIC_KEY, GITHUB_HEADERS, STAFF_CHANNEL, \
+    ADMIN_ROLE, TEST_CHANNEL
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
@@ -269,7 +270,9 @@ def app():
 
 async def recruit_task():
     gunicorn_logger.info(f"Recruit task")
-    return await utility.sendMessage(STAFF_CHANNEL, f"<@&{ADMIN_ROLE}> Post recruitment on <https://www.reddit.com/r/FindAUnit>", ["roles"])
+    return await utility.sendMessage(STAFF_CHANNEL,
+                                     f"<@&{ADMIN_ROLE}> Post recruitment on <https://www.reddit.com/r/FindAUnit>",
+                                     ["roles"])
 
 
 app = app()
@@ -278,7 +281,7 @@ app = app()
 @app.on_event('startup')
 def init_scheduler():
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(recruit_task, 'cron', day_of_week='mon,wed,fri', hour=17)
+    scheduler.add_job(recruit_task, 'cron', day_of_week='mon,wed,fri', hour='17')
     scheduler.start()
 
 

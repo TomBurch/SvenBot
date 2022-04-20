@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     PUBLIC_KEY: str
     GITHUB_TOKEN: str
 
+    TEST_CHANNEL: int
     STAFF_CHANNEL: int
 
     ADMIN_ROLE: int
