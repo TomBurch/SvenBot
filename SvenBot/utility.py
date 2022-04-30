@@ -1,5 +1,7 @@
 import logging
 import re
+from datetime import datetime, timedelta
+from pytz import timezone
 
 import httpx
 from starlette.status import HTTP_200_OK
@@ -77,7 +79,7 @@ async def patch(statuses, url, params=None, json=None):
 
 async def sendMessage(channel_id, message, mentions=[]):
     url = f"{CHANNELS_URL}/{channel_id}/messages"
-    message = ResponseData(content = message, allowed_mentions = {"parse": mentions})
+    message = ResponseData(content=message, allowed_mentions={"parse": mentions})
     async with httpx.AsyncClient() as client:
         await req(client.post, [HTTP_200_OK], url, json=message.dict())
 
@@ -168,3 +170,13 @@ async def findRoleByName(guild_id, query, autocomplete=False, excludeReserved=Tr
         return None
 
     return candidate
+
+
+def timeUntilOptime(modifier=0):
+    today = datetime.now(tz=timezone('Europe/London'))
+    opday = today
+    opday = opday.replace(hour=18, minute=0, second=0) + timedelta(hours=modifier)
+    if today > opday:
+        opday = opday + timedelta(days=1)
+
+    return opday - today

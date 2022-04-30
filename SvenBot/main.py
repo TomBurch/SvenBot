@@ -2,14 +2,12 @@ import logging
 import os
 import random
 import sys
-from datetime import datetime, timedelta
 
 import uvicorn
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI, Body, Request, HTTPException
 from fastapi.params import Depends
 from nacl.signing import VerifyKey
-from pytz import timezone
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, \
     HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_501_NOT_IMPLEMENTED
 
@@ -20,7 +18,7 @@ sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 from SvenBot import utility
 from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType
 from SvenBot.utility import GUILD_URL, ARCHUB_URL, ARCHUB_HEADERS, PUBLIC_KEY, GITHUB_HEADERS, STAFF_CHANNEL, \
-    ADMIN_ROLE, TEST_CHANNEL
+    ADMIN_ROLE
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
@@ -87,16 +85,9 @@ async def execute_myroles(interaction: Interaction):
 
 
 async def execute_optime(interaction):
-    today = datetime.now(tz=timezone('Europe/London'))
+    modifier = 0
     if interaction.data.options is not None and len(interaction.data.options) > 0:
         modifier = interaction.data.options[0].value
-    else:
-        modifier = 0
-
-    opday = today
-    opday = opday.replace(hour=18, minute=0, second=0) + timedelta(hours=modifier)
-    if today > opday:
-        opday = opday + timedelta(days=1)
 
     if modifier == 0:
         modifierString = ""
@@ -105,7 +96,7 @@ async def execute_optime(interaction):
     else:
         modifierString = f" {modifier}"
 
-    timeUntilOptime = opday - today
+    timeUntilOptime = utility.timeUntilOptime(modifier)
     return f"Optime{modifierString} starts in {timeUntilOptime}!"
 
 

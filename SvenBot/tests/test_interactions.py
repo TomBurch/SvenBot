@@ -145,7 +145,6 @@ async def test_myroles():
     assert reply == ImmediateReply("<@&{}>\n".format(testRole["id"]), mentions=[], ephemeral=True)
 
 
-#@mock.patch('datetime.now')
 @pytest.mark.asyncio
 @pytest.mark.parametrize("now_mock, modifier, timeUntilOptime", [
     (datetime(2021, 3, 19, 15, 30), "", "2:30:00"),
