@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from pydantic import BaseModel
 
 from SvenBot.models import OptionType
@@ -21,8 +19,8 @@ class CommandDefinition(BaseModel):
     name: str
     description: str
     default_permission: bool = True
-    options: Optional[List[OptionDefinition]]
-    choices: Optional[List[Choice]]
+    options: list[OptionDefinition] | None
+    choices: list[Choice] | None
 
 
 ping = CommandDefinition(

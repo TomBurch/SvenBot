@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import Any, Optional, List
+from typing import Any, ForwardRef
 
 from pydantic import BaseModel
 
@@ -11,17 +11,17 @@ class InteractionResponseType(IntEnum):
 
 
 class ResponseData(BaseModel):
-    tts: Optional[bool]
-    content: Optional[str]
+    tts: bool | None
+    content: str | None
     embeds: Any
     allowed_mentions: Any
-    flags: Optional[int]
+    flags: int | None
     components: Any
 
 
 class Response(BaseModel):
     type: InteractionResponseType
-    data: Optional[ResponseData]
+    data: ResponseData | None
 
 
 class InteractionType(IntEnum):
@@ -47,7 +47,7 @@ class User(BaseModel):
     username: str
     discriminator: str
     avatar: Any
-    bot: Optional[bool]
+    bot: bool | None
     system: Any
     mfa_enabled: Any
     locale: Any
@@ -59,22 +59,25 @@ class User(BaseModel):
 
 
 class Member(BaseModel):
-    user: Optional[User]
-    nick: Optional[str]
+    user: User | None
+    nick: str | None
     roles: Any
     joined_at: Any
     premium_since: Any
     deaf: Any
     mute: Any
     pending: Any
-    permissions: Optional[str]
+    permissions: str | None
+
+
+Option = ForwardRef('Option')
 
 
 class Option(BaseModel):
     name: str
     type: OptionType
     value: Any
-    options: Optional[List['Option']]
+    options: list[Option] | None
 
 
 Option.update_forward_refs()
@@ -84,7 +87,7 @@ class Command(BaseModel):
     id: str
     name: str
     resolved: Any
-    options: Optional[List[Option]]
+    options: list[Option] | None
     custom_id: Any
     component_type: Any
 
@@ -93,11 +96,11 @@ class Interaction(BaseModel):
     id: str
     application_id: str
     type: InteractionType
-    data: Optional[Command]
-    guild_id: Optional[str]
-    channel_id: Optional[str]
-    member: Optional[Member]
-    user: Optional[User]
+    data: Command | None
+    guild_id: str | None
+    channel_id: str | None
+    member: Member | None
+    user: User | None
     token: str
     version: int
     message: Any

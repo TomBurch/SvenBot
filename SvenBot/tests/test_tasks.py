@@ -20,5 +20,6 @@ async def test_recruit_task(httpx_mock):
 
     assert reply == expected
 
+
 if __name__ == "__main__":
     pytest.main()
