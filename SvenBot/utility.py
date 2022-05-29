@@ -1,9 +1,9 @@
 import logging
 import re
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import httpx
-from pytz import timezone
 from starlette.status import HTTP_200_OK
 
 from SvenBot import config
@@ -173,7 +173,7 @@ async def findRoleByName(guild_id, query, autocomplete=False, excludeReserved=Tr
 
 
 def timeUntilOptime(modifier=0):
-    today = datetime.now(tz=timezone('Europe/London'))
+    today = datetime.now(tz=ZoneInfo('Europe/London'))
     opday = today
     opday = opday.replace(hour=18, minute=0, second=0) + timedelta(hours=modifier)
     if today > opday:
