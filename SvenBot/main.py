@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import random
@@ -18,7 +19,7 @@ sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 from SvenBot import utility
 from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType
 from SvenBot.utility import GUILD_URL, ARCHUB_URL, ARCHUB_HEADERS, PUBLIC_KEY, GITHUB_HEADERS, STAFF_CHANNEL, \
-    ADMIN_ROLE
+    ADMIN_ROLE, REPO_URL, TEST_CHANNEL
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
@@ -259,6 +260,36 @@ def app():
     return fast_app
 
 
+async def a3sync_task():
+    r = await utility.get([HTTP_200_OK], f'{REPO_URL}/repo')
+    repoInfo = r.json()
+
+    with open('revision.json', 'r') as f:
+        revision = json.load(f)
+
+    if repoInfo['revision'] != revision['revision']:
+        r = await utility.get([HTTP_200_OK], f'{REPO_URL}/changelog')
+        changelogs = r.json()['list']
+
+        newRepoSize = round((float(repoInfo["totalFilesSize"]) / 1000000000), 2)
+        updatePost = f"```md\n# The A3Sync repo has changed #\n\n[{newRepoSize} GB]\n```\n"
+        for changelog in changelogs:
+            if changelog['revision'] > revision['revision']:
+                new = '' if (len(changelog["newAddons"]) == 0) else "< New >\n{}".format("\n".join(changelog["newAddons"]))
+                deleted = '' if (len(changelog["deletedAddons"]) == 0) else "\n\n< Deleted >\n{}".format("\n".join(changelog["deletedAddons"]))
+                updated = '' if (len(changelog["updatedAddons"]) == 0) else "\n\n< Updated >\n{}".format("\n".join(changelog["updatedAddons"]))
+                if len(new + deleted + updated) > 0:
+                    updatePost += f"```md\n{new}{deleted}{updated}\n```\n"
+
+        revision['revision'] = changelog['revision']
+
+        with open('revision.json', 'w') as f:
+            json.dump(revision, f)
+
+        return await utility.sendMessage(TEST_CHANNEL, updatePost)
+    return None
+
+
 async def recruit_task():
     gunicorn_logger.info(f"Recruit task")
     return await utility.sendMessage(STAFF_CHANNEL,
@@ -271,8 +302,16 @@ app = app()
 
 @app.on_event('startup')
 def init_scheduler():
+    try:
+        with open('revision.json', 'r') as f:
+            revision = json.load(f)
+    except Exception as e:
+        with open('revision.json', 'w') as f:
+            json.dump(revision, {'revision' : 0})
+
     scheduler = AsyncIOScheduler()
     scheduler.add_job(recruit_task, 'cron', day_of_week='mon,wed,fri', hour='17')
+    scheduler.add_job(a3sync_task, 'cron', minute='5,25,45')
     scheduler.start()
 
 

@@ -23,9 +23,10 @@ STAFF_CHANNEL = config.settings.STAFF_CHANNEL
 ADMIN_ROLE = config.settings.ADMIN_ROLE
 
 ARCHUB_URL = "https://arcomm.co.uk/api/v1"
-GUILD_URL = "https://discord.com/api/v8/guilds"
-CHANNELS_URL = "https://discord.com/api/v8/channels"
 APP_URL = f"https://discord.com/api/v8/applications/{CLIENT_ID}"
+CHANNELS_URL = "https://discord.com/api/v8/channels"
+GUILD_URL = "https://discord.com/api/v8/guilds"
+REPO_URL = "https://events.arcomm.co.uk/api"
 
 DEFAULT_HEADERS = {
     "Authorization": f"Bot {BOT_TOKEN}"
