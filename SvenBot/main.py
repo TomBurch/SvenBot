@@ -307,7 +307,7 @@ def init_scheduler():
             revision = json.load(f)
     except Exception as e:
         with open('revision.json', 'w') as f:
-            json.dump(revision, {'revision' : 0})
+            json.dump({'revision' : 0}, f)
 
     scheduler = AsyncIOScheduler()
     scheduler.add_job(recruit_task, 'cron', day_of_week='mon,wed,fri', hour='17')
