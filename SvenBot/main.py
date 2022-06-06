@@ -19,7 +19,7 @@ sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 from SvenBot import utility
 from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType
 from SvenBot.utility import GUILD_URL, ARCHUB_URL, ARCHUB_HEADERS, PUBLIC_KEY, GITHUB_HEADERS, STAFF_CHANNEL, \
-    ADMIN_ROLE, REPO_URL, TEST_CHANNEL
+    ADMIN_ROLE, REPO_URL, TEST_CHANNEL, ANNOUNCE_CHANNEL
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
@@ -286,7 +286,7 @@ async def a3sync_task():
         with open('revision.json', 'w') as f:
             json.dump(revision, f)
 
-        return await utility.sendMessage(TEST_CHANNEL, updatePost)
+        return await utility.sendMessage(ANNOUNCE_CHANNEL, updatePost)
     return None
 
 

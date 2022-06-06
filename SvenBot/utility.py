@@ -17,6 +17,7 @@ CLIENT_ID = config.settings.CLIENT_ID
 PUBLIC_KEY = config.settings.PUBLIC_KEY
 GITHUB_TOKEN = config.settings.GITHUB_TOKEN
 
+ANNOUNCE_CHANNEL = config.settings.ANNOUNCE_CHANNEL
 TEST_CHANNEL = config.settings.TEST_CHANNEL
 STAFF_CHANNEL = config.settings.STAFF_CHANNEL
 
