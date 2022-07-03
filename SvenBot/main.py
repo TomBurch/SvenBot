@@ -10,14 +10,13 @@ from fastapi.params import Depends
 from nacl.signing import VerifyKey
 from starlette.status import HTTP_401_UNAUTHORIZED
 
-from SvenBot.interactions import handle_interaction
-from SvenBot.tasks import recruit_task, a3sync_task
-
 PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 from SvenBot import utility
+from SvenBot.interactions import handle_interaction
+from SvenBot.tasks import recruit_task, a3sync_task
 from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
