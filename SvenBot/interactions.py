@@ -1,3 +1,4 @@
+import logging
 import random
 
 from fastapi import HTTPException
@@ -5,9 +6,10 @@ from starlette.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN, HTTP_200_O
     HTTP_400_BAD_REQUEST, HTTP_501_NOT_IMPLEMENTED, HTTP_500_INTERNAL_SERVER_ERROR
 
 from SvenBot import utility
-from SvenBot.main import gunicorn_logger
 from SvenBot.models import Interaction, InteractionType
 from SvenBot.utility import GUILD_URL, ARCHUB_HEADERS, ARCHUB_URL, GITHUB_HEADERS
+
+gunicorn_logger = logging.getLogger('gunicorn.error')
 
 
 async def execute_role(interaction: Interaction):
