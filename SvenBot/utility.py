@@ -11,8 +11,6 @@ from SvenBot.models import InteractionResponseType, ResponseData, Response
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
-SQLALCHEMY_DATABASE_URL = config.settings.SQLALCHEMY_DATABASE_URL
-
 ARCHUB_TOKEN = config.settings.ARCHUB_TOKEN
 BOT_TOKEN = config.settings.BOT_TOKEN
 CLIENT_ID = config.settings.CLIENT_ID
