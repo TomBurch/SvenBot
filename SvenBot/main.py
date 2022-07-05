@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import sys
+from datetime import datetime
 
 import uvicorn
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -16,7 +17,7 @@ sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 from SvenBot import utility
 from SvenBot.interactions import handle_interaction
-from SvenBot.tasks import recruit_task, a3sync_task
+from SvenBot.tasks import recruit_task, a3sync_task, steam_task
 from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
@@ -70,14 +71,23 @@ app = app()
 def init_scheduler():
     try:
         with open('revision.json', 'r') as f:
-            revision = json.load(f)
+            json.load(f)
     except Exception as e:
         with open('revision.json', 'w') as f:
             json.dump({'revision': 0}, f)
 
+    try:
+        with open('steam_timestamp.json', 'r') as f:
+            json.load(f)
+    except Exception as e:
+        with open('steam_timestamp.json', 'w') as f:
+            lastMonth = datetime.utcnow().timestamp() - 2500000
+            json.dump({'last_checked': lastMonth}, f)
+
     scheduler = AsyncIOScheduler()
     scheduler.add_job(recruit_task, 'cron', day_of_week='mon,wed,fri', hour='17')
     scheduler.add_job(a3sync_task, 'cron', minute='5,25,45')
+    scheduler.add_job(steam_task, 'cron', minute='20,50')
     scheduler.start()
 
 

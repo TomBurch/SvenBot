@@ -11,11 +11,15 @@ from SvenBot.models import InteractionResponseType, ResponseData, Response
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
+SQLALCHEMY_DATABASE_URL = config.settings.SQLALCHEMY_DATABASE_URL
+
 ARCHUB_TOKEN = config.settings.ARCHUB_TOKEN
 BOT_TOKEN = config.settings.BOT_TOKEN
 CLIENT_ID = config.settings.CLIENT_ID
 PUBLIC_KEY = config.settings.PUBLIC_KEY
 GITHUB_TOKEN = config.settings.GITHUB_TOKEN
+
+STEAM_MODLIST = config.settings.STEAM_MODLIST
 
 ANNOUNCE_CHANNEL = config.settings.ANNOUNCE_CHANNEL
 TEST_CHANNEL = config.settings.TEST_CHANNEL
@@ -28,6 +32,7 @@ APP_URL = f"https://discord.com/api/v8/applications/{CLIENT_ID}"
 CHANNELS_URL = "https://discord.com/api/v8/channels"
 GUILD_URL = "https://discord.com/api/v8/guilds"
 REPO_URL = "https://events.arcomm.co.uk/api"
+STEAM_URL = "https://api.steampowered.com/ISteamRemoteStorage"
 
 DEFAULT_HEADERS = {
     "Authorization": f"Bot {BOT_TOKEN}"
@@ -42,11 +47,8 @@ GITHUB_HEADERS = {
 }
 
 
-async def req(function, statuses, url, params=None, json=None, headers=DEFAULT_HEADERS):
-    if json is not None:
-        r = await function(url, headers=headers, params=params, json=json)
-    else:
-        r = await function(url, headers=headers, params=params)
+async def req(function, statuses, url, headers=DEFAULT_HEADERS, **kwargs):
+    r = await function(url, headers=headers, **kwargs)
 
     if r.status_code not in statuses:
         gunicorn_logger.error(f"Received unexpected status code {r.status_code} (expected {statuses})\n{r.text}")
@@ -54,29 +56,29 @@ async def req(function, statuses, url, params=None, json=None, headers=DEFAULT_H
     return r
 
 
-async def get(statuses, url, params=None):
+async def get(statuses, url, **kwargs):
     async with httpx.AsyncClient() as client:
-        return await req(client.get, statuses, url, params)
+        return await req(client.get, statuses, url, **kwargs)
 
 
-async def delete(statuses, url, params=None):
+async def delete(statuses, url, **kwargs):
     async with httpx.AsyncClient() as client:
-        return await req(client.delete, statuses, url, params)
+        return await req(client.delete, statuses, url, **kwargs)
 
 
-async def put(statuses, url, params=None):
+async def put(statuses, url, **kwargs):
     async with httpx.AsyncClient() as client:
-        return await req(client.put, statuses, url, params)
+        return await req(client.put, statuses, url, **kwargs)
 
 
-async def post(statuses, url, params=None, json=None, headers=DEFAULT_HEADERS):
+async def post(statuses, url, **kwargs):
     async with httpx.AsyncClient() as client:
-        return await req(client.post, statuses, url, params, json, headers)
+        return await req(client.post, statuses, url, **kwargs)
 
 
-async def patch(statuses, url, params=None, json=None):
+async def patch(statuses, url, **kwargs):
     async with httpx.AsyncClient() as client:
-        return await req(client.patch, statuses, url, params, json)
+        return await req(client.patch, statuses, url, **kwargs)
 
 
 async def sendMessage(channel_id, message, mentions=[]):

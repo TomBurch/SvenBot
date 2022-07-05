@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     PUBLIC_KEY: str
     GITHUB_TOKEN: str
 
+    STEAM_MODLIST: int
+
     ANNOUNCE_CHANNEL: int
     TEST_CHANNEL: int
     STAFF_CHANNEL: int
