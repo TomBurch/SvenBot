@@ -82,7 +82,7 @@ async def steam_task():
                 gunicorn_logger.error(f"Error retrieving changelog for {modId}:\n{e}")
                 changelog = f"Error retrieving changelog"
 
-            updatePost += f"```\n{changelog}\n```\n"
+            updatePost += f"```\n{changelog}```\n"
 
     steam_timestamp['last_checked'] = now
     with open('steam_timestamp.json', 'w') as f:
