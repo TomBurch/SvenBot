@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import IntEnum, Enum
 from typing import Any, ForwardRef
 
 from pydantic import BaseModel
@@ -104,3 +104,14 @@ class Interaction(BaseModel):
     token: str
     version: int
     message: Any
+
+
+class SlackEventType(str, Enum):
+    VERIFICATION = "url_verification"
+    CALLBACK = "event_callback"
+
+
+class SlackEvent(BaseModel):
+    token: str
+    challenge: str | None
+    type: SlackEventType

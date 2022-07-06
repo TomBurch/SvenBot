@@ -18,7 +18,7 @@ sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 from SvenBot.config import settings
 from SvenBot.interactions import handle_interaction
 from SvenBot.tasks import recruit_task, a3sync_task, steam_task
-from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType
+from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType, SlackEvent, SlackEventType
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
@@ -56,6 +56,12 @@ def app():
 
         response = await handle_interaction(interaction)
         return response
+
+    @fast_app.post('/slack/')
+    async def interact(event: SlackEvent = Body(...)):
+        gunicorn_logger.error(f"{event}")
+        if event.type == SlackEventType.VERIFICATION:
+            return {'challenge': event.challenge}
 
     @fast_app.get('/abc/')
     def hello_world():
