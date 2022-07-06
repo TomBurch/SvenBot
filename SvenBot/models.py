@@ -106,11 +106,6 @@ class Interaction(BaseModel):
     message: Any
 
 
-class SlackNotificationType(str, Enum):
-    VERIFICATION = "url_verification"
-    CALLBACK = "event_callback"
-
-
 class SlackCalendarEvent(BaseModel):
     color: str
     pretext: str | None
@@ -122,6 +117,11 @@ class SlackEvent(BaseModel):
     type: str
     text: str
     attachments: list[SlackCalendarEvent] | None
+
+
+class SlackNotificationType(str, Enum):
+    VERIFICATION = "url_verification"
+    CALLBACK = "event_callback"
 
 
 class SlackNotification(BaseModel):

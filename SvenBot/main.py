@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 import sys
 from datetime import datetime
 
@@ -60,12 +61,17 @@ def app():
 
     @fast_app.post('/slack/')
     async def interact(notification: SlackNotification = Body(...)):
-        gunicorn_logger.error(f"{notification}")
+        gunicorn_logger.error(f"Calendar event:\n{notification}")
         if notification.type == SlackNotificationType.VERIFICATION:
             return {'challenge': notification.challenge}
 
         cal = notification.event.attachments[0]
-        await sendMessage(settings.TEST_CHANNEL, f"{cal.pretext}, {cal.title}, {cal.text}")
+        times = re.match(cal.text, r"<!date\^(\d+)\^{\w+} from.*to <!date\^(\d+)\^{\w+}")
+        if times:
+            startTime, endTime = re.groups()
+            
+            embed = f"Title: {cal.title}\nDescription: Starting<t:{startTime}:R>\nField1: Start <t:{startTime}:t> \nField2: End <t:{endTime:t>}"
+            await sendMessage(settings.TEST_CHANNEL, embed)
 
     @fast_app.get('/abc/')
     def hello_world():
