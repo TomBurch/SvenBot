@@ -115,7 +115,7 @@ class SlackCalendarEvent(BaseModel):
     color: str
     pretext: str | None
     title: str | None
-    title_link: str | None
+    text: str | None
 
 
 class SlackNotification(BaseModel):

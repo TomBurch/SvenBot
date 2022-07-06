@@ -16,6 +16,7 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 from SvenBot.config import settings
+from SvenBot.utility import sendMessage
 from SvenBot.interactions import handle_interaction
 from SvenBot.tasks import recruit_task, a3sync_task, steam_task
 from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType, SlackEvent, SlackEventType
@@ -62,6 +63,8 @@ def app():
         gunicorn_logger.error(f"{event}")
         if event.type == SlackEventType.VERIFICATION:
             return {'challenge': event.challenge}
+
+        await sendMessage(settings.TEST_CHANNEL, event)
 
     @fast_app.get('/abc/')
     def hello_world():
