@@ -112,9 +112,8 @@ class SlackEventType(str, Enum):
 
 
 class SlackCalendarNotification(BaseModel):
-    type: str
-    title: str
-    title_link: str
+    title: str | None
+    title_link: str | None
     text: str
 
 
