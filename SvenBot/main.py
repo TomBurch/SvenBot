@@ -58,10 +58,10 @@ def app():
         return response
 
     @fast_app.post('/slack/')
-    async def interact(event: SlackEvent = Body(...)):
+    async def interact(event = Body(...)):
         gunicorn_logger.error(f"{event}")
-        if event.type == SlackEventType.VERIFICATION:
-            return {'challenge': event.challenge}
+        if event['type'] == SlackEventType.VERIFICATION:
+            return {'challenge': event['challenge']}
 
     @fast_app.get('/abc/')
     def hello_world():
