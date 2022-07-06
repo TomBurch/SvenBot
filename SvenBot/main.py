@@ -68,8 +68,8 @@ def app():
         cal = notification.event.attachments[0]
         times = re.match(r"<!date\^(\d+)\^\{\w+\} from.*to <!date\^(\d+)\^\{\w+}", cal.text)
         if times:
-            startTime, endTime = re.groups()
-            
+            startTime, endTime = times.groups()
+
             embed = f"Title: {cal.title}\nDescription: Starting<t:{startTime}:R>\nField1: Start <t:{startTime}:t> \nField2: End <t:{endTime}:t>"
             await sendMessage(settings.TEST_CHANNEL, embed)
 
