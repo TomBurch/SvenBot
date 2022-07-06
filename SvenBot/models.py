@@ -113,10 +113,7 @@ class SlackEventType(str, Enum):
 
 class SlackCallback(BaseModel):
     type: str
-    event_ts: str
     user: str
-    ts: str
-    item: str
     text: str | None
 
 
