@@ -6,15 +6,16 @@ from starlette.status import HTTP_200_OK
 from bs4 import BeautifulSoup
 
 from SvenBot import utility
-from SvenBot.utility import STEAM_MODLIST, STEAM_URL
+from SvenBot.config import settings
+from SvenBot.utility import STEAM_URL
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
 
 async def recruit_task():
     gunicorn_logger.info(f"Recruit task")
-    return await utility.sendMessage(utility.STAFF_CHANNEL,
-                                     f"<@&{utility.ADMIN_ROLE}> Post recruitment on <https://www.reddit.com/r/FindAUnit>",
+    return await utility.sendMessage(settings.STAFF_CHANNEL,
+                                     f"<@&{settings.ADMIN_ROLE}> Post recruitment on <https://www.reddit.com/r/FindAUnit>",
                                      ["roles"])
 
 
@@ -47,7 +48,7 @@ async def a3sync_task():
         with open('revision.json', 'w') as f:
             json.dump(revision, f)
 
-        return await utility.sendMessage(utility.ANNOUNCE_CHANNEL, updatePost)
+        return await utility.sendMessage(settings.ANNOUNCE_CHANNEL, updatePost)
     return None
 
 
@@ -55,7 +56,7 @@ async def steam_task():
     with open('steam_timestamp.json', 'r') as f:
         steam_timestamp = json.load(f)
 
-    mods = set(await getSteamMods(STEAM_MODLIST))
+    mods = set(await getSteamMods(settings.STEAM_MODLIST))
     data = {'itemcount': len(mods)}
     for i, mod in enumerate(mods):
         data[f"publishedfileids[{i}]"] = mod
@@ -89,7 +90,7 @@ async def steam_task():
         json.dump(steam_timestamp, f)
 
     if updatePost:
-        return await utility.sendMessage(utility.STAFF_CHANNEL, f"<@&{utility.ADMIN_ROLE}>\n{updatePost}", ["roles"])
+        return await utility.sendMessage(settings.STAFF_CHANNEL, f"<@&{settings.ADMIN_ROLE}>\n{updatePost}", ["roles"])
     return None
 
 

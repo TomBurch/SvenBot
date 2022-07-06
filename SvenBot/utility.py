@@ -6,42 +6,28 @@ from zoneinfo import ZoneInfo
 import httpx
 from starlette.status import HTTP_200_OK
 
-from SvenBot import config
+from SvenBot.config import settings
 from SvenBot.models import InteractionResponseType, ResponseData, Response
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
-ARCHUB_TOKEN = config.settings.ARCHUB_TOKEN
-BOT_TOKEN = config.settings.BOT_TOKEN
-CLIENT_ID = config.settings.CLIENT_ID
-PUBLIC_KEY = config.settings.PUBLIC_KEY
-GITHUB_TOKEN = config.settings.GITHUB_TOKEN
-
-STEAM_MODLIST = config.settings.STEAM_MODLIST
-
-ANNOUNCE_CHANNEL = config.settings.ANNOUNCE_CHANNEL
-TEST_CHANNEL = config.settings.TEST_CHANNEL
-STAFF_CHANNEL = config.settings.STAFF_CHANNEL
-
-ADMIN_ROLE = config.settings.ADMIN_ROLE
-
 ARCHUB_URL = "https://arcomm.co.uk/api/v1"
-APP_URL = f"https://discord.com/api/v8/applications/{CLIENT_ID}"
+APP_URL = f"https://discord.com/api/v8/applications/{settings.CLIENT_ID}"
 CHANNELS_URL = "https://discord.com/api/v8/channels"
 GUILD_URL = "https://discord.com/api/v8/guilds"
 REPO_URL = "https://events.arcomm.co.uk/api"
 STEAM_URL = "https://api.steampowered.com/ISteamRemoteStorage"
 
 DEFAULT_HEADERS = {
-    "Authorization": f"Bot {BOT_TOKEN}"
+    "Authorization": f"Bot {settings.BOT_TOKEN}"
 }
 
 ARCHUB_HEADERS = {
-    "Authorization": f"Bearer {ARCHUB_TOKEN}"
+    "Authorization": f"Bearer {settings.ARCHUB_TOKEN}"
 }
 
 GITHUB_HEADERS = {
-    "Authorization": f"Bearer {GITHUB_TOKEN}"
+    "Authorization": f"Bearer {settings.GITHUB_TOKEN}"
 }
 
 
@@ -118,7 +104,7 @@ async def validateRole(guild_id, role, roles=None):
     botPosition = -1
     for r in roles:
         if r.get("tags", {}).get("bot_id") is not None:
-            if r["tags"]["bot_id"] == CLIENT_ID:
+            if r["tags"]["bot_id"] == settings.CLIENT_ID:
                 botPosition = r["position"]
                 break
 

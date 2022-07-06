@@ -15,7 +15,7 @@ PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
-from SvenBot import utility
+from SvenBot.config import settings
 from SvenBot.interactions import handle_interaction
 from SvenBot.tasks import recruit_task, a3sync_task, steam_task
 from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType
@@ -39,7 +39,7 @@ def verify_key(body, signature, timestamp):
     message = timestamp.encode() + body
 
     try:
-        VerifyKey(bytes.fromhex(utility.PUBLIC_KEY)).verify(message, bytes.fromhex(signature))
+        VerifyKey(bytes.fromhex(settings.PUBLIC_KEY)).verify(message, bytes.fromhex(signature))
         return True
     except Exception as e:
         gunicorn_logger.error(e)

@@ -7,9 +7,10 @@ from fastapi import HTTPException
 from freezegun import freeze_time
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_200_OK
 
+from SvenBot.config import settings
 from SvenBot.main import handle_interaction
 from SvenBot.models import InteractionType, Member, Interaction, Option, OptionType
-from SvenBot.utility import CLIENT_ID, ImmediateReply, ARCHUB_HEADERS, GITHUB_HEADERS, GUILD_URL
+from SvenBot.utility import ImmediateReply, ARCHUB_HEADERS, GITHUB_HEADERS, GUILD_URL
 
 
 class Role(dict):
@@ -28,7 +29,7 @@ class MockRequest(dict):
                       id="MockRequestId")
 
 
-botRole = Role("SvenBotRoleId", "SvenBot", 3, botId=CLIENT_ID)
+botRole = Role("SvenBotRoleId", "SvenBot", 3, botId=settings.CLIENT_ID)
 invalidRole = Role("RoleId789", "InvalidRole", 1, color=10)
 testRole = Role("RoleId456", "TestRole", 2)
 roleNotInGuild = Role("RoleId123", "RoleNotInGuild", 5)
