@@ -111,7 +111,17 @@ class SlackEventType(str, Enum):
     CALLBACK = "event_callback"
 
 
+class SlackCallback(BaseModel):
+    type: str
+    event_ts: str
+    user: str
+    ts: str
+    item: str
+    text: str | None
+
+
 class SlackEvent(BaseModel):
     token: str
     challenge: str | None
     type: SlackEventType
+    event: SlackCallback | None
