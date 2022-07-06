@@ -66,7 +66,7 @@ def app():
             return {'challenge': notification.challenge}
 
         cal = notification.event.attachments[0]
-        times = re.match(cal.text, r"<!date\^(\d+)\^{\w+} from.*to <!date\^(\d+)\^{\w+}")
+        times = re.match(r"<!date\^(\d+)\^\{\w+\} from.*to <!date\^(\d+)\^\{\w+}", cal.text)
         if times:
             startTime, endTime = re.groups()
             
