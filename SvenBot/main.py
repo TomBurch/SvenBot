@@ -19,7 +19,7 @@ from SvenBot.config import settings
 from SvenBot.utility import sendMessage
 from SvenBot.interactions import handle_interaction
 from SvenBot.tasks import recruit_task, a3sync_task, steam_task
-from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType, SlackEvent, SlackEventType
+from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType, SlackNotification, SlackNotificationType
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
@@ -59,12 +59,12 @@ def app():
         return response
 
     @fast_app.post('/slack/')
-    async def interact(event: SlackEvent = Body(...)):
-        gunicorn_logger.error(f"{event}")
-        if event.type == SlackEventType.VERIFICATION:
-            return {'challenge': event.challenge}
+    async def interact(notification: SlackNotification = Body(...)):
+        gunicorn_logger.error(f"{notification}")
+        if notification.type == SlackNotificationType.VERIFICATION:
+            return {'challenge': notification.challenge}
 
-        cal = event.attachments[0]
+        cal = notification.event.attachments[0]
         await sendMessage(settings.TEST_CHANNEL, f"{cal.pretext}, {cal.title}, {cal.text}")
 
     @fast_app.get('/abc/')

@@ -106,7 +106,7 @@ class Interaction(BaseModel):
     message: Any
 
 
-class SlackEventType(str, Enum):
+class SlackNotificationType(str, Enum):
     VERIFICATION = "url_verification"
     CALLBACK = "event_callback"
 
@@ -118,14 +118,14 @@ class SlackCalendarEvent(BaseModel):
     text: str | None
 
 
-class SlackNotification(BaseModel):
+class SlackEvent(BaseModel):
     type: str
     text: str
     attachments: list[SlackCalendarEvent] | None
 
 
-class SlackEvent(BaseModel):
+class SlackNotification(BaseModel):
     token: str
     challenge: str | None
-    type: SlackEventType
-    event: SlackNotification | None
+    type: SlackNotificationType
+    event: SlackEvent | None
