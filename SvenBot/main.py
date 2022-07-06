@@ -64,7 +64,8 @@ def app():
         if event.type == SlackEventType.VERIFICATION:
             return {'challenge': event.challenge}
 
-        await sendMessage(settings.TEST_CHANNEL, event)
+        cal = event.attachments[0]
+        await sendMessage(settings.TEST_CHANNEL, f"{cal.pretext}, {cal.title}, {cal.text}")
 
     @fast_app.get('/abc/')
     def hello_world():
