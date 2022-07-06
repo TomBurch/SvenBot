@@ -70,7 +70,7 @@ def app():
         if times:
             startTime, endTime = re.groups()
             
-            embed = f"Title: {cal.title}\nDescription: Starting<t:{startTime}:R>\nField1: Start <t:{startTime}:t> \nField2: End <t:{endTime:t>}"
+            embed = f"Title: {cal.title}\nDescription: Starting<t:{startTime}:R>\nField1: Start <t:{startTime}:t> \nField2: End <t:{endTime}:t>"
             await sendMessage(settings.TEST_CHANNEL, embed)
 
     @fast_app.get('/abc/')
