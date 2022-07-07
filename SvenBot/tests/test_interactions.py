@@ -10,7 +10,7 @@ from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_200_OK
 from SvenBot.config import settings
 from SvenBot.main import handle_interaction
 from SvenBot.models import InteractionType, Member, Interaction, Option, OptionType
-from SvenBot.utility import ImmediateReply, ARCHUB_HEADERS, GITHUB_HEADERS, GUILD_URL
+from SvenBot.utility import ImmediateReply, ARCHUB_HEADERS, GITHUB_HEADERS, GUILD_URL, ARCHUB_URL
 
 
 class Role(dict):
@@ -233,7 +233,7 @@ async def test_subscribe(httpx_mock, statusCode, replyType):
 
     httpx_mock.add_response(
         method="POST",
-        url=f"https://arcomm.co.uk/api/v1/missions/{missionId}/subscribe?discord_id={userId}",
+        url=f"{ARCHUB_URL}/missions/{missionId}/subscribe?discord_id={userId}",
         status_code=statusCode,
         match_headers=ARCHUB_HEADERS
     )

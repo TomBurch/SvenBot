@@ -17,7 +17,7 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 from SvenBot.config import settings, EVENT_PINGS
-from SvenBot.utility import sendMessage
+from SvenBot.utility import sendMessage, getOperationMissions, missionTypeFromMode
 from SvenBot.interactions import handle_interaction
 from SvenBot.tasks import recruit_task, a3sync_task, steam_task
 from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType, SlackNotification, \
@@ -74,17 +74,27 @@ def app():
         times = re.match(r"<!date\^(\d+)\^\{\w+\} from.*to <!date\^(\d+)\^\{\w+}", cal.text)
 
         if times:
-            event, ping, channel = None, None, settings.OP_CHANNEL
-            for e, pc in EVENT_PINGS.items():
+            event, ping, channel, color = None, None, settings.OP_CHANNEL, None
+            for e, pcc in EVENT_PINGS.items():
                 if re.search(e, cal.title.lower()):
-                    event, ping, channel = e, f"<@&{pc[0]}>", pc[1]
+                    event, ping, channel, color = e, f"<@&{pcc[0]}>", pcc[1], pcc[2]
                     break
 
             startTime, endTime = times.groups()
-            startField = EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True)
-            endField = EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True)
-            embed = Embed(title=cal.title, description=f"Starting <t:{startTime}:R>", fields=[startField, endField])
+            fields = [
+                EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True),
+                EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True)
+            ]
 
+            if event == "main":
+                for mission in await getOperationMissions():
+                    missionType = missionTypeFromMode(mission['mode'])
+                    link = f"https://arcomm.co.uk/hub/missions/{mission['id']}"
+                    fields.append(
+                        EmbedField(name=mission["display_name"], value=f"[{missionType} by {mission['maker']}]({link})", inline=False)
+                    )
+
+            embed = Embed(title=cal.title, description=f"Starting <t:{startTime}:R>", fields=fields, color=color)
             await sendMessage(channel, ping, embeds=[embed], mentions=["roles"])
 
     return fast_app

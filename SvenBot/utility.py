@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import httpx
-from starlette.status import HTTP_200_OK
+from starlette.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 
 from SvenBot.config import settings
 from SvenBot.models import InteractionResponseType, ResponseData, Response
@@ -133,7 +133,7 @@ async def validateRoleById(guild_id, role_id):
 
 async def getRoles(guild_id):
     url = f"{GUILD_URL}/{guild_id}/roles"
-    roles = await get([200], url)
+    roles = await get([HTTP_200_OK], url)
     return roles.json()
 
 
@@ -167,3 +167,20 @@ def timeUntilOptime(modifier=0):
         opday = opday + timedelta(days=1)
 
     return opday - today
+
+
+async def getOperationMissions():
+    response = await get([HTTP_200_OK, HTTP_204_NO_CONTENT], f"{ARCHUB_URL}/operations/next", headers=ARCHUB_HEADERS)
+    if response.status_code == HTTP_200_OK:
+        return response.json()
+    return []
+
+
+def missionTypeFromMode(mode):
+    if mode == 'coop':
+        return 'Co-op'
+    elif mode == 'adversarial':
+        return 'TvT'
+    elif mode == 'arcade':
+        return 'ARCade'
+    return None
