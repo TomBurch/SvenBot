@@ -76,7 +76,7 @@ def app():
         if times:
             event, ping, channel = None, None, settings.OP_CHANNEL
             for e, pc in EVENT_PINGS.items():
-                if re.search(e, cal.text.lower()):
+                if re.search(e, cal.title.lower()):
                     event, ping, channel = e, f"<@&{pc[0]}>", pc[1]
                     break
 
@@ -85,7 +85,7 @@ def app():
             endField = EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True)
             embed = Embed(title=cal.title, description=f"Starting <t:{startTime}:R>", fields=[startField, endField])
 
-            await sendMessage(channel, ping, embeds=[embed])
+            await sendMessage(channel, ping, embeds=[embed], mentions=["roles"])
 
     return fast_app
 
