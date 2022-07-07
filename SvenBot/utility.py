@@ -6,29 +6,10 @@ from zoneinfo import ZoneInfo
 import httpx
 from starlette.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 
-from SvenBot.config import settings
+from SvenBot.config import settings, CHANNELS_URL, GUILD_URL, ARCHUB_API, DEFAULT_HEADERS, ARCHUB_HEADERS
 from SvenBot.models import InteractionResponseType, ResponseData, Response
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
-
-ARCHUB_URL = "https://arcomm.co.uk/api/v1"
-APP_URL = f"https://discord.com/api/v8/applications/{settings.CLIENT_ID}"
-CHANNELS_URL = "https://discord.com/api/v8/channels"
-GUILD_URL = "https://discord.com/api/v8/guilds"
-REPO_URL = "https://events.arcomm.co.uk/api"
-STEAM_URL = "https://api.steampowered.com/ISteamRemoteStorage"
-
-DEFAULT_HEADERS = {
-    "Authorization": f"Bot {settings.BOT_TOKEN}"
-}
-
-ARCHUB_HEADERS = {
-    "Authorization": f"Bearer {settings.ARCHUB_TOKEN}"
-}
-
-GITHUB_HEADERS = {
-    "Authorization": f"Bearer {settings.GITHUB_TOKEN}"
-}
 
 
 async def req(function, statuses, url, headers=DEFAULT_HEADERS, **kwargs):
@@ -170,7 +151,7 @@ def timeUntilOptime(modifier=0):
 
 
 async def getOperationMissions():
-    response = await get([HTTP_200_OK, HTTP_204_NO_CONTENT], f"{ARCHUB_URL}/operations/next", headers=ARCHUB_HEADERS)
+    response = await get([HTTP_200_OK, HTTP_204_NO_CONTENT], f"{ARCHUB_API}/operations/next", headers=ARCHUB_HEADERS)
     if response.status_code == HTTP_200_OK:
         return response.json()
     return []

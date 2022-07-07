@@ -7,10 +7,10 @@ from fastapi import HTTPException
 from freezegun import freeze_time
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_200_OK
 
-from SvenBot.config import settings
+from SvenBot.config import settings, GITHUB_HEADERS, ARCHUB_HEADERS, GUILD_URL, ARCHUB_API, HUB_URL
 from SvenBot.main import handle_interaction
 from SvenBot.models import InteractionType, Member, Interaction, Option, OptionType
-from SvenBot.utility import ImmediateReply, ARCHUB_HEADERS, GITHUB_HEADERS, GUILD_URL, ARCHUB_URL
+from SvenBot.utility import ImmediateReply
 
 
 class Role(dict):
@@ -233,7 +233,7 @@ async def test_subscribe(httpx_mock, statusCode, replyType):
 
     httpx_mock.add_response(
         method="POST",
-        url=f"{ARCHUB_URL}/missions/{missionId}/subscribe?discord_id={userId}",
+        url=f"{ARCHUB_API}/missions/{missionId}/subscribe?discord_id={userId}",
         status_code=statusCode,
         match_headers=ARCHUB_HEADERS
     )
@@ -241,7 +241,7 @@ async def test_subscribe(httpx_mock, statusCode, replyType):
     interaction = Interaction(**MockRequest("subscribe", memberNoRole, options=[
         Option(value=missionId, name="subscribe", type=OptionType.INTEGER)]))
     reply = await handle_interaction(interaction)
-    expected = f"{replyType} https://arcomm.co.uk/hub/missions/{missionId}"
+    expected = f"{replyType} {HUB_URL}/missions/{missionId}"
 
     assert reply == ImmediateReply(expected, mentions=[])
 

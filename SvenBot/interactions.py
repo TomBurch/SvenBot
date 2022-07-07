@@ -6,8 +6,8 @@ from starlette.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN, HTTP_200_O
     HTTP_400_BAD_REQUEST, HTTP_501_NOT_IMPLEMENTED, HTTP_500_INTERNAL_SERVER_ERROR
 
 from SvenBot import utility
+from SvenBot.config import GUILD_URL, ARCHUB_API, ARCHUB_HEADERS, GITHUB_HEADERS, HUB_URL
 from SvenBot.models import Interaction, InteractionType
-from SvenBot.utility import GUILD_URL, ARCHUB_HEADERS, ARCHUB_URL, GITHUB_HEADERS
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
@@ -121,9 +121,9 @@ async def execute_removerole(interaction: Interaction):
 async def execute_subscribe(interaction: Interaction):
     user_id = interaction.member.user.id
     mission_id, = interaction.data.options
-    url = f"{ARCHUB_URL}/missions/{mission_id.value}/subscribe?discord_id={user_id}"
+    url = f"{ARCHUB_API}/missions/{mission_id.value}/subscribe?discord_id={user_id}"
     r = await utility.post([HTTP_201_CREATED, HTTP_204_NO_CONTENT], url, headers=ARCHUB_HEADERS)
-    missionUrl = f"https://arcomm.co.uk/hub/missions/{mission_id.value}"
+    missionUrl = f"{HUB_URL}/missions/{mission_id.value}"
 
     if r.status_code == HTTP_201_CREATED:
         return f"You are now subscribed to {missionUrl}"

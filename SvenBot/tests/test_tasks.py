@@ -1,10 +1,9 @@
 import pytest
 from starlette.status import HTTP_200_OK
 
-from SvenBot.config import settings
+from SvenBot.config import settings, CHANNELS_URL
 from SvenBot.main import a3sync_task, recruit_task
 from SvenBot.models import ResponseData
-from SvenBot.utility import CHANNELS_URL
 
 
 @pytest.mark.asyncio

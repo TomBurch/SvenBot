@@ -6,8 +6,7 @@ from starlette.status import HTTP_200_OK
 from bs4 import BeautifulSoup
 
 from SvenBot import utility
-from SvenBot.config import settings
-from SvenBot.utility import STEAM_URL
+from SvenBot.config import settings, STEAM_URL, REPO_URL
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
@@ -20,14 +19,14 @@ async def recruit_task():
 
 
 async def a3sync_task():
-    r = await utility.get([HTTP_200_OK], f'{utility.REPO_URL}/repo')
+    r = await utility.get([HTTP_200_OK], f'{REPO_URL}/repo')
     repoInfo = r.json()
 
     with open('revision.json', 'r') as f:
         revision = json.load(f)
 
     if repoInfo['revision'] != revision['revision']:
-        r = await utility.get([HTTP_200_OK], f'{utility.REPO_URL}/changelog')
+        r = await utility.get([HTTP_200_OK], f'{REPO_URL}/changelog')
         changelogs = r.json()['list']
 
         newRepoSize = round((float(repoInfo["totalFilesSize"]) / 1000000000), 2)
