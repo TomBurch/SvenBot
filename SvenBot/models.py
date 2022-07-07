@@ -10,10 +10,23 @@ class InteractionResponseType(IntEnum):
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5
 
 
+class EmbedField(BaseModel):
+    name: str
+    value: str
+    inline: bool | None
+
+
+class Embed(BaseModel):
+    title: str
+    description: str
+    color: int | None
+    fields: list[EmbedField] | None
+
+
 class ResponseData(BaseModel):
     tts: bool | None
     content: str | None
-    embeds: Any
+    embeds: list[Embed] | None
     allowed_mentions: Any
     flags: int | None
     components: Any

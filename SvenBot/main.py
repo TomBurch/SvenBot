@@ -20,7 +20,8 @@ from SvenBot.config import settings
 from SvenBot.utility import sendMessage
 from SvenBot.interactions import handle_interaction
 from SvenBot.tasks import recruit_task, a3sync_task, steam_task
-from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType, SlackNotification, SlackNotificationType
+from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType, SlackNotification, \
+    SlackNotificationType, Embed, EmbedField
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
@@ -51,6 +52,10 @@ def verify_key(body, signature, timestamp):
 def app():
     fast_app = FastAPI()
 
+    @fast_app.get('/abc/')
+    def hello_world():
+        return {"message", "Hello, World!"}
+
     @fast_app.post('/interaction/', response_model=Response)
     async def interact(interaction: Interaction = Body(...), valid: bool = Depends(ValidDiscordRequest())):
         if interaction.type == InteractionType.PING:
@@ -67,15 +72,13 @@ def app():
 
         cal = notification.event.attachments[0]
         times = re.match(r"<!date\^(\d+)\^\{\w+\} from.*to <!date\^(\d+)\^\{\w+}", cal.text)
+
         if times:
             startTime, endTime = times.groups()
-
-            embed = f"Title: {cal.title}\nDescription: Starting<t:{startTime}:R>\nField1: Start <t:{startTime}:t> \nField2: End <t:{endTime}:t>"
-            await sendMessage(settings.TEST_CHANNEL, embed)
-
-    @fast_app.get('/abc/')
-    def hello_world():
-        return {"message", "Hello, World!"}
+            startField = EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True)
+            endField = EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True)
+            embed = Embed(title=cal.title, description=f"Starting <t:{startTime}:R>", fields=[startField, endField])
+            await sendMessage(settings.TEST_CHANNEL, embeds=[embed])
 
     return fast_app
 
