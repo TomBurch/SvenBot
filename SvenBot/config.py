@@ -22,13 +22,13 @@ class Settings(BaseSettings):
     MEMBER_ROLE: int
     RECRUIT_ROLE: int
 
-    EVENT_PINGS = {
-        'main': [MEMBER_ROLE, OP_CHANNEL],
-        'recruit': [RECRUIT_ROLE, OP_CHANNEL]
-    }
-
     class Config:
         env_file = ".env"
 
 
 settings = Settings()
+
+EVENT_PINGS = {
+    'main': [settings.MEMBER_ROLE, settings.OP_CHANNEL],
+    'recruit': [settings.RECRUIT_ROLE, settings.OP_CHANNEL]
+}

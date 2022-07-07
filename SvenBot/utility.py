@@ -65,7 +65,7 @@ async def patch(statuses, url, **kwargs):
         return await req(client.patch, statuses, url, **kwargs)
 
 
-async def sendMessage(channel_id, text=None, embeds=None, mentions=[]):
+async def sendMessage(channel_id, text=None, mentions=[], embeds=None):
     message = ResponseData(content=text, embeds=embeds, allowed_mentions={"parse": mentions})
     async with httpx.AsyncClient() as client:
         await req(client.post, [HTTP_200_OK], f"{CHANNELS_URL}/{channel_id}/messages", json=message.dict())

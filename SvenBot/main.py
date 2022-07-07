@@ -16,7 +16,7 @@ PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
-from SvenBot.config import settings
+from SvenBot.config import settings, EVENT_PINGS
 from SvenBot.utility import sendMessage
 from SvenBot.interactions import handle_interaction
 from SvenBot.tasks import recruit_task, a3sync_task, steam_task
@@ -75,7 +75,7 @@ def app():
 
         if times:
             event, ping, channel = None, None, settings.OP_CHANNEL
-            for e, pc in settings.EVENT_PINGS.items():
+            for e, pc in EVENT_PINGS.items():
                 if re.search(e, cal.text.lower()):
                     event, ping, channel = e, f"<@&{pc[0]}>", pc[1]
                     break
