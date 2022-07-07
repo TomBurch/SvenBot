@@ -13,7 +13,7 @@ class InteractionResponseType(IntEnum):
 class EmbedField(BaseModel):
     name: str
     value: str
-    inline: bool | None
+    inline: bool = False
 
 
 class Embed(BaseModel):

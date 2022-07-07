@@ -14,10 +14,18 @@ class Settings(BaseSettings):
     STEAM_MODLIST: int
 
     ANNOUNCE_CHANNEL: int
+    OP_CHANNEL: int
     TEST_CHANNEL: int
     STAFF_CHANNEL: int
 
     ADMIN_ROLE: int
+    MEMBER_ROLE: int
+    RECRUIT_ROLE: int
+
+    EVENT_PINGS = {
+        'main': [MEMBER_ROLE, OP_CHANNEL],
+        'recruit': [RECRUIT_ROLE, OP_CHANNEL]
+    }
 
     class Config:
         env_file = ".env"

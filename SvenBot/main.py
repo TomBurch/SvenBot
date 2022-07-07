@@ -74,11 +74,18 @@ def app():
         times = re.match(r"<!date\^(\d+)\^\{\w+\} from.*to <!date\^(\d+)\^\{\w+}", cal.text)
 
         if times:
+            event, ping, channel = None, None, settings.OP_CHANNEL
+            for e, pc in settings.EVENT_PINGS.items():
+                if re.search(e, cal.text.lower()):
+                    event, ping, channel = e, f"<@&{pc[0]}>", pc[1]
+                    break
+
             startTime, endTime = times.groups()
             startField = EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True)
-            endField = EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True)
+            endField = EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True)
             embed = Embed(title=cal.title, description=f"Starting <t:{startTime}:R>", fields=[startField, endField])
-            await sendMessage(settings.TEST_CHANNEL, embeds=[embed])
+
+            await sendMessage(channel, ping, embeds=[embed])
 
     return fast_app
 
