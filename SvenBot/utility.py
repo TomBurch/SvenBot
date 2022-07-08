@@ -11,45 +11,41 @@ from SvenBot.models import InteractionResponseType, ResponseData, Response
 
 gunicorn_logger = logging.getLogger('gunicorn.error')
 
+client = httpx.AsyncClient()
+
 
 async def req(function, statuses, url, headers=DEFAULT_HEADERS, **kwargs):
-    r = await function(url, headers=headers, **kwargs)
+    response = await function(url, headers=headers, **kwargs)
 
-    if r.status_code not in statuses:
-        gunicorn_logger.error(f"Received unexpected status code {r.status_code} (expected {statuses})\n{r.text}")
-        raise RuntimeError(f"Req error: {r.text}")
-    return r
+    if response.status_code not in statuses:
+        gunicorn_logger.error(f"Received unexpected status code {response.status_code} (expected {statuses})\n{response.text}")
+        raise RuntimeError(f"Req error: {response.text}")
+    return response
 
 
 async def get(statuses, url, **kwargs):
-    async with httpx.AsyncClient() as client:
-        return await req(client.get, statuses, url, **kwargs)
+    return await req(client.get, statuses, url, **kwargs)
 
 
 async def delete(statuses, url, **kwargs):
-    async with httpx.AsyncClient() as client:
-        return await req(client.delete, statuses, url, **kwargs)
+    return await req(client.delete, statuses, url, **kwargs)
 
 
 async def put(statuses, url, **kwargs):
-    async with httpx.AsyncClient() as client:
-        return await req(client.put, statuses, url, **kwargs)
+    return await req(client.put, statuses, url, **kwargs)
 
 
 async def post(statuses, url, **kwargs):
-    async with httpx.AsyncClient() as client:
-        return await req(client.post, statuses, url, **kwargs)
+    return await req(client.post, statuses, url, **kwargs)
 
 
 async def patch(statuses, url, **kwargs):
-    async with httpx.AsyncClient() as client:
-        return await req(client.patch, statuses, url, **kwargs)
+    return await req(client.patch, statuses, url, **kwargs)
 
 
 async def sendMessage(channel_id, text=None, mentions=[], embeds=None):
     message = ResponseData(content=text, embeds=embeds, allowed_mentions={"parse": mentions})
-    async with httpx.AsyncClient() as client:
-        await req(client.post, [HTTP_200_OK], f"{CHANNELS_URL}/{channel_id}/messages", json=message.dict())
+    await post([HTTP_200_OK], f"{CHANNELS_URL}/{channel_id}/messages", json=message.dict())
 
     return message
 
@@ -94,8 +90,7 @@ async def validateRole(guild_id, role, roles=None):
     role_validate = role_validate_funcs.get(guild_id)
     if role_validate is None:
         return False
-    else:
-        return role_validate(role, botPosition)
+    return role_validate(role, botPosition)
 
 
 async def validateRoleById(guild_id, role_id):
@@ -113,8 +108,7 @@ async def validateRoleById(guild_id, role_id):
 
 
 async def getRoles(guild_id):
-    url = f"{GUILD_URL}/{guild_id}/roles"
-    roles = await get([HTTP_200_OK], url)
+    roles = await get([HTTP_200_OK], f"{GUILD_URL}/{guild_id}/roles")
     return roles.json()
 
 
