@@ -160,7 +160,7 @@ async def execute_maps(interaction: Interaction):
 
     outString = "File name -> Display name\n=========================\n"
     for _map in maps:
-        outString += f"{_map['class_name']} -> {_map['display_name']}\n"
+        outString += f"{_map['class_name']}\n" if _map['class_name'] == _map['display_name'] else f"{_map['class_name']} -> {_map['display_name']}\n"
 
     return f"```\n{outString}```"
 
