@@ -162,7 +162,7 @@ async def execute_maps(interaction: Interaction):
     for _map in maps:
         outString += f"{_map['class_name']}\n" if _map['class_name'] == _map['display_name'] else f"{_map['class_name']} [{_map['display_name']}]\n"
 
-    return f"```asciidoc\n{outString}```"
+    return f"```ini\n{outString}```"
 
 
 async def execute_renamemap(interaction: Interaction):
