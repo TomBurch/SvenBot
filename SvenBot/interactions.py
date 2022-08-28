@@ -158,11 +158,11 @@ async def execute_maps(interaction: Interaction):
     r = await utility.get([HTTP_200_OK], url, headers=ARCHUB_HEADERS)
     maps = r.json()
 
-    outString = "File name -> Display name\n=========================\n"
+    outString = "File name [ Display name ]\n=========================\n"
     for _map in maps:
-        outString += f"{_map['class_name']}\n" if _map['class_name'] == _map['display_name'] else f"{_map['class_name']} -> {_map['display_name']}\n"
+        outString += f"{_map['class_name']}\n" if _map['class_name'] == _map['display_name'] else f"{_map['class_name']} [ {_map['display_name']} ]\n"
 
-    return f"```\n{outString}```"
+    return f"```asciidoc\n{outString}```"
 
 
 async def execute_renamemap(interaction: Interaction):
