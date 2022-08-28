@@ -319,5 +319,41 @@ async def test_renamerole(httpx_mock, role, newName, patches, replyType):
         assert reply == ImmediateReply(f"<@&{roleId}> {replyType}", mentions=[])
 
 
+@pytest.mark.asyncio
+async def test_maps(httpx_mock):
+    maps = [{"class_name": "map1class", "display_name": "map1display"}]
+    httpx_mock.add_response(
+        method="GET",
+        url=f"{ARCHUB_API}/maps",
+        json=maps,
+        status_code=HTTP_200_OK,
+        match_headers=ARCHUB_HEADERS
+    )
+
+    interaction = Interaction(**MockRequest("maps", memberNoRole, options=[]))
+    reply = await handle_interaction(interaction)
+
+    outString = f"```\nFile name -> Display name\n=========================\n{maps[0]['class_name']} -> {maps[0]['display_name']}\n```"
+    assert reply == ImmediateReply(outString, mentions=[])
+
+
+@pytest.mark.asyncio
+async def test_renamemap(httpx_mock):
+    old_name, new_name = "abc", "def"
+    httpx_mock.add_response(
+        method="PATCH",
+        url=f"{ARCHUB_API}/maps?old_name={old_name}&new_name={new_name}",
+        status_code=HTTP_204_NO_CONTENT,
+        match_headers=ARCHUB_HEADERS
+    )
+
+    interaction = Interaction(
+        **MockRequest("renamemap", memberNoRole, options=[Option(value=old_name, name="old_name", type=OptionType.STRING),
+                                                          Option(value=new_name, name="new_name", type=OptionType.STRING)]))
+    reply = await handle_interaction(interaction)
+
+    assert reply == ImmediateReply(f"`{old_name}` was renamed to `{new_name}`", mentions=[])
+
+
 if __name__ == "__main__":
     pytest.main()

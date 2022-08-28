@@ -118,19 +118,6 @@ async def execute_removerole(interaction: Interaction):
         return "Role is restricted"
 
 
-async def execute_subscribe(interaction: Interaction):
-    user_id = interaction.member.user.id
-    mission_id, = interaction.data.options
-    url = f"{ARCHUB_API}/missions/{mission_id.value}/subscribe?discord_id={user_id}"
-    r = await utility.post([HTTP_201_CREATED, HTTP_204_NO_CONTENT], url, headers=ARCHUB_HEADERS)
-    missionUrl = f"{HUB_URL}/missions/{mission_id.value}"
-
-    if r.status_code == HTTP_201_CREATED:
-        return f"You are now subscribed to {missionUrl}"
-
-    return f"You are no longer subscribed to {missionUrl}"
-
-
 async def execute_ticket(interaction: Interaction):
     member = interaction.member
     repo, title, body = interaction.data.options
@@ -166,17 +153,53 @@ async def execute_renamerole(interaction: Interaction):
     return f"<@&{role_id.value}> was renamed"
 
 
+async def execute_maps(interaction: Interaction):
+    url = f"{ARCHUB_API}/maps"
+    r = await utility.get([HTTP_200_OK], url, headers=ARCHUB_HEADERS)
+    maps = r.json()
+
+    outString = "File name -> Display name\n=========================\n"
+    for _map in maps:
+        outString += f"{_map['class_name']} -> {_map['display_name']}\n"
+
+    return f"```\n{outString}```"
+
+
+async def execute_renamemap(interaction: Interaction):
+    old_name, new_name = interaction.data.options
+
+    url = f"{ARCHUB_API}/maps?old_name={old_name.value}&new_name={new_name.value}"
+    await utility.patch([HTTP_204_NO_CONTENT], url, headers=ARCHUB_HEADERS)
+
+    return f"`{old_name.value}` was renamed to `{new_name.value}`"
+
+
+async def execute_subscribe(interaction: Interaction):
+    user_id = interaction.member.user.id
+    mission_id, = interaction.data.options
+    url = f"{ARCHUB_API}/missions/{mission_id.value}/subscribe?discord_id={user_id}"
+    r = await utility.post([HTTP_201_CREATED, HTTP_204_NO_CONTENT], url, headers=ARCHUB_HEADERS)
+    missionUrl = f"{HUB_URL}/missions/{mission_id.value}"
+
+    if r.status_code == HTTP_201_CREATED:
+        return f"You are now subscribed to {missionUrl}"
+
+    return f"You are no longer subscribed to {missionUrl}"
+
+
 async def execute_ping(interaction: Interaction):
     return "Pong!"
 
 execute_map = {
     "addrole": execute_addrole,
     "cointoss": execute_cointoss,
+    "maps": execute_maps,
     "members": execute_members,
     "myroles": execute_myroles,
     "optime": execute_optime,
     "ping": execute_ping,
     "removerole": execute_removerole,
+    "renamemap": execute_renamemap,
     "renamerole": execute_renamerole,
     "role": execute_role,
     "roles": execute_roles,

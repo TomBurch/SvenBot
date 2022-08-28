@@ -59,6 +59,24 @@ removerole = CommandDefinition(
     ]
 )
 
+renamemap = CommandDefinition(
+    name="renamemap",
+    description="Rename a map on ARCHUB",
+    default_permission=False,
+    options=[
+        OptionDefinition(
+            name="old_name",
+            description="Old name",
+            type=OptionType.STRING,
+        ),
+        OptionDefinition(
+            name="new_name",
+            description="New name",
+            type=OptionType.STRING,
+        )
+    ]
+)
+
 renamerole = CommandDefinition(
     name="renamerole",
     description="Rename an existing role",
@@ -75,6 +93,11 @@ renamerole = CommandDefinition(
             type=OptionType.STRING,
         )
     ]
+)
+
+maps = CommandDefinition(
+    name="maps",
+    description="Get a list of maps on ARCHUB",
 )
 
 members = CommandDefinition(
