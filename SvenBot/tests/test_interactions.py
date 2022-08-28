@@ -333,7 +333,7 @@ async def test_maps(httpx_mock):
     interaction = Interaction(**MockRequest("maps", memberNoRole, options=[]))
     reply = await handle_interaction(interaction)
 
-    outString = f"```asciidoc\nFile name [ Display name ]\n=========================\n{maps[0]['class_name']} [ {maps[0]['display_name']} ]\n```"
+    outString = f"```asciidoc\nFile name [Display name]\n=========================\n{maps[0]['class_name']} [{maps[0]['display_name']}]\n```"
     assert reply == ImmediateReply(outString, mentions=[])
 
 
