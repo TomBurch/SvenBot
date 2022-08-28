@@ -95,7 +95,7 @@ def app():
                     )
 
             embed = Embed(title=cal.title, description=f"Starting <t:{startTime}:R>", fields=fields, color=color)
-            await sendMessage(channel, ping, embeds=[embed], mentions=["roles"])
+            await sendMessage(channel, ping, ["roles"], [embed])
 
     return fast_app
 
