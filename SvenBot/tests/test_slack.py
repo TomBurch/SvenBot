@@ -88,7 +88,7 @@ def test_main_event(httpx_mock: HTTPXMock):
 
     assert response.status_code == HTTP_200_OK
     assert httpx_mock.get_request(method="POST").content.decode() == ResponseData(
-        content=f"<@&{settings.MEMBER_ROLE}>",
+        content=f"<@&{settings.MEMBER_ROLE}> <@&{settings.RECRUIT_ROLE}>",
         allowed_mentions = {"parse": ["roles"]},
         embeds = [Embed(
             title=title,

@@ -29,8 +29,8 @@ class Settings(BaseSettings):
 settings = Settings()
 
 EVENT_PINGS = {
-    'main': [settings.MEMBER_ROLE, settings.OP_CHANNEL, 0x992d22],
-    'recruit': [settings.RECRUIT_ROLE, settings.OP_CHANNEL, 0x1f8b4c]
+    'main': [[settings.MEMBER_ROLE, settings.RECRUIT_ROLE], settings.OP_CHANNEL, 0x992d22],
+    'recruit': [[settings.RECRUIT_ROLE], settings.OP_CHANNEL, 0x1f8b4c]
 }
 
 HUB_URL = "https://arcomm.co.uk/hub"

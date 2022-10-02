@@ -74,10 +74,11 @@ def app():
         times = re.match(r"<!date\^(\d+)\^\{\w+\} from.*to <!date\^(\d+)\^\{\w+}", cal.text)
 
         if times:
-            event, ping, channel, color = None, None, settings.OP_CHANNEL, None
+            event, pings, channel, color = None, None, settings.OP_CHANNEL, None
             for e, pcc in EVENT_PINGS.items():
                 if re.search(e, cal.title.lower()):
-                    event, ping, channel, color = e, f"<@&{pcc[0]}>", pcc[1], pcc[2]
+                    pings = " ".join(f"<@&{ping}>" for ping in pcc[0])
+                    event, channel, color = e, pcc[1], pcc[2]
                     break
 
             startTime, endTime = times.groups()
@@ -95,7 +96,7 @@ def app():
                     )
 
             embed = Embed(title=cal.title, description=f"Starting <t:{startTime}:R>", fields=fields, color=color)
-            await sendMessage(channel, ping, ["roles"], [embed])
+            await sendMessage(channel, pings, ["roles"], [embed])
 
     return fast_app
 
