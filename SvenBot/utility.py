@@ -154,8 +154,8 @@ async def getOperationMissions():
 def missionTypeFromMode(mode):
     if mode == 'coop':
         return 'Co-op'
-    elif mode == 'adversarial':
+    elif mode == 'tvt':
         return 'TvT'
-    elif mode == 'arcade':
+    elif mode == 'ade':
         return 'ARCade'
     return None

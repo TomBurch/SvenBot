@@ -65,8 +65,8 @@ def test_random_event(httpx_mock: HTTPXMock):
 
 def test_main_event(httpx_mock: HTTPXMock):
     mission1 = ArchubMission(id=15, display_name='Random COOP', mode='coop', maker='MissionMaker1')
-    mission2 = ArchubMission(id=16, display_name='Random TVT', mode='adversarial', maker='MissionMaker2')
-    mission3 = ArchubMission(id=17, display_name='Random ARCade', mode='arcade', maker='MissionMaker3')
+    mission2 = ArchubMission(id=16, display_name='Random TVT', mode='tvt', maker='MissionMaker2')
+    mission3 = ArchubMission(id=17, display_name='Random ARCade', mode='ade', maker='MissionMaker3')
 
     httpx_mock.add_response(
         method="GET",
