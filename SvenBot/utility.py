@@ -137,7 +137,7 @@ async def findRoleByName(guild_id, query, autocomplete=False, excludeReserved=Tr
 def timeUntilOptime(modifier=0):
     today = datetime.now(tz=ZoneInfo('Europe/London'))
     opday = today
-    opday = opday.replace(hour=18, minute=0, second=0) + timedelta(hours=modifier)
+    opday = opday.replace(hour=19, minute=0, second=0) + timedelta(hours=modifier)
     if today > opday:
         opday = opday + timedelta(days=1)
 
