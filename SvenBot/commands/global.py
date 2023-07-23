@@ -1,6 +1,6 @@
 import requests
 
-from SvenBot.utility import DEFAULT_HEADERS, APP_URL
+from SvenBot.config import APP_URL, DEFAULT_HEADERS
 
 url = f"{APP_URL}/commands"
 

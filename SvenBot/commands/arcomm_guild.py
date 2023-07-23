@@ -6,8 +6,8 @@ from SvenBot.config import APP_URL, DEFAULT_HEADERS
 url = f"{APP_URL}/guilds/240160552867987475/commands"
 STAFF_ROLE_ID = 324227354329219072
 
-update = []
-staff = ["addrole", "removerole", "renamerole", "maps", "renamemap"]
+update: list[str] = []
+staff: list[str] = ["addrole", "removerole", "renamerole", "maps", "renamemap"]
 
 commands = [
     addrole,

@@ -1,5 +1,5 @@
 gunicorn==20.1.0
-uvicorn==0.13.4
+uvicorn==0.23.1
 uvloop
 httptools~=0.4.0
 apscheduler==3.9.1
@@ -7,6 +7,7 @@ BeautifulSoup4==4.11.1
 fastapi==0.75.2
 freezegun==1.2.1
 httpx==0.22.0
+mypy==1.4.1
 pytest==7.1.2
 pytest-asyncio==0.18.3
 pytest-httpx==0.20.0
@@ -16,3 +17,5 @@ pynacl==1.5.0
 requests==2.27.1
 starlette==0.17.1
 SQLAlchemy~=1.4.39
+types-beautifulsoup4
+types-requests
