@@ -6,10 +6,17 @@ from zoneinfo import ZoneInfo
 import httpx
 from starlette.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 
-from SvenBot.config import settings, CHANNELS_URL, GUILD_URL, ARCHUB_API, DEFAULT_HEADERS, ARCHUB_HEADERS
-from SvenBot.models import InteractionResponseType, ResponseData, Response
+from SvenBot.config import (
+    ARCHUB_API,
+    ARCHUB_HEADERS,
+    CHANNELS_URL,
+    DEFAULT_HEADERS,
+    GUILD_URL,
+    settings,
+)
+from SvenBot.models import InteractionResponseType, Response, ResponseData
 
-gunicorn_logger = logging.getLogger('gunicorn.error')
+gunicorn_logger = logging.getLogger("gunicorn.error")
 
 client = httpx.AsyncClient()
 
@@ -69,7 +76,7 @@ def colourValidation(role, botPosition):
 role_validate_funcs = {
     "342006395010547712": colourValidation,
     "240160552867987475": colourValidation,
-    "333316787603243018": basicValidation
+    "333316787603243018": basicValidation,
 }
 
 
@@ -135,7 +142,7 @@ async def findRoleByName(guild_id, query, autocomplete=False, excludeReserved=Tr
 
 
 def timeUntilOptime(modifier=0):
-    today = datetime.now(tz=ZoneInfo('Europe/London'))
+    today = datetime.now(tz=ZoneInfo("Europe/London"))
     opday = today
     opday = opday.replace(hour=19, minute=0, second=0) + timedelta(hours=modifier)
     if today > opday:
@@ -152,10 +159,12 @@ async def getOperationMissions():
 
 
 def missionTypeFromMode(mode):
-    if mode == 'coop':
-        return 'Co-op'
-    elif mode == 'tvt':
-        return 'TvT'
-    elif mode == 'ade':
-        return 'ARCade'
-    return None
+    mission_type = None
+    match mode:
+        case "coop":
+            mission_type = "Co-op"
+        case "tvt":
+            mission_type = "TvT"
+        case "ade":
+            mission_type = "ARCade"
+    return mission_type

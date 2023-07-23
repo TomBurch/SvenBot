@@ -1,6 +1,6 @@
 import requests
 
-from SvenBot.commands.command_models import *
+from SvenBot.commands.command_models import members, myroles, role, roles
 from SvenBot.config import APP_URL, DEFAULT_HEADERS
 
 url = f"{APP_URL}/guilds/333316787603243018/commands"
@@ -11,7 +11,7 @@ commands = [
     members,
     myroles,
     role,
-    roles
+    roles,
 ]
 
 if __name__ == "__main__":

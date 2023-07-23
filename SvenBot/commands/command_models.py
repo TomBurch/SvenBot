@@ -25,7 +25,7 @@ class CommandDefinition(BaseModel):
 
 ping = CommandDefinition(
     name="ping",
-    description="Ping!"
+    description="Ping!",
 )
 
 addrole = CommandDefinition(
@@ -37,13 +37,13 @@ addrole = CommandDefinition(
             name="name",
             description="Name",
             type=OptionType.STRING,
-        )
-    ]
+        ),
+    ],
 )
 
 cointoss = CommandDefinition(
     name="cointoss",
-    description="Flip a coin"
+    description="Flip a coin",
 )
 
 removerole = CommandDefinition(
@@ -55,8 +55,8 @@ removerole = CommandDefinition(
             name="role",
             description="Role",
             type=OptionType.ROLE,
-        )
-    ]
+        ),
+    ],
 )
 
 renamemap = CommandDefinition(
@@ -73,8 +73,8 @@ renamemap = CommandDefinition(
             name="new_name",
             description="New name",
             type=OptionType.STRING,
-        )
-    ]
+        ),
+    ],
 )
 
 renamerole = CommandDefinition(
@@ -91,8 +91,8 @@ renamerole = CommandDefinition(
             name="name",
             description="New name",
             type=OptionType.STRING,
-        )
-    ]
+        ),
+    ],
 )
 
 maps = CommandDefinition(
@@ -108,13 +108,13 @@ members = CommandDefinition(
             name="role",
             description="Role",
             type=OptionType.ROLE,
-        )
-    ]
+        ),
+    ],
 )
 
 myroles = CommandDefinition(
     name="myroles",
-    description="Get a list of roles you're in"
+    description="Get a list of roles you're in",
 )
 
 optime = CommandDefinition(
@@ -125,9 +125,9 @@ optime = CommandDefinition(
             name="modifier",
             description="Modifier",
             type=OptionType.INTEGER,
-            required=False
-        )
-    ]
+            required=False,
+        ),
+    ],
 )
 
 role = CommandDefinition(
@@ -138,13 +138,13 @@ role = CommandDefinition(
             name="role",
             description="Role",
             type=OptionType.ROLE,
-        )
-    ]
+        ),
+    ],
 )
 
 roles = CommandDefinition(
     name="roles",
-    description="Get a list of roles you can join"
+    description="Get a list of roles you can join",
 )
 
 subscribe = CommandDefinition(
@@ -154,9 +154,9 @@ subscribe = CommandDefinition(
         OptionDefinition(
             name="mission",
             description="The mission ID",
-            type=OptionType.INTEGER
-        )
-    ]
+            type=OptionType.INTEGER,
+        ),
+    ],
 )
 
 ticket = CommandDefinition(
@@ -171,8 +171,8 @@ ticket = CommandDefinition(
                 Choice(name="archub", value="ARCOMM/ARCHUB"),
                 Choice(name="arc_misc", value="ARCOMM/arc_misc"),
                 Choice(name="arcmt", value="ARCOMM/ARCMT"),
-                Choice(name="svenbot", value="TomBurch/SvenBot")
-            ]
+                Choice(name="svenbot", value="TomBurch/SvenBot"),
+            ],
         ),
         OptionDefinition(
             name="title",
@@ -182,7 +182,7 @@ ticket = CommandDefinition(
         OptionDefinition(
             name="body",
             description="Ticket description",
-            type=OptionType.STRING
-        )
-    ]
+            type=OptionType.STRING,
+        ),
+    ],
 )

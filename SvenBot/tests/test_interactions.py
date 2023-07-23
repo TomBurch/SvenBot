@@ -5,11 +5,18 @@ from unittest import mock
 import pytest
 from fastapi import HTTPException
 from freezegun import freeze_time
-from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_200_OK
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
-from SvenBot.config import settings, GITHUB_HEADERS, ARCHUB_HEADERS, GUILD_URL, ARCHUB_API, HUB_URL
+from SvenBot.config import (
+    ARCHUB_API,
+    ARCHUB_HEADERS,
+    GITHUB_HEADERS,
+    GUILD_URL,
+    HUB_URL,
+    settings,
+)
 from SvenBot.main import handle_interaction
-from SvenBot.models import InteractionType, Member, Interaction, Option, OptionType
+from SvenBot.models import Interaction, InteractionType, Member, Option, OptionType
 from SvenBot.utility import ImmediateReply
 
 
@@ -41,7 +48,7 @@ memberNoRole = Member(user={"id": "User234", "username": "TestUser2", "discrimin
 memberWithRole = Member(user={"id": "User123", "username": "TestUser", "discriminator": "3124"}, roles=[testRole["id"]])
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_ping():
     interaction = Interaction(**MockRequest("ping", memberNoRole))
     reply = await handle_interaction(interaction)
@@ -50,14 +57,14 @@ async def test_ping():
     assert reply == expected
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("httpx_mock, user, role, roleMethod, roleStatus, replyType", [
+@pytest.mark.asyncio()
+@pytest.mark.parametrize(("httpx_mock", "user", "role", "roleMethod", "roleStatus", "replyType"), [
     (None, memberWithRole, testRole, "DELETE", 204, "left"),
     (None, memberNoRole, testRole, "PUT", 204, "joined"),
     (None, memberWithRole, testRole, "DELETE", 403, "restricted"),
     (None, memberNoRole, testRole, "PUT", 403, "restricted"),
     (None, memberWithRole, invalidRole, None, None, "restricted"),
-    (None, memberNoRole, invalidRole, None, None, "restricted")
+    (None, memberNoRole, invalidRole, None, None, "restricted"),
 ], indirect=["httpx_mock"])
 async def test_role(httpx_mock, user, role, roleMethod, roleStatus, replyType):
     userId = user.user.id
@@ -67,35 +74,35 @@ async def test_role(httpx_mock, user, role, roleMethod, roleStatus, replyType):
         method="GET",
         url=f"{GUILD_URL}/{arcommGuild}/roles",
         json=roles,
-        status_code=HTTP_200_OK
+        status_code=HTTP_200_OK,
     )
 
     if roleMethod is not None:
         httpx_mock.add_response(
             method=roleMethod,
             url=f"{GUILD_URL}/{arcommGuild}/members/{userId}/roles/{roleId}",
-            status_code=roleStatus
+            status_code=roleStatus,
         )
 
     interaction = Interaction(
         **MockRequest("role", user, options=[Option(value=roleId, name="role", type=OptionType.ROLE)]))
     reply = await handle_interaction(interaction)
 
-    if replyType == "left" or replyType == "joined":
+    if replyType in ("left", "joined"):
         assert reply == ImmediateReply(f"You've {replyType} <@&{roleId}>", mentions=[])
     elif replyType == "restricted":
         assert reply == ImmediateReply(f"<@&{roleId}> is restricted", mentions=[])
     else:
-        assert False
+        pytest.fail("Unknown reply type")
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_roles(httpx_mock):
     httpx_mock.add_response(
         method="GET",
         url=f"{GUILD_URL}/{arcommGuild}/roles",
         json=roles,
-        status_code=HTTP_200_OK
+        status_code=HTTP_200_OK,
     )
 
     interaction = Interaction(**MockRequest("roles", memberWithRole))
@@ -104,22 +111,21 @@ async def test_roles(httpx_mock):
     assert reply == ImmediateReply("```\n{}\n```".format(testRole["name"]), mentions=[])
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_rolesNoBotRole(httpx_mock):
     httpx_mock.add_response(
         method="GET",
         url=f"{GUILD_URL}/{arcommGuild}/roles",
         json=[testRole, invalidRole],
-        status_code=HTTP_200_OK
+        status_code=HTTP_200_OK,
     )
 
-    with pytest.raises(HTTPException) as e2:
-        with pytest.raises(RuntimeError, match="Unable to find bot's role") as e1:
-            interaction = Interaction(**MockRequest("roles", memberNoRole))
-            await handle_interaction(interaction)
+    with pytest.raises(HTTPException), pytest.raises(RuntimeError, match="Unable to find bot's role"):
+        interaction = Interaction(**MockRequest("roles", memberNoRole))
+        await handle_interaction(interaction)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_members(httpx_mock):
     roleId = testRole["id"]
 
@@ -127,7 +133,7 @@ async def test_members(httpx_mock):
         method="GET",
         url=f"{GUILD_URL}/{arcommGuild}/members?limit=200",
         json=[memberWithRole.dict()],
-        status_code=HTTP_200_OK
+        status_code=HTTP_200_OK,
     )
 
     interaction = Interaction(
@@ -138,7 +144,7 @@ async def test_members(httpx_mock):
     assert reply == ImmediateReply(f"```\n{username}\n```", mentions=[])
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_myroles():
     interaction = Interaction(**MockRequest("myroles", memberWithRole))
     reply = await handle_interaction(interaction)
@@ -146,15 +152,15 @@ async def test_myroles():
     assert reply == ImmediateReply("<@&{}>\n".format(testRole["id"]), mentions=[], ephemeral=True)
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("now_mock, modifier, timeUntilOptime", [
+@pytest.mark.asyncio()
+@pytest.mark.parametrize(("now_mock", "modifier", "timeUntilOptime"), [
     (datetime(2021, 3, 19, 15, 30), "", "2:30:00"),
     (datetime(2021, 3, 19, 19, 30, 42), "", "22:29:18"),
     (datetime(2021, 3, 19, 18, 0, 0), "", "0:00:00"),
     (datetime(2021, 3, 19, 18, 0, 0), " +1", "1:00:00"),
     (datetime(2021, 3, 19, 18, 0, 0), " -1", "23:00:00"),
     (datetime(2021, 3, 19, 18, 0, 0), " +7", "7:00:00"),
-    (datetime(2021, 3, 19, 18, 0, 0), " -7", "17:00:00")
+    (datetime(2021, 3, 19, 18, 0, 0), " -7", "17:00:00"),
 ])
 async def test_optime(now_mock, modifier, timeUntilOptime):
     with freeze_time(now_mock):
@@ -165,17 +171,17 @@ async def test_optime(now_mock, modifier, timeUntilOptime):
     assert reply == ImmediateReply(f"Optime{modifier} starts in {timeUntilOptime}!", mentions=[])
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("httpx_mock, roleName, roleId, sendsPost, replyType", [
+@pytest.mark.asyncio()
+@pytest.mark.parametrize(("httpx_mock", "roleName", "roleId", "sendsPost", "replyType"), [
     (None, "NewRole", "NewRoleId", True, "added"),
-    (None, "TestRole", "RoleId456", False, "already exists")
+    (None, "TestRole", "RoleId456", False, "already exists"),
 ], indirect=["httpx_mock"])
 async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
     httpx_mock.add_response(
         method="GET",
         url=f"{GUILD_URL}/{arcommGuild}/roles",
         json=roles,
-        status_code=HTTP_200_OK
+        status_code=HTTP_200_OK,
     )
 
     if sendsPost:
@@ -183,7 +189,7 @@ async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
             method="POST",
             url=f"{GUILD_URL}/{arcommGuild}/roles",
             json=Role(roleId, roleName, 4),
-            status_code=HTTP_200_OK
+            status_code=HTTP_200_OK,
         )
 
     interaction = Interaction(
@@ -193,10 +199,10 @@ async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
     assert reply == ImmediateReply(f"<@&{roleId}> {replyType}", mentions=[])
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("httpx_mock, role, sendsDelete, replyType", [
+@pytest.mark.asyncio()
+@pytest.mark.parametrize(("httpx_mock", "role", "sendsDelete", "replyType"), [
     (None, testRole, True, "Role deleted"),
-    (None, invalidRole, False, "Role is restricted")
+    (None, invalidRole, False, "Role is restricted"),
 ], indirect=["httpx_mock"])
 async def test_removerole(httpx_mock, role, sendsDelete, replyType):
     roleId = role["id"]
@@ -205,14 +211,14 @@ async def test_removerole(httpx_mock, role, sendsDelete, replyType):
         method="GET",
         url=f"{GUILD_URL}/{arcommGuild}/roles",
         json=roles,
-        status_code=HTTP_200_OK
+        status_code=HTTP_200_OK,
     )
 
     if sendsDelete:
         httpx_mock.add_response(
             method="DELETE",
             url=f"{GUILD_URL}/{arcommGuild}/roles/{roleId}",
-            status_code=HTTP_204_NO_CONTENT
+            status_code=HTTP_204_NO_CONTENT,
         )
 
     interaction = Interaction(
@@ -222,10 +228,10 @@ async def test_removerole(httpx_mock, role, sendsDelete, replyType):
     assert reply == ImmediateReply(replyType, mentions=[])
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("httpx_mock, statusCode, replyType", [
+@pytest.mark.asyncio()
+@pytest.mark.parametrize(("httpx_mock", "statusCode", "replyType"), [
     (None, HTTP_201_CREATED, "You are now subscribed to"),
-    (None, HTTP_204_NO_CONTENT, "You are no longer subscribed to")
+    (None, HTTP_204_NO_CONTENT, "You are no longer subscribed to"),
 ], indirect=["httpx_mock"])
 async def test_subscribe(httpx_mock, statusCode, replyType):
     missionId = 900
@@ -235,7 +241,7 @@ async def test_subscribe(httpx_mock, statusCode, replyType):
         method="POST",
         url=f"{ARCHUB_API}/missions/{missionId}/subscribe?discord_id={userId}",
         status_code=statusCode,
-        match_headers=ARCHUB_HEADERS
+        match_headers=ARCHUB_HEADERS,
     )
 
     interaction = Interaction(**MockRequest("subscribe", memberNoRole, options=[
@@ -246,22 +252,22 @@ async def test_subscribe(httpx_mock, statusCode, replyType):
     assert reply == ImmediateReply(expected, mentions=[])
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_ticket(httpx_mock):
     createdUrl = "https://github.com/ARCOMM/ArcommBot/issues/64"
 
     httpx_mock.add_response(
         method="POST",
-        url=f"https://api.github.com/repos/TomBurch/SvenBot/issues",
+        url="https://api.github.com/repos/TomBurch/SvenBot/issues",
         json={"html_url": createdUrl},
         status_code=HTTP_201_CREATED,
-        match_headers=GITHUB_HEADERS
+        match_headers=GITHUB_HEADERS,
     )
 
     options = [
         Option(value="TomBurch/SvenBot", name="repo", type=OptionType.STRING),
         Option(value="Test title", name="title", type=OptionType.STRING),
-        Option(value="Test body", name="body", type=OptionType.STRING)
+        Option(value="Test body", name="body", type=OptionType.STRING),
     ]
     interaction = Interaction(**MockRequest("ticket", memberNoRole, options=options))
     reply = await handle_interaction(interaction)
@@ -270,25 +276,25 @@ async def test_ticket(httpx_mock):
     assert reply == ImmediateReply(expected, mentions=[])
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("httpx_mock, coin", [
-    (None, 'Heads'),
-    (None, 'Tails')
+@pytest.mark.asyncio()
+@pytest.mark.parametrize(("httpx_mock", "coin"), [
+    (None, "Heads"),
+    (None, "Tails"),
 ], indirect=["httpx_mock"])
 async def test_cointoss(httpx_mock, coin):
     interaction = Interaction(**MockRequest("cointoss", memberNoRole))
 
-    with mock.patch.object(random, 'choice') as m:
+    with mock.patch.object(random, "choice") as m:
         m.return_value = coin
         reply = await handle_interaction(interaction)
         assert (reply == ImmediateReply(coin))
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("httpx_mock, role, newName, patches, replyType", [
+@pytest.mark.asyncio()
+@pytest.mark.parametrize(("httpx_mock", "role", "newName", "patches", "replyType"), [
     (None, testRole, "RandomName", True, "was renamed"),
     (None, invalidRole, "RandomName", False, "is restricted"),
-    (None, testRole, invalidRole["name"], False, "already exists")
+    (None, testRole, invalidRole["name"], False, "already exists"),
 ], indirect=["httpx_mock"])
 async def test_renamerole(httpx_mock, role, newName, patches, replyType):
     roleId = role["id"]
@@ -297,7 +303,7 @@ async def test_renamerole(httpx_mock, role, newName, patches, replyType):
         method="GET",
         url=f"{GUILD_URL}/{arcommGuild}/roles",
         json=roles,
-        status_code=HTTP_200_OK
+        status_code=HTTP_200_OK,
     )
 
     if patches:
@@ -313,13 +319,13 @@ async def test_renamerole(httpx_mock, role, newName, patches, replyType):
     reply = await handle_interaction(interaction)
 
     if newName == invalidRole["name"]:
-        roleId = invalidRole['id']
+        roleId = invalidRole["id"]
         assert reply == ImmediateReply(f"<@&{roleId}> {replyType}", mentions=[])
     else:
         assert reply == ImmediateReply(f"<@&{roleId}> {replyType}", mentions=[])
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_maps(httpx_mock):
     maps = [{"class_name": "map1class", "display_name": "map1display"}]
     httpx_mock.add_response(
@@ -327,7 +333,7 @@ async def test_maps(httpx_mock):
         url=f"{ARCHUB_API}/maps",
         json=maps,
         status_code=HTTP_200_OK,
-        match_headers=ARCHUB_HEADERS
+        match_headers=ARCHUB_HEADERS,
     )
 
     interaction = Interaction(**MockRequest("maps", memberNoRole, options=[]))
@@ -337,14 +343,14 @@ async def test_maps(httpx_mock):
     assert reply == ImmediateReply(outString, mentions=[])
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_renamemap(httpx_mock):
     old_name, new_name = "abc", "def"
     httpx_mock.add_response(
         method="PATCH",
         url=f"{ARCHUB_API}/maps?old_name={old_name}&new_name={new_name}",
         status_code=HTTP_204_NO_CONTENT,
-        match_headers=ARCHUB_HEADERS
+        match_headers=ARCHUB_HEADERS,
     )
 
     interaction = Interaction(

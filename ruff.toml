@@ -1,0 +1,32 @@
+select = [
+    "E", # pycodestyle
+    "W", # pycodestyle
+    "F", # pyflakes
+    "I", # isort
+    "UP", # pyupgrade
+    "RUF", # ruff
+    # "PL" # pylint
+    # "ANN" # flake8-annotations
+    "B", # flake8-bugbear
+    "COM", # flake8-commas
+    "C4", # flake8-comprehensions
+    "DTZ", # flake8-datetimez
+    "PT", # flake8-pytest-style
+    "Q", # flake8-quotes
+    "RET", # flake8-return
+    "SIM", # flake8-simplify
+    # "PTH" # flake8-use-pathlib
+]
+ignore = [
+    "E501", # line length
+    "E402", # module import not at top of file
+    "SIM102", # nested if statements
+    # Shouldn't ignore
+    "B008", # Function call in argument defaults
+    "B006", # Mutable data structure for arguments
+    "B011", # Don't assert False
+    "DTZ001", # datetime() without tzinfo
+    "DTZ003", # datetime.utcnow()
+    "PT012", # pytest.raises()
+    "RET503", # Missing explicit return
+]

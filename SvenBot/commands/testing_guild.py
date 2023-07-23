@@ -1,6 +1,14 @@
 import requests
 
-from SvenBot.commands.command_models import *
+from SvenBot.commands.command_models import (
+    addrole,
+    members,
+    myroles,
+    optime,
+    removerole,
+    role,
+    roles,
+)
 from SvenBot.config import APP_URL, DEFAULT_HEADERS
 
 url = f"{APP_URL}/guilds/342006395010547712/commands"
@@ -16,7 +24,7 @@ commands = [
     myroles,
     optime,
     role,
-    roles
+    roles,
 ]
 
 if __name__ == "__main__":
@@ -42,8 +50,8 @@ if __name__ == "__main__":
                         "permissions": [{
                             "id": STAFF_ROLE_ID,
                             "type": 1,
-                            "permission": True
-                        }]
+                            "permission": True,
+                        }],
                     }
                     r = requests.put(f"{url}/{commandId}/permissions", headers=DEFAULT_HEADERS, json=permissions)
                     print(r.status_code, r.reason, r.text)

@@ -7,23 +7,31 @@ from datetime import datetime
 
 import uvicorn
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from fastapi import FastAPI, Body, Request, HTTPException
+from fastapi import Body, FastAPI, HTTPException, Request
 from fastapi.params import Depends
 from nacl.signing import VerifyKey
 from starlette.status import HTTP_401_UNAUTHORIZED
 
-PACKAGE_PARENT = '..'
+PACKAGE_PARENT = ".."
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
-from SvenBot.config import settings, EVENT_PINGS, HUB_URL
-from SvenBot.utility import sendMessage, getOperationMissions, missionTypeFromMode
+from SvenBot.config import EVENT_PINGS, HUB_URL, settings
 from SvenBot.interactions import handle_interaction
-from SvenBot.tasks import recruit_task, a3sync_task, steam_task
-from SvenBot.models import InteractionType, Response, Interaction, InteractionResponseType, SlackNotification, \
-    SlackNotificationType, Embed, EmbedField
+from SvenBot.models import (
+    Embed,
+    EmbedField,
+    Interaction,
+    InteractionResponseType,
+    InteractionType,
+    Response,
+    SlackNotification,
+    SlackNotificationType,
+)
+from SvenBot.tasks import a3sync_task, recruit_task, steam_task
+from SvenBot.utility import getOperationMissions, missionTypeFromMode, sendMessage
 
-gunicorn_logger = logging.getLogger('gunicorn.error')
+gunicorn_logger = logging.getLogger("gunicorn.error")
 
 
 class ValidDiscordRequest:
@@ -52,23 +60,22 @@ def verify_key(body, signature, timestamp):
 def app():
     fast_app = FastAPI()
 
-    @fast_app.get('/abc/')
+    @fast_app.get("/abc/")
     def hello_world():
         return {"message", "Hello, World!"}
 
-    @fast_app.post('/interaction/', response_model=Response)
+    @fast_app.post("/interaction/", response_model=Response)
     async def interact(interaction: Interaction = Body(...), valid: bool = Depends(ValidDiscordRequest())):
         if interaction.type == InteractionType.PING:
             return Response(type=InteractionResponseType.PONG)
 
-        response = await handle_interaction(interaction)
-        return response
+        return await handle_interaction(interaction)
 
-    @fast_app.post('/slack/')
-    async def interact(notification: SlackNotification = Body(...)):
+    @fast_app.post("/slack/")
+    async def slack(notification: SlackNotification = Body(...)):
         gunicorn_logger.error(f"Calendar event:\n{notification}")
         if notification.type == SlackNotificationType.VERIFICATION:
-            return {'challenge': notification.challenge}
+            return {"challenge": notification.challenge}
 
         cal = notification.event.attachments[0]
         times = re.match(r"<!date\^(\d+)\^\{\w+\} from.*to <!date\^(\d+)\^\{\w+}", cal.text)
@@ -84,15 +91,15 @@ def app():
             startTime, endTime = times.groups()
             fields = [
                 EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True),
-                EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True)
+                EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True),
             ]
 
             if event == "main":
                 for mission in await getOperationMissions():
-                    missionType = missionTypeFromMode(mission['mode'])
+                    missionType = missionTypeFromMode(mission["mode"])
                     link = f"{HUB_URL}/missions/{mission['id']}"
                     fields.append(
-                        EmbedField(name=mission["display_name"], value=f"[{missionType} by {mission['maker']}]({link})", inline=False)
+                        EmbedField(name=mission["display_name"], value=f"[{missionType} by {mission['maker']}]({link})", inline=False),
                     )
 
             embed = Embed(title=cal.title, description=f"Starting <t:{startTime}:R>", fields=fields, color=color)
@@ -104,29 +111,29 @@ def app():
 app = app()
 
 
-@app.on_event('startup')
+@app.on_event("startup")
 def init_scheduler():
     try:
-        with open('revision.json', 'r') as f:
+        with open("revision.json") as f:
             json.load(f)
-    except Exception as e:
-        with open('revision.json', 'w') as f:
-            json.dump({'revision': 0}, f)
+    except Exception:
+        with open("revision.json", "w") as f:
+            json.dump({"revision": 0}, f)
 
     try:
-        with open('steam_timestamp.json', 'r') as f:
+        with open("steam_timestamp.json") as f:
             json.load(f)
-    except Exception as e:
-        with open('steam_timestamp.json', 'w') as f:
+    except Exception:
+        with open("steam_timestamp.json", "w") as f:
             lastMonth = datetime.utcnow().timestamp() - 2500000
-            json.dump({'last_checked': lastMonth}, f)
+            json.dump({"last_checked": lastMonth}, f)
 
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(recruit_task, 'cron', day_of_week='mon,wed,fri', hour='17')
-    scheduler.add_job(a3sync_task, 'cron', minute='5,25,45')
-    scheduler.add_job(steam_task, 'cron', minute='20,50')
+    scheduler.add_job(recruit_task, "cron", day_of_week="mon,wed,fri", hour="17")
+    scheduler.add_job(a3sync_task, "cron", minute="5,25,45")
+    scheduler.add_job(steam_task, "cron", minute="20,50")
     scheduler.start()
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host='0.0.0.0', port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -1,4 +1,4 @@
-from enum import IntEnum, Enum
+from enum import Enum, IntEnum
 from typing import Any, ForwardRef
 
 from pydantic import BaseModel
@@ -83,7 +83,7 @@ class Member(BaseModel):
     permissions: str | None
 
 
-Option = ForwardRef('Option')
+Option = ForwardRef("Option")
 
 
 class Option(BaseModel):

@@ -2,14 +2,27 @@ import logging
 import random
 
 from fastapi import HTTPException
-from starlette.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN, HTTP_200_OK, HTTP_201_CREATED, \
-    HTTP_400_BAD_REQUEST, HTTP_501_NOT_IMPLEMENTED, HTTP_500_INTERNAL_SERVER_ERROR
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_201_CREATED,
+    HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
+    HTTP_403_FORBIDDEN,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+    HTTP_501_NOT_IMPLEMENTED,
+)
 
 from SvenBot import utility
-from SvenBot.config import GUILD_URL, ARCHUB_API, ARCHUB_HEADERS, GITHUB_HEADERS, HUB_URL
+from SvenBot.config import (
+    ARCHUB_API,
+    ARCHUB_HEADERS,
+    GITHUB_HEADERS,
+    GUILD_URL,
+    HUB_URL,
+)
 from SvenBot.models import Interaction, InteractionType
 
-gunicorn_logger = logging.getLogger('gunicorn.error')
+gunicorn_logger = logging.getLogger("gunicorn.error")
 
 
 async def execute_role(interaction: Interaction):
@@ -114,8 +127,8 @@ async def execute_removerole(interaction: Interaction):
 
         await utility.delete([HTTP_204_NO_CONTENT], url)
         return "Role deleted"
-    else:
-        return "Role is restricted"
+
+    return "Role is restricted"
 
 
 async def execute_ticket(interaction: Interaction):
@@ -160,7 +173,7 @@ async def execute_maps(interaction: Interaction):
 
     outString = "File name [Display name]\n=========================\n"
     for _map in maps:
-        outString += f"{_map['class_name']}\n" if _map['class_name'] == _map['display_name'] else f"{_map['class_name']} [{_map['display_name']}]\n"
+        outString += f"{_map['class_name']}\n" if _map["class_name"] == _map["display_name"] else f"{_map['class_name']} [{_map['display_name']}]\n"
 
     return f"```ini\n{outString}```"
 
@@ -225,5 +238,5 @@ async def handle_interaction(interaction: Interaction):
         return utility.ImmediateReply(reply, ephemeral=command in ephemeral)
 
     except Exception as e:
-        gunicorn_logger.error(f"Error executing '{command}':\n{str(e)})")
-        raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error executing '{command}'")
+        gunicorn_logger.error(f"Error executing '{command}':\n{e})")
+        raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error executing '{command}'") from e
