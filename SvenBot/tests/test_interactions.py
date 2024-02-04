@@ -154,13 +154,13 @@ async def test_myroles():
 
 @pytest.mark.asyncio()
 @pytest.mark.parametrize(("now_mock", "modifier", "timeUntilOptime"), [
-    (datetime(2021, 3, 19, 15, 30), "", "2:30:00"),
-    (datetime(2021, 3, 19, 19, 30, 42), "", "22:29:18"),
-    (datetime(2021, 3, 19, 18, 0, 0), "", "0:00:00"),
-    (datetime(2021, 3, 19, 18, 0, 0), " +1", "1:00:00"),
-    (datetime(2021, 3, 19, 18, 0, 0), " -1", "23:00:00"),
-    (datetime(2021, 3, 19, 18, 0, 0), " +7", "7:00:00"),
-    (datetime(2021, 3, 19, 18, 0, 0), " -7", "17:00:00"),
+    (datetime(2021, 3, 19, 15, 30), "", "3:30:00"),
+    (datetime(2021, 3, 19, 19, 30, 42), "", "23:29:18"),
+    (datetime(2021, 3, 19, 18, 0, 0), "", "1:00:00"),
+    (datetime(2021, 3, 19, 18, 0, 0), " +1", "2:00:00"),
+    (datetime(2021, 3, 19, 18, 0, 0), " -1", "0:00:00"),
+    (datetime(2021, 3, 19, 18, 0, 0), " +7", "8:00:00"),
+    (datetime(2021, 3, 19, 18, 0, 0), " -7", "18:00:00"),
 ])
 async def test_optime(now_mock, modifier, timeUntilOptime):
     with freeze_time(now_mock):

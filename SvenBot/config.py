@@ -33,8 +33,9 @@ EVENT_PINGS = {
     "recruit": [[settings.RECRUIT_ROLE], settings.OP_CHANNEL, 0x1f8b4c],
 }
 
-HUB_URL = "https://arcomm.co.uk/hub"
-ARCHUB_API = "https://arcomm.co.uk/api/v1"
+BASE_ARCHUB_URL = "https://arcomm.co.uk"
+HUB_URL = f"{BASE_ARCHUB_URL}/hub"
+ARCHUB_API = f"{BASE_ARCHUB_URL}/api/v1"
 APP_URL = f"https://discord.com/api/v8/applications/{settings.CLIENT_ID}"
 CHANNELS_URL = "https://discord.com/api/v8/channels"
 GUILD_URL = "https://discord.com/api/v8/guilds"

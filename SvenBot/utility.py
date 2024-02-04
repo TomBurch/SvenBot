@@ -158,13 +158,11 @@ async def getOperationMissions():
     return []
 
 
-def missionTypeFromMode(mode):
-    mission_type = None
+def mission_colour_from_mode(mode: str) -> int:
     match mode:
         case "coop":
-            mission_type = "Co-op"
+            return 959977
         case "tvt":
-            mission_type = "TvT"
+            return 16007006
         case "ade":
-            mission_type = "ARCade"
-    return mission_type
+            return 1096065

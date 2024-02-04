@@ -9,7 +9,7 @@ from SvenBot.config import (
     CHANNELS_URL,
     EVENT_PINGS,
     HUB_URL,
-    settings,
+    settings, BASE_ARCHUB_URL,
 )
 from SvenBot.main import app
 from SvenBot.models import (
@@ -19,7 +19,7 @@ from SvenBot.models import (
     SlackCalendarEvent,
     SlackEvent,
     SlackNotification,
-    SlackNotificationType,
+    SlackNotificationType, EmbedThumbnail,
 )
 
 client = TestClient(app)
@@ -32,7 +32,9 @@ class ArchubMission(BaseModel):
     id: int
     display_name: str
     mode: str
-    maker: str
+    user: str
+    hasMaintainer: bool
+    thumbnail: str = "/thumb"
 
 
 def mockCalendarNotification(title):
@@ -78,9 +80,9 @@ def test_random_event(httpx_mock: HTTPXMock):
 
 
 def test_main_event(httpx_mock: HTTPXMock):
-    mission1 = ArchubMission(id=15, display_name="Random COOP", mode="coop", maker="MissionMaker1")
-    mission2 = ArchubMission(id=16, display_name="Random TVT", mode="tvt", maker="MissionMaker2")
-    mission3 = ArchubMission(id=17, display_name="Random ARCade", mode="ade", maker="MissionMaker3")
+    mission1 = ArchubMission(id=15, display_name="Random COOP", mode="coop", user="MissionMaker1", hasMaintainer=False)
+    mission2 = ArchubMission(id=16, display_name="Random TVT", mode="tvt", user="MissionMaker2", hasMaintainer=False)
+    mission3 = ArchubMission(id=17, display_name="Random ARCade", mode="ade", user="MissionMaker3", hasMaintainer=True)
 
     httpx_mock.add_response(
         method="GET",
@@ -103,18 +105,33 @@ def test_main_event(httpx_mock: HTTPXMock):
     assert response.status_code == HTTP_200_OK
     assert httpx_mock.get_request(method="POST").content.decode() == ResponseData(
         content=f"<@&{settings.MEMBER_ROLE}> <@&{settings.RECRUIT_ROLE}>",
-        allowed_mentions = {"parse": ["roles"]},
-        embeds = [Embed(
+        allowed_mentions={"parse": ["roles"]},
+        embeds=[Embed(
             title=title,
-            description = f"Starting <t:{startTime}:R>",
+            description=f"Starting <t:{startTime}:R>",
             fields=[
                 EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True),
                 EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True),
-                EmbedField(name=mission1.display_name, value=f"[Co-op by {mission1.maker}]({HUB_URL}/missions/{mission1.id})", inline=False),
-                EmbedField(name=mission2.display_name, value=f"[TvT by {mission2.maker}]({HUB_URL}/missions/{mission2.id})", inline=False),
-                EmbedField(name=mission3.display_name, value=f"[ARCade by {mission3.maker}]({HUB_URL}/missions/{mission3.id})", inline=False),
             ],
             color=EVENT_PINGS["main"][2],
+        ), Embed(
+            title=mission1.display_name,
+            url=f"{HUB_URL}/missions/{mission1.id}",
+            description=f"Made by {mission1.user}",
+            color=959977,
+            thumbnail=EmbedThumbnail(url=f"{BASE_ARCHUB_URL}{mission1.thumbnail}"),
+        ), Embed(
+            title=mission2.display_name,
+            url=f"{HUB_URL}/missions/{mission2.id}",
+            description=f"Made by {mission2.user}",
+            color=16007006,
+            thumbnail=EmbedThumbnail(url=f"{BASE_ARCHUB_URL}{mission2.thumbnail}"),
+        ), Embed(
+            title=mission3.display_name,
+            url=f"{HUB_URL}/missions/{mission3.id}",
+            description=f"Maintained by {mission3.user}",
+            color=1096065,
+            thumbnail=EmbedThumbnail(url=f"{BASE_ARCHUB_URL}{mission3.thumbnail}"),
         )],
     ).json()
 

@@ -10,6 +10,10 @@ class InteractionResponseType(IntEnum):
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5
 
 
+class EmbedThumbnail(BaseModel):
+    url: str
+
+
 class EmbedField(BaseModel):
     name: str
     value: str
@@ -19,7 +23,9 @@ class EmbedField(BaseModel):
 class Embed(BaseModel):
     title: str
     description: str
+    url: str | None
     color: int | None
+    thumbnail: EmbedThumbnail | None
     fields: list[EmbedField] | None
 
 

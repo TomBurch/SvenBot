@@ -16,7 +16,7 @@ PACKAGE_PARENT = ".."
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
-from SvenBot.config import EVENT_PINGS, HUB_URL, settings
+from SvenBot.config import EVENT_PINGS, HUB_URL, settings, BASE_ARCHUB_URL
 from SvenBot.interactions import handle_interaction
 from SvenBot.models import (
     Embed,
@@ -26,10 +26,10 @@ from SvenBot.models import (
     InteractionType,
     Response,
     SlackNotification,
-    SlackNotificationType,
+    SlackNotificationType, EmbedThumbnail,
 )
 from SvenBot.tasks import a3sync_task, recruit_task, steam_task
-from SvenBot.utility import getOperationMissions, missionTypeFromMode, sendMessage
+from SvenBot.utility import getOperationMissions, sendMessage, mission_colour_from_mode
 
 gunicorn_logger = logging.getLogger("gunicorn.error")
 
@@ -88,22 +88,27 @@ def app():
                     event, channel, color = e, pcc[1], pcc[2]
                     break
 
-            startTime, endTime = times.groups()
+            start_time, end_time = times.groups()
             fields = [
-                EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True),
-                EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True),
+                EmbedField(name="Start", value=f"<t:{start_time}:t>", inline=True),
+                EmbedField(name="End", value=f"<t:{end_time}:t>", inline=True),
+            ]
+            embeds = [
+                Embed(title=cal.title, description=f"Starting <t:{start_time}:R>", fields=fields, color=color)
             ]
 
             if event == "main":
                 for mission in await getOperationMissions():
-                    missionType = missionTypeFromMode(mission["mode"])
                     link = f"{HUB_URL}/missions/{mission['id']}"
-                    fields.append(
-                        EmbedField(name=mission["display_name"], value=f"[{missionType} by {mission['maker']}]({link})", inline=False),
+                    maker_string = "Maintained" if mission["hasMaintainer"] else "Made"
+                    thumbnail = EmbedThumbnail(url=f"{BASE_ARCHUB_URL}{mission['thumbnail']}")
+
+                    embeds.append(
+                        Embed(title=mission['display_name'], description=f"{maker_string} by {mission['user']}",
+                              url=link, thumbnail=thumbnail, color=mission_colour_from_mode(mission["mode"]))
                     )
 
-            embed = Embed(title=cal.title, description=f"Starting <t:{startTime}:R>", fields=fields, color=color)
-            await sendMessage(channel, pings, ["roles"], [embed])
+            await sendMessage(channel, pings, ["roles"], embeds)
 
     return fast_app
 
