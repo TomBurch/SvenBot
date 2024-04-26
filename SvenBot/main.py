@@ -102,7 +102,9 @@ def app():
                     link = f"{HUB_URL}/missions/{mission['id']}"
                     maker_string = "Maintained" if mission["hasMaintainer"] else "Made"
                     thumbnail = EmbedThumbnail(url=f"{BASE_ARCHUB_URL}{mission['thumbnail']}")
-                    print(thumbnail)
+                    if " " in thumbnail:
+                        print("Skipping thumbnail!")
+                        thumbnail = None
 
                     embeds.append(
                         Embed(title=mission['display_name'], description=f"{maker_string} by {mission['user']}",
