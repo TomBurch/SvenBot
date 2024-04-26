@@ -37,7 +37,7 @@ class ArchubMission(BaseModel):
     thumbnail: str = "/thumb"
 
 
-def mockCalendarNotification(title):
+def mock_calendar_notification(title: str) -> SlackNotification:
     return SlackNotification(
         token="abca",
         type=SlackNotificationType.CALLBACK,
@@ -46,8 +46,8 @@ def mockCalendarNotification(title):
             text="abcdef",
             attachments=[SlackCalendarEvent(
                 color="#colorrr",
-                title=title,
-                text=f"<!date^{startTime}^{{date_short_pretty}} from {{time}}|July 6th, 2022 from 9:58 PM> to <!date^{endTime}^{{time}}|10:58 PM Z>",
+                text="random text",
+                title=f"<!date^{startTime}^{{time}}|7:00 PM> - <!date^{endTime}^{{time}}|11:00 PM> <https://www.google.com/calendar/event?eid=abc&amp;ctz=UTC|{title}>",
             )],
         ),
     )
@@ -61,16 +61,16 @@ def test_random_event(httpx_mock: HTTPXMock):
     )
 
     title = "ARCOMM random kind of event"
-    notification = mockCalendarNotification(title)
+    notification = mock_calendar_notification(title)
     response = client.post("/slack/", json=notification.dict())
 
     assert response.status_code == HTTP_200_OK
     assert httpx_mock.get_request().content.decode() == ResponseData(
         content=None,
-        allowed_mentions = {"parse": ["roles"]},
-        embeds = [Embed(
+        allowed_mentions={"parse": ["roles"]},
+        embeds=[Embed(
             title=title,
-            description = f"Starting <t:{startTime}:R>",
+            description=f"Starting <t:{startTime}:R>",
             fields=[
                 EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True),
                 EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True),
@@ -99,7 +99,7 @@ def test_main_event(httpx_mock: HTTPXMock):
     )
 
     title = "ARCOMM MAIN EVENT"
-    notification = mockCalendarNotification(title)
+    notification = mock_calendar_notification(title)
     response = client.post("/slack/", json=notification.dict())
 
     assert response.status_code == HTTP_200_OK
@@ -144,16 +144,16 @@ def test_recruit_event(httpx_mock: HTTPXMock):
     )
 
     title = "ARCOMM RECRUIT EVENT"
-    notification = mockCalendarNotification(title)
+    notification = mock_calendar_notification(title)
     response = client.post("/slack/", json=notification.dict())
 
     assert response.status_code == HTTP_200_OK
     assert httpx_mock.get_request().content.decode() == ResponseData(
         content=f"<@&{settings.RECRUIT_ROLE}>",
-        allowed_mentions = {"parse": ["roles"]},
-        embeds = [Embed(
+        allowed_mentions={"parse": ["roles"]},
+        embeds=[Embed(
             title=title,
-            description = f"Starting <t:{startTime}:R>",
+            description=f"Starting <t:{startTime}:R>",
             fields=[
                 EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True),
                 EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True),

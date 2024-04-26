@@ -78,23 +78,25 @@ def app():
             return {"challenge": notification.challenge}
 
         cal = notification.event.attachments[0]
-        times = re.match(r"<!date\^(\d+)\^\{\w+\} from.*to <!date\^(\d+)\^\{\w+}", cal.text)
+        matches = re.match(r"<!date\^(\d+)\^\{\w+\}.*? - <!date\^(\d+)\^\{\w+}.*?<.*?\|(.*)>", cal.title)
 
-        if times:
+        if matches:
             event, pings, channel, color = None, None, settings.OP_CHANNEL, None
             for e, pcc in EVENT_PINGS.items():
                 if re.search(e, cal.title.lower()):
-                    pings = " ".join(f"<@&{ping}>" for ping in pcc[0])
+                    pings = "{pings}"
+                    #pings = " ".join(f"<@&{ping}>" for ping in pcc[0])
                     event, channel, color = e, pcc[1], pcc[2]
+                    channel = 703618484386398349
                     break
 
-            start_time, end_time = times.groups()
+            start_time, end_time, title = matches.groups()
             fields = [
                 EmbedField(name="Start", value=f"<t:{start_time}:t>", inline=True),
                 EmbedField(name="End", value=f"<t:{end_time}:t>", inline=True),
             ]
             embeds = [
-                Embed(title=cal.title, description=f"Starting <t:{start_time}:R>", fields=fields, color=color)
+                Embed(title=title, description=f"Starting <t:{start_time}:R>", fields=fields, color=color)
             ]
 
             if event == "main":
