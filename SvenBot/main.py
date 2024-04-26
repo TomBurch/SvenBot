@@ -84,10 +84,8 @@ def app():
             event, pings, channel, color = None, None, settings.OP_CHANNEL, None
             for e, pcc in EVENT_PINGS.items():
                 if re.search(e, cal.title.lower()):
-                    pings = "{pings}"
-                    #pings = " ".join(f"<@&{ping}>" for ping in pcc[0])
+                    pings = " ".join(f"<@&{ping}>" for ping in pcc[0])
                     event, channel, color = e, pcc[1], pcc[2]
-                    channel = 703618484386398349
                     break
 
             start_time, end_time, title = matches.groups()
