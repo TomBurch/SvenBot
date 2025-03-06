@@ -2,6 +2,8 @@ from pydantic import BaseModel
 
 from SvenBot.models import OptionType
 
+MANAGE_GUILD_PERMISSION = str(1 << 5)
+
 
 class Choice(BaseModel):
     name: str
@@ -18,7 +20,7 @@ class OptionDefinition(BaseModel):
 class CommandDefinition(BaseModel):
     name: str
     description: str
-    default_permission: bool = True
+    default_member_permissions: str | None = None
     options: list[OptionDefinition] | None
     choices: list[Choice] | None
 
@@ -31,7 +33,7 @@ ping = CommandDefinition(
 addrole = CommandDefinition(
     name="addrole",
     description="Add a new role",
-    default_permission=False,
+    default_member_permissions=MANAGE_GUILD_PERMISSION,
     options=[
         OptionDefinition(
             name="name",
@@ -49,7 +51,7 @@ cointoss = CommandDefinition(
 removerole = CommandDefinition(
     name="removerole",
     description="Remove an existing role",
-    default_permission=False,
+    default_member_permissions=MANAGE_GUILD_PERMISSION,
     options=[
         OptionDefinition(
             name="role",
@@ -62,7 +64,7 @@ removerole = CommandDefinition(
 renamemap = CommandDefinition(
     name="renamemap",
     description="Rename a map on ARCHUB",
-    default_permission=False,
+    default_member_permissions=MANAGE_GUILD_PERMISSION,
     options=[
         OptionDefinition(
             name="old_name",
@@ -80,7 +82,7 @@ renamemap = CommandDefinition(
 renamerole = CommandDefinition(
     name="renamerole",
     description="Rename an existing role",
-    default_permission=False,
+    default_member_permissions=MANAGE_GUILD_PERMISSION,
     options=[
         OptionDefinition(
             name="role",

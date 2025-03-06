@@ -21,7 +21,7 @@ url = f"{APP_URL}/guilds/240160552867987475/commands"
 STAFF_ROLE_ID = 324227354329219072
 
 update: list[str] = []
-staff: list[str] = ["addrole", "removerole", "renamerole", "maps", "renamemap"]
+staff: list[str] = ["addrole", "removerole", "renamerole", "renamemap"]
 
 commands = [
     addrole,
@@ -44,6 +44,10 @@ if __name__ == "__main__":
     print(r.status_code, r.reason, r.text)
     currentCommands = r.json()
 
+    r = requests.get(f"{url}/permissions", headers=DEFAULT_HEADERS)
+    print(r.status_code, r.reason, r.text)
+
+    print(currentCommands)
     for command in commands:
         commandId = next((c["id"] for c in currentCommands if c["name"] == command.name), None)
         print("===================")
@@ -65,7 +69,7 @@ if __name__ == "__main__":
                             "permission": True,
                         }],
                     }
-                    r = requests.put(f"{url}/{commandId}/permissions", headers=DEFAULT_HEADERS, json=permissions)
+                    r = requests.put(f"{url}/{commandId}/permissions", headers=HEADERS, json=permissions)
                     print(r.status_code, r.reason, r.text)
                 else:
                     print("ERROR commandId is NONE")
