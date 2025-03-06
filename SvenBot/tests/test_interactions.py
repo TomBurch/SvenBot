@@ -6,6 +6,7 @@ import pytest
 from d20 import RollSyntaxError
 from fastapi import HTTPException
 from freezegun import freeze_time
+from pytest_httpx import HTTPXMock
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
 from SvenBot.config import (
@@ -22,7 +23,7 @@ from SvenBot.utility import ImmediateReply
 
 
 class Role(dict):
-    def __init__(self, _id, name, position, color=0, botId=None):
+    def __init__(self, _id: str, name: str, position: int, color: int = 0, botId: str | None = None) -> None:
         if botId is not None:
             dict.__init__(self, id=_id, name=name, position=position, color=color, tags={"bot_id": botId})
         else:
@@ -30,7 +31,7 @@ class Role(dict):
 
 
 class MockRequest(dict):
-    def __init__(self, name, member=None, options=[]):
+    def __init__(self, name: str, member: Member | None = None, options: list[Option] = []) -> None:
         dict.__init__(
             self,
             type=InteractionType.APPLICATION_COMMAND,
@@ -57,7 +58,7 @@ memberWithRole = Member(user={"id": "User123", "username": "TestUser", "discrimi
 
 
 @pytest.mark.asyncio
-async def test_ping():
+async def test_ping() -> None:
     interaction = Interaction(**MockRequest("ping", memberNoRole))
     reply = await handle_interaction(interaction)
     expected = ImmediateReply("Pong!")
@@ -78,7 +79,14 @@ async def test_ping():
     ],
     indirect=["httpx_mock"],
 )
-async def test_role(httpx_mock, user, role, roleMethod, roleStatus, replyType):
+async def test_role(
+    httpx_mock: HTTPXMock,
+    user: Member,
+    role: Role,
+    roleMethod: str | None,
+    roleStatus: int | None,
+    replyType: str,
+) -> None:
     userId = user.user.id
     roleId = role["id"]
 
@@ -110,7 +118,7 @@ async def test_role(httpx_mock, user, role, roleMethod, roleStatus, replyType):
 
 
 @pytest.mark.asyncio
-async def test_roles(httpx_mock):
+async def test_roles(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         method="GET",
         url=f"{GUILD_URL}/{arcommGuild}/roles",
@@ -125,7 +133,7 @@ async def test_roles(httpx_mock):
 
 
 @pytest.mark.asyncio
-async def test_rolesNoBotRole(httpx_mock):
+async def test_rolesNoBotRole(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         method="GET",
         url=f"{GUILD_URL}/{arcommGuild}/roles",
@@ -139,7 +147,7 @@ async def test_rolesNoBotRole(httpx_mock):
 
 
 @pytest.mark.asyncio
-async def test_members(httpx_mock):
+async def test_members(httpx_mock: HTTPXMock) -> None:
     roleId = testRole["id"]
 
     httpx_mock.add_response(
@@ -159,7 +167,7 @@ async def test_members(httpx_mock):
 
 
 @pytest.mark.asyncio
-async def test_myroles():
+async def test_myroles() -> None:
     interaction = Interaction(**MockRequest("myroles", memberWithRole))
     reply = await handle_interaction(interaction)
 
@@ -179,7 +187,7 @@ async def test_myroles():
         (datetime(2021, 3, 19, 18, 0, 0), " -7", "18:00:00"),
     ],
 )
-async def test_optime(now_mock, modifier, timeUntilOptime):
+async def test_optime(now_mock: datetime, modifier: str, timeUntilOptime: str) -> None:
     with freeze_time(now_mock):
         options = None if modifier == "" else [Option(value=int(modifier), name="modifier", type=OptionType.INTEGER)]
         interaction = Interaction(**MockRequest("optime", memberNoRole, options=options))
@@ -197,7 +205,7 @@ async def test_optime(now_mock, modifier, timeUntilOptime):
     ],
     indirect=["httpx_mock"],
 )
-async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
+async def test_addrole(httpx_mock: HTTPXMock, roleName: str, roleId: str, sendsPost: bool, replyType: str) -> None:
     httpx_mock.add_response(
         method="GET",
         url=f"{GUILD_URL}/{arcommGuild}/roles",
@@ -230,7 +238,7 @@ async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
     ],
     indirect=["httpx_mock"],
 )
-async def test_removerole(httpx_mock, role, sendsDelete, replyType):
+async def test_removerole(httpx_mock: HTTPXMock, role: Role, sendsDelete: bool, replyType: str) -> None:
     roleId = role["id"]
 
     httpx_mock.add_response(
@@ -264,7 +272,7 @@ async def test_removerole(httpx_mock, role, sendsDelete, replyType):
     ],
     indirect=["httpx_mock"],
 )
-async def test_subscribe(httpx_mock, statusCode, replyType):
+async def test_subscribe(httpx_mock: HTTPXMock, statusCode: int, replyType: str) -> None:
     missionId = 900
     userId = memberNoRole.user.id
 
@@ -289,7 +297,7 @@ async def test_subscribe(httpx_mock, statusCode, replyType):
 
 
 @pytest.mark.asyncio
-async def test_ticket(httpx_mock):
+async def test_ticket(httpx_mock: HTTPXMock) -> None:
     createdUrl = "https://github.com/ARCOMM/ArcommBot/issues/64"
 
     httpx_mock.add_response(
@@ -321,7 +329,7 @@ async def test_ticket(httpx_mock):
     ],
     indirect=["httpx_mock"],
 )
-async def test_cointoss(httpx_mock, coin):
+async def test_cointoss(httpx_mock: HTTPXMock, coin: str) -> None:
     interaction = Interaction(**MockRequest("cointoss", memberNoRole))
 
     with mock.patch.object(random, "choice") as m:
@@ -339,7 +347,7 @@ async def test_cointoss(httpx_mock, coin):
     ],
     indirect=["httpx_mock"],
 )
-async def test_d20(httpx_mock, roll_str, error_expected):
+async def test_d20(httpx_mock: HTTPXMock, roll_str: str, error_expected: bool) -> None:
     interaction = Interaction(
         **MockRequest("d20", memberNoRole, options=[Option(value=roll_str, name="options", type=OptionType.STRING)]),
     )
@@ -361,7 +369,7 @@ async def test_d20(httpx_mock, roll_str, error_expected):
     ],
     indirect=["httpx_mock"],
 )
-async def test_renamerole(httpx_mock, role, newName, patches, replyType):
+async def test_renamerole(httpx_mock: HTTPXMock, role: Role, newName: str, patches: bool, replyType: str) -> None:
     roleId = role["id"]
 
     httpx_mock.add_response(
@@ -398,7 +406,7 @@ async def test_renamerole(httpx_mock, role, newName, patches, replyType):
 
 
 @pytest.mark.asyncio
-async def test_maps(httpx_mock):
+async def test_maps(httpx_mock: HTTPXMock) -> None:
     maps = [{"class_name": "map1class", "display_name": "map1display"}]
     httpx_mock.add_response(
         method="GET",
@@ -416,7 +424,7 @@ async def test_maps(httpx_mock):
 
 
 @pytest.mark.asyncio
-async def test_renamemap(httpx_mock):
+async def test_renamemap(httpx_mock: HTTPXMock) -> None:
     old_name, new_name = "abc", "def"
     httpx_mock.add_response(
         method="PATCH",

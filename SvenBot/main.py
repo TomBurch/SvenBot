@@ -23,9 +23,9 @@ from SvenBot.models import (
     EmbedField,
     EmbedThumbnail,
     Interaction,
+    InteractionResponse,
     InteractionResponseType,
     InteractionType,
-    Response,
     SlackNotification,
     SlackNotificationType,
 )
@@ -36,7 +36,7 @@ gunicorn_logger = logging.getLogger("gunicorn.error")
 
 
 class ValidDiscordRequest:
-    async def __call__(self, request: Request):
+    async def __call__(self, request: Request) -> bool:
         signature = request.headers.get("X-Signature-Ed25519")
         timestamp = request.headers.get("X-Signature-Timestamp")
         body = await request.body()
@@ -47,7 +47,7 @@ class ValidDiscordRequest:
         return True
 
 
-def verify_key(body, signature, timestamp):
+def verify_key(body: bytes, signature: str, timestamp: str) -> bool:
     message = timestamp.encode() + body
 
     try:
@@ -58,22 +58,25 @@ def verify_key(body, signature, timestamp):
         return False
 
 
-def app():
+def app() -> FastAPI:
     fast_app = FastAPI()
 
     @fast_app.get("/abc/")
-    def hello_world():
-        return {"message", "Hello, World!"}
+    def hello_world() -> dict[str, str]:
+        return {"message": "Hello, World!"}
 
-    @fast_app.post("/interaction/", response_model=Response)
-    async def interact(interaction: Interaction = Body(...), valid: bool = Depends(ValidDiscordRequest())):
+    @fast_app.post("/interaction/", response_model=InteractionResponse)
+    async def interact(
+        interaction: Interaction = Body(...),
+        valid: bool = Depends(ValidDiscordRequest()),
+    ) -> InteractionResponse:
         if interaction.type == InteractionType.PING:
-            return Response(type=InteractionResponseType.PONG)
+            return InteractionResponse(type=InteractionResponseType.PONG)
 
         return await handle_interaction(interaction)
 
     @fast_app.post("/slack/")
-    async def slack(notification: SlackNotification = Body(...)):
+    async def slack(notification: SlackNotification = Body(...)) -> None:
         gunicorn_logger.error(f"Calendar event:\n{notification}")
         if notification.type == SlackNotificationType.VERIFICATION:
             return {"challenge": notification.challenge}
@@ -129,7 +132,7 @@ app = app()
 
 
 @app.on_event("startup")
-def init_scheduler():
+def init_scheduler() -> None:
     try:
         with open("revision.json") as f:
             json.load(f)

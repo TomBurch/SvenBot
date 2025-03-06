@@ -38,7 +38,7 @@ class ResponseData(BaseModel):
     components: Any
 
 
-class Response(BaseModel):
+class InteractionResponse(BaseModel):
     type: InteractionResponseType
     data: ResponseData | None
 

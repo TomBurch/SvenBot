@@ -45,8 +45,8 @@ select = [
     "I", # isort
     "UP", # pyupgrade
     "RUF", # ruff
-    # "PL" # pylint
-    # "ANN" # flake8-annotations
+    # "PL", # pylint
+    "ANN", # flake8-annotations
     "B", # flake8-bugbear
     "COM", # flake8-commas
     "C4", # flake8-comprehensions
@@ -55,7 +55,7 @@ select = [
     "Q", # flake8-quotes
     "RET", # flake8-return
     "SIM", # flake8-simplify
-    # "PTH" # flake8-use-pathlib
+    # "PTH", # flake8-use-pathlib
 ]
 ignore = [
     "E501", # line length
@@ -70,3 +70,6 @@ ignore = [
     "PT012", # pytest.raises()
     "RET503", # Missing explicit return
 ]
+
+[tool.ruff.lint.flake8-annotations]
+allow-star-arg-any = true

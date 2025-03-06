@@ -57,7 +57,7 @@ def mock_calendar_notification(title: str) -> SlackNotification:
     )
 
 
-def test_random_event(httpx_mock: HTTPXMock):
+def test_random_event(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         method="POST",
         url=f"{CHANNELS_URL}/{settings.OP_CHANNEL}/messages",
@@ -88,7 +88,7 @@ def test_random_event(httpx_mock: HTTPXMock):
     )
 
 
-def test_main_event(httpx_mock: HTTPXMock):
+def test_main_event(httpx_mock: HTTPXMock) -> None:
     mission1 = ArchubMission(id=15, display_name="Random COOP", mode="coop", user="MissionMaker1", hasMaintainer=False)
     mission2 = ArchubMission(id=16, display_name="Random TVT", mode="tvt", user="MissionMaker2", hasMaintainer=False)
     mission3 = ArchubMission(id=17, display_name="Random ARCade", mode="ade", user="MissionMaker3", hasMaintainer=True)
@@ -153,7 +153,7 @@ def test_main_event(httpx_mock: HTTPXMock):
     )
 
 
-def test_recruit_event(httpx_mock: HTTPXMock):
+def test_recruit_event(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         method="POST",
         url=f"{CHANNELS_URL}/{settings.OP_CHANNEL}/messages",

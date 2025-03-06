@@ -21,12 +21,12 @@ from SvenBot.config import (
     GUILD_URL,
     HUB_URL,
 )
-from SvenBot.models import Interaction, InteractionType
+from SvenBot.models import Interaction, InteractionResponse, InteractionType
 
 gunicorn_logger = logging.getLogger("gunicorn.error")
 
 
-async def execute_role(interaction: Interaction):
+async def execute_role(interaction: Interaction) -> str:
     guild_id = interaction.guild_id
     user_id = interaction.member.user.id
     (role_id,) = interaction.data.options
@@ -48,7 +48,7 @@ async def execute_role(interaction: Interaction):
     return reply
 
 
-async def execute_roles(interaction: Interaction):
+async def execute_roles(interaction: Interaction) -> str:
     guild_id = interaction.guild_id
     roles = await utility.getRoles(guild_id)
 
@@ -61,7 +61,7 @@ async def execute_roles(interaction: Interaction):
     return "```\n{}\n```".format("\n".join(joinableRoles))
 
 
-async def execute_members(interaction: Interaction):
+async def execute_members(interaction: Interaction) -> str:
     guild_id = interaction.guild_id
     (role_id,) = interaction.data.options
 
@@ -78,7 +78,7 @@ async def execute_members(interaction: Interaction):
     return f"```\n{reply}```"
 
 
-async def execute_myroles(interaction: Interaction):
+async def execute_myroles(interaction: Interaction) -> str:
     reply = ""
 
     for role_id in interaction.member.roles:
@@ -87,7 +87,7 @@ async def execute_myroles(interaction: Interaction):
     return reply
 
 
-async def execute_optime(interaction):
+async def execute_optime(interaction: Interaction) -> str:
     modifier = 0
     if interaction.data.options is not None and len(interaction.data.options) > 0:
         modifier = interaction.data.options[0].value
@@ -103,7 +103,7 @@ async def execute_optime(interaction):
     return f"Optime{modifierString} starts in {timeUntilOptime}!"
 
 
-async def execute_addrole(interaction: Interaction):
+async def execute_addrole(interaction: Interaction) -> str:
     guild_id = interaction.guild_id
     (name,) = interaction.data.options
 
@@ -119,7 +119,7 @@ async def execute_addrole(interaction: Interaction):
     return f"<@&{role_id}> added"
 
 
-async def execute_removerole(interaction: Interaction):
+async def execute_removerole(interaction: Interaction) -> str:
     guild_id = interaction.guild_id
     (role_id,) = interaction.data.options
 
@@ -132,7 +132,7 @@ async def execute_removerole(interaction: Interaction):
     return "Role is restricted"
 
 
-async def execute_ticket(interaction: Interaction):
+async def execute_ticket(interaction: Interaction) -> str:
     member = interaction.member
     repo, title, body = interaction.data.options
     username = member.user.username if (member.nick is None) else member.nick
@@ -145,16 +145,16 @@ async def execute_ticket(interaction: Interaction):
     return f"Ticket created at: {createdUrl}"
 
 
-async def execute_cointoss(interaction: Interaction):
+async def execute_cointoss(interaction: Interaction) -> str:
     return random.choice(["Heads", "Tails"])
 
 
-async def execute_d20(interaction: Interaction):
+async def execute_d20(interaction: Interaction) -> str:
     (roll_str,) = interaction.data.options
     return str(d20.roll(roll_str.value))
 
 
-async def execute_renamerole(interaction: Interaction):
+async def execute_renamerole(interaction: Interaction) -> str:
     guild_id = interaction.guild_id
     role_id, new_name = interaction.data.options
     if not await utility.validateRoleById(guild_id, role_id.value):
@@ -171,7 +171,7 @@ async def execute_renamerole(interaction: Interaction):
     return f"<@&{role_id.value}> was renamed"
 
 
-async def execute_maps(interaction: Interaction):
+async def execute_maps(interaction: Interaction) -> str:
     url = f"{ARCHUB_API}/maps"
     r = await utility.get([HTTP_200_OK], url, headers=ARCHUB_HEADERS)
     maps = r.json()
@@ -187,7 +187,7 @@ async def execute_maps(interaction: Interaction):
     return f"```ini\n{outString}```"
 
 
-async def execute_renamemap(interaction: Interaction):
+async def execute_renamemap(interaction: Interaction) -> str:
     old_name, new_name = interaction.data.options
 
     url = f"{ARCHUB_API}/maps?old_name={old_name.value}&new_name={new_name.value}"
@@ -196,7 +196,7 @@ async def execute_renamemap(interaction: Interaction):
     return f"`{old_name.value}` was renamed to `{new_name.value}`"
 
 
-async def execute_subscribe(interaction: Interaction):
+async def execute_subscribe(interaction: Interaction) -> str:
     user_id = interaction.member.user.id
     (mission_id,) = interaction.data.options
     url = f"{ARCHUB_API}/missions/{mission_id.value}/subscribe?discord_id={user_id}"
@@ -209,7 +209,7 @@ async def execute_subscribe(interaction: Interaction):
     return f"You are no longer subscribed to {missionUrl}"
 
 
-async def execute_ping(interaction: Interaction):
+async def execute_ping(interaction: Interaction) -> str:
     return "Pong!"
 
 
@@ -234,7 +234,7 @@ execute_map = {
 ephemeral = ["myroles"]
 
 
-async def handle_interaction(interaction: Interaction):
+async def handle_interaction(interaction: Interaction) -> InteractionResponse:
     if interaction.type != InteractionType.APPLICATION_COMMAND:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Not an application command")
 

@@ -1,4 +1,5 @@
 import pytest
+from pytest_httpx import HTTPXMock
 from starlette.status import HTTP_200_OK
 
 from SvenBot.config import CHANNELS_URL, settings
@@ -7,7 +8,7 @@ from SvenBot.models import ResponseData
 
 
 @pytest.mark.asyncio
-async def test_recruit_task(httpx_mock):
+async def test_recruit_task(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         method="POST",
         url=f"{CHANNELS_URL}/{settings.STAFF_CHANNEL}/messages",

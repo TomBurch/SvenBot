@@ -7,11 +7,12 @@ from starlette.status import HTTP_200_OK
 
 from SvenBot import utility
 from SvenBot.config import REPO_URL, STEAM_URL, settings
+from SvenBot.models import ResponseData
 
 gunicorn_logger = logging.getLogger("gunicorn.error")
 
 
-async def recruit_task():
+async def recruit_task() -> ResponseData:
     gunicorn_logger.info("Recruit task")
     return await utility.sendMessage(
         settings.STAFF_CHANNEL,
@@ -20,7 +21,7 @@ async def recruit_task():
     )
 
 
-async def a3sync_task():
+async def a3sync_task() -> ResponseData | None:
     r = await utility.get([HTTP_200_OK], f"{REPO_URL}/repo")
     repoInfo = r.json()
 
@@ -62,7 +63,7 @@ async def a3sync_task():
     return None
 
 
-async def steam_task():
+async def steam_task() -> ResponseData | None:
     with open("steam_timestamp.json") as f:
         steam_timestamp = json.load(f)
 
@@ -104,9 +105,9 @@ async def steam_task():
     return None
 
 
-async def getSteamMods(collection):
+async def getSteamMods(collection: int) -> list[str]:
     data = {"collectioncount": 1, "publishedfileids[0]": collection}
-    mods = []
+    mods: list[str] = []
 
     r = await utility.post([HTTP_200_OK], f"{STEAM_URL}/GetCollectionDetails/v1/", data=data, headers=None)
     response = r.json()
@@ -121,7 +122,7 @@ async def getSteamMods(collection):
     return mods
 
 
-async def getSteamChangelog(changelogUrl):
+async def getSteamChangelog(changelogUrl: str) -> str:
     r = await utility.get([HTTP_200_OK], changelogUrl, headers=None)
     soup = BeautifulSoup(r.text, features="html.parser")
     headline = soup.find("div", {"class": "changelog headline"})
