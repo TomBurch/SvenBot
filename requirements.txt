@@ -6,10 +6,6 @@ anyio==3.7.1
     #   starlette
 apscheduler==3.9.1
     # via svenbot (pyproject.toml)
-atomicwrites==1.4.1
-    # via pytest
-attrs==25.1.0
-    # via pytest
 beautifulsoup4==4.11.1
     # via svenbot (pyproject.toml)
 cachetools==5.5.2
@@ -28,16 +24,12 @@ charset-normalizer==2.0.12
 click==8.1.8
     # via uvicorn
 colorama==0.4.6
-    # via
-    #   click
-    #   pytest
+    # via click
 d20==1.1.2
     # via svenbot (pyproject.toml)
 exceptiongroup==1.2.2
     # via anyio
 fastapi==0.75.2
-    # via svenbot (pyproject.toml)
-freezegun==1.2.1
     # via svenbot (pyproject.toml)
 greenlet==3.1.1
     # via sqlalchemy
@@ -52,28 +44,14 @@ httpcore==0.14.7
 httptools==0.4.0
     # via svenbot (pyproject.toml)
 httpx==0.22.0
-    # via
-    #   svenbot (pyproject.toml)
-    #   pytest-httpx
+    # via svenbot (pyproject.toml)
 idna==3.10
     # via
     #   anyio
     #   requests
     #   rfc3986
-iniconfig==2.0.0
-    # via pytest
 lark-parser==0.9.0
     # via d20
-mypy==1.4.1
-    # via svenbot (pyproject.toml)
-mypy-extensions==1.0.0
-    # via mypy
-packaging==24.2
-    # via pytest
-pluggy==1.5.0
-    # via pytest
-py==1.11.0
-    # via pytest
 pycparser==2.22
     # via cffi
 pydantic==1.9.0
@@ -82,17 +60,6 @@ pydantic==1.9.0
     #   fastapi
 pynacl==1.5.0
     # via svenbot (pyproject.toml)
-pytest==7.1.2
-    # via
-    #   svenbot (pyproject.toml)
-    #   pytest-asyncio
-    #   pytest-httpx
-pytest-asyncio==0.18.3
-    # via svenbot (pyproject.toml)
-pytest-httpx==0.20.0
-    # via svenbot (pyproject.toml)
-python-dateutil==2.9.0.post0
-    # via freezegun
 python-dotenv==0.20.0
     # via svenbot (pyproject.toml)
 pytz==2025.1
@@ -101,16 +68,12 @@ requests==2.27.1
     # via svenbot (pyproject.toml)
 rfc3986==1.5.0
     # via httpx
-ruff==0.9.9
-    # via svenbot (pyproject.toml)
 setuptools==75.8.2
     # via
     #   apscheduler
     #   gunicorn
 six==1.17.0
-    # via
-    #   apscheduler
-    #   python-dateutil
+    # via apscheduler
 sniffio==1.3.1
     # via
     #   anyio
@@ -124,21 +87,8 @@ starlette==0.17.1
     # via
     #   svenbot (pyproject.toml)
     #   fastapi
-tomli==2.2.1
-    # via
-    #   mypy
-    #   pytest
-types-beautifulsoup4==4.12.0.20250204
-    # via svenbot (pyproject.toml)
-types-html5lib==1.1.11.20241018
-    # via types-beautifulsoup4
-types-requests==2.31.0.6
-    # via svenbot (pyproject.toml)
-types-urllib3==1.26.25.14
-    # via types-requests
 typing-extensions==4.12.2
     # via
-    #   mypy
     #   pydantic
     #   uvicorn
 tzdata==2025.1
