@@ -70,7 +70,7 @@ if __name__ == "__main__":
                                 "id": STAFF_ROLE_ID,
                                 "type": 1,
                                 "permission": True,
-                            }
+                            },
                         ],
                     }
                     r = requests.put(f"{url}/{commandId}/permissions", headers=HEADERS, json=permissions)

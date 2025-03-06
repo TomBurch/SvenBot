@@ -97,7 +97,7 @@ async def test_role(httpx_mock, user, role, roleMethod, roleStatus, replyType):
         )
 
     interaction = Interaction(
-        **MockRequest("role", user, options=[Option(value=roleId, name="role", type=OptionType.ROLE)])
+        **MockRequest("role", user, options=[Option(value=roleId, name="role", type=OptionType.ROLE)]),
     )
     reply = await handle_interaction(interaction)
 
@@ -150,7 +150,7 @@ async def test_members(httpx_mock):
     )
 
     interaction = Interaction(
-        **MockRequest("members", memberNoRole, options=[Option(value=roleId, name="role", type=OptionType.ROLE)])
+        **MockRequest("members", memberNoRole, options=[Option(value=roleId, name="role", type=OptionType.ROLE)]),
     )
     reply = await handle_interaction(interaction)
 
@@ -214,7 +214,7 @@ async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
         )
 
     interaction = Interaction(
-        **MockRequest("addrole", memberNoRole, options=[Option(value=roleName, name="name", type=OptionType.STRING)])
+        **MockRequest("addrole", memberNoRole, options=[Option(value=roleName, name="name", type=OptionType.STRING)]),
     )
     reply = await handle_interaction(interaction)
 
@@ -248,7 +248,7 @@ async def test_removerole(httpx_mock, role, sendsDelete, replyType):
         )
 
     interaction = Interaction(
-        **MockRequest("removerole", memberNoRole, options=[Option(value=roleId, name="role", type=OptionType.ROLE)])
+        **MockRequest("removerole", memberNoRole, options=[Option(value=roleId, name="role", type=OptionType.ROLE)]),
     )
     reply = await handle_interaction(interaction)
 
@@ -277,8 +277,10 @@ async def test_subscribe(httpx_mock, statusCode, replyType):
 
     interaction = Interaction(
         **MockRequest(
-            "subscribe", memberNoRole, options=[Option(value=missionId, name="subscribe", type=OptionType.INTEGER)]
-        )
+            "subscribe",
+            memberNoRole,
+            options=[Option(value=missionId, name="subscribe", type=OptionType.INTEGER)],
+        ),
     )
     reply = await handle_interaction(interaction)
     expected = f"{replyType} {HUB_URL}/missions/{missionId}"
@@ -339,7 +341,7 @@ async def test_cointoss(httpx_mock, coin):
 )
 async def test_d20(httpx_mock, roll_str, error_expected):
     interaction = Interaction(
-        **MockRequest("d20", memberNoRole, options=[Option(value=roll_str, name="options", type=OptionType.STRING)])
+        **MockRequest("d20", memberNoRole, options=[Option(value=roll_str, name="options", type=OptionType.STRING)]),
     )
 
     if error_expected:
@@ -384,7 +386,7 @@ async def test_renamerole(httpx_mock, role, newName, patches, replyType):
                 Option(value=roleId, name="role", type=OptionType.ROLE),
                 Option(value=newName, name="name", type=OptionType.STRING),
             ],
-        )
+        ),
     )
     reply = await handle_interaction(interaction)
 
@@ -431,7 +433,7 @@ async def test_renamemap(httpx_mock):
                 Option(value=old_name, name="old_name", type=OptionType.STRING),
                 Option(value=new_name, name="new_name", type=OptionType.STRING),
             ],
-        )
+        ),
     )
     reply = await handle_interaction(interaction)
 

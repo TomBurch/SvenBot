@@ -51,7 +51,7 @@ def mock_calendar_notification(title: str) -> SlackNotification:
                     color="#colorrr",
                     text="random text",
                     title=f"<!date^{startTime}^{{time}}|7:00 PM> - <!date^{endTime}^{{time}}|11:00 PM> <https://www.google.com/calendar/event?eid=abc&amp;ctz=UTC|{title}>",
-                )
+                ),
             ],
         ),
     )
@@ -82,7 +82,7 @@ def test_random_event(httpx_mock: HTTPXMock):
                         EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True),
                         EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True),
                     ],
-                )
+                ),
             ],
         ).json()
     )
@@ -179,7 +179,7 @@ def test_recruit_event(httpx_mock: HTTPXMock):
                         EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True),
                     ],
                     color=EVENT_PINGS["recruit"][2],
-                )
+                ),
             ],
         ).json()
     )

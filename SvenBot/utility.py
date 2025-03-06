@@ -26,7 +26,7 @@ async def req(function, statuses, url, headers=DEFAULT_HEADERS, **kwargs):
 
     if response.status_code not in statuses:
         gunicorn_logger.error(
-            f"Received unexpected status code {response.status_code} (expected {statuses})\n{response.text}"
+            f"Received unexpected status code {response.status_code} (expected {statuses})\n{response.text}",
         )
         raise RuntimeError(f"Req error: {response.text}")
     return response
