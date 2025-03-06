@@ -2,6 +2,7 @@ import requests
 
 from SvenBot.commands.command_models import (
     addrole,
+    d20,
     members,
     myroles,
     optime,
@@ -19,6 +20,7 @@ staff = ["addrole", "removerole"]
 
 commands = [
     addrole,
+    d20,
     removerole,
     members,
     myroles,

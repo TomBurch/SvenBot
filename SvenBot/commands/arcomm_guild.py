@@ -3,6 +3,7 @@ import requests
 from SvenBot.commands.command_models import (
     addrole,
     cointoss,
+    d20,
     maps,
     members,
     myroles,
@@ -25,6 +26,7 @@ staff: list[str] = ["addrole", "removerole", "renamerole", "renamemap"]
 
 commands = [
     addrole,
+    d20,
     cointoss,
     removerole,
     renamemap,

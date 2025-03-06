@@ -1,6 +1,7 @@
 import logging
 import random
 
+import d20
 from fastapi import HTTPException
 from starlette.status import (
     HTTP_200_OK,
@@ -149,6 +150,11 @@ async def execute_cointoss(interaction: Interaction):
     return random.choice(["Heads", "Tails"])
 
 
+async def execute_d20(interaction: Interaction):
+    roll_str, = interaction.data.options
+    return str(d20.roll(roll_str.value))
+
+
 async def execute_renamerole(interaction: Interaction):
     guild_id = interaction.guild_id
     role_id, new_name = interaction.data.options
@@ -206,6 +212,7 @@ async def execute_ping(interaction: Interaction):
 execute_map = {
     "addrole": execute_addrole,
     "cointoss": execute_cointoss,
+    "d20": execute_d20,
     "maps": execute_maps,
     "members": execute_members,
     "myroles": execute_myroles,

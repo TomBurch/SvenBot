@@ -3,6 +3,7 @@ from datetime import datetime
 from unittest import mock
 
 import pytest
+from d20 import RollSyntaxError
 from fastapi import HTTPException
 from freezegun import freeze_time
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT
@@ -288,6 +289,21 @@ async def test_cointoss(httpx_mock, coin):
         m.return_value = coin
         reply = await handle_interaction(interaction)
         assert (reply == ImmediateReply(coin))
+
+
+@pytest.mark.asyncio()
+@pytest.mark.parametrize(("httpx_mock", "roll_str", "error_expected"), [
+    (None, "1d6", False),
+    (None, "aaa", True),
+], indirect=["httpx_mock"])
+async def test_d20(httpx_mock, roll_str, error_expected):
+    interaction = Interaction(**MockRequest("d20", memberNoRole, options=[Option(value=roll_str, name="options", type=OptionType.STRING)]))
+
+    if error_expected:
+        with pytest.raises(HTTPException), pytest.raises(RollSyntaxError):
+            await handle_interaction(interaction)
+    else:
+        await handle_interaction(interaction)
 
 
 @pytest.mark.asyncio()

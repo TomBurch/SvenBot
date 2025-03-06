@@ -48,6 +48,18 @@ cointoss = CommandDefinition(
     description="Flip a coin",
 )
 
+d20 = CommandDefinition(
+    name="d20",
+    description="Roll dice with Avrae",
+    options=[
+        OptionDefinition(
+            name="options",
+            description="Options",
+            type=OptionType.STRING,
+        ),
+    ],
+)
+
 removerole = CommandDefinition(
     name="removerole",
     description="Remove an existing role",

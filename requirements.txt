@@ -4,6 +4,7 @@ uvloop
 httptools~=0.4.0
 apscheduler==3.9.1
 BeautifulSoup4==4.11.1
+d20==1.1.2
 fastapi==0.75.2
 freezegun==1.2.1
 httpx==0.22.0
