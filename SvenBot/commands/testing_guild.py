@@ -49,11 +49,13 @@ if __name__ == "__main__":
                 if commandId is not None:
                     print("adding staff permissions")
                     permissions = {
-                        "permissions": [{
-                            "id": STAFF_ROLE_ID,
-                            "type": 1,
-                            "permission": True,
-                        }],
+                        "permissions": [
+                            {
+                                "id": STAFF_ROLE_ID,
+                                "type": 1,
+                                "permission": True,
+                            }
+                        ],
                     }
                     r = requests.put(f"{url}/{commandId}/permissions", headers=DEFAULT_HEADERS, json=permissions)
                     print(r.status_code, r.reason, r.text)

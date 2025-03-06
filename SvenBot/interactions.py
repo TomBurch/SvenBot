@@ -29,7 +29,7 @@ gunicorn_logger = logging.getLogger("gunicorn.error")
 async def execute_role(interaction: Interaction):
     guild_id = interaction.guild_id
     user_id = interaction.member.user.id
-    role_id, = interaction.data.options
+    (role_id,) = interaction.data.options
 
     if not await utility.validateRoleById(guild_id, role_id.value):
         return f"<@&{role_id.value}> is restricted"
@@ -63,7 +63,7 @@ async def execute_roles(interaction: Interaction):
 
 async def execute_members(interaction: Interaction):
     guild_id = interaction.guild_id
-    role_id, = interaction.data.options
+    (role_id,) = interaction.data.options
 
     url = f"{GUILD_URL}/{guild_id}/members"
 
@@ -105,7 +105,7 @@ async def execute_optime(interaction):
 
 async def execute_addrole(interaction: Interaction):
     guild_id = interaction.guild_id
-    name, = interaction.data.options
+    (name,) = interaction.data.options
 
     existingRole = await utility.findRoleByName(guild_id, name.value, excludeReserved=False)
     if existingRole is not None:
@@ -121,7 +121,7 @@ async def execute_addrole(interaction: Interaction):
 
 async def execute_removerole(interaction: Interaction):
     guild_id = interaction.guild_id
-    role_id, = interaction.data.options
+    (role_id,) = interaction.data.options
 
     if await utility.validateRoleById(guild_id, role_id.value):
         url = f"{GUILD_URL}/{guild_id}/roles/{role_id.value}"
@@ -136,8 +136,7 @@ async def execute_ticket(interaction: Interaction):
     member = interaction.member
     repo, title, body = interaction.data.options
     username = member.user.username if (member.nick is None) else member.nick
-    json = {"title": f"{username}: {title.value}",
-            "body": body.value}
+    json = {"title": f"{username}: {title.value}", "body": body.value}
 
     repoUrl = f"https://api.github.com/repos/{repo.value}/issues"
     r = await utility.post([HTTP_201_CREATED], repoUrl, json=json, headers=GITHUB_HEADERS)
@@ -151,7 +150,7 @@ async def execute_cointoss(interaction: Interaction):
 
 
 async def execute_d20(interaction: Interaction):
-    roll_str, = interaction.data.options
+    (roll_str,) = interaction.data.options
     return str(d20.roll(roll_str.value))
 
 
@@ -179,7 +178,11 @@ async def execute_maps(interaction: Interaction):
 
     outString = "File name [Display name]\n=========================\n"
     for _map in maps:
-        outString += f"{_map['class_name']}\n" if _map["class_name"] == _map["display_name"] else f"{_map['class_name']} [{_map['display_name']}]\n"
+        outString += (
+            f"{_map['class_name']}\n"
+            if _map["class_name"] == _map["display_name"]
+            else f"{_map['class_name']} [{_map['display_name']}]\n"
+        )
 
     return f"```ini\n{outString}```"
 
@@ -195,7 +198,7 @@ async def execute_renamemap(interaction: Interaction):
 
 async def execute_subscribe(interaction: Interaction):
     user_id = interaction.member.user.id
-    mission_id, = interaction.data.options
+    (mission_id,) = interaction.data.options
     url = f"{ARCHUB_API}/missions/{mission_id.value}/subscribe?discord_id={user_id}"
     r = await utility.post([HTTP_201_CREATED, HTTP_204_NO_CONTENT], url, headers=ARCHUB_HEADERS)
     missionUrl = f"{HUB_URL}/missions/{mission_id.value}"
@@ -208,6 +211,7 @@ async def execute_subscribe(interaction: Interaction):
 
 async def execute_ping(interaction: Interaction):
     return "Pong!"
+
 
 execute_map = {
     "addrole": execute_addrole,

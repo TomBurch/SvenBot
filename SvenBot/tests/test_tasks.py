@@ -6,7 +6,7 @@ from SvenBot.main import recruit_task
 from SvenBot.models import ResponseData
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_recruit_task(httpx_mock):
     httpx_mock.add_response(
         method="POST",
@@ -15,8 +15,10 @@ async def test_recruit_task(httpx_mock):
     )
 
     reply = await recruit_task()
-    expected = ResponseData(content=f"<@&{settings.ADMIN_ROLE}> Post recruitment on <https://www.reddit.com/r/FindAUnit>",
-                            allowed_mentions={"parse": ["roles"]})
+    expected = ResponseData(
+        content=f"<@&{settings.ADMIN_ROLE}> Post recruitment on <https://www.reddit.com/r/FindAUnit>",
+        allowed_mentions={"parse": ["roles"]},
+    )
 
     assert reply == expected
 

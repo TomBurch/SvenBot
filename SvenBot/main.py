@@ -16,20 +16,21 @@ PACKAGE_PARENT = ".."
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
-from SvenBot.config import EVENT_PINGS, HUB_URL, settings, BASE_ARCHUB_URL
+from SvenBot.config import BASE_ARCHUB_URL, EVENT_PINGS, HUB_URL, settings
 from SvenBot.interactions import handle_interaction
 from SvenBot.models import (
     Embed,
     EmbedField,
+    EmbedThumbnail,
     Interaction,
     InteractionResponseType,
     InteractionType,
     Response,
     SlackNotification,
-    SlackNotificationType, EmbedThumbnail,
+    SlackNotificationType,
 )
 from SvenBot.tasks import a3sync_task, recruit_task, steam_task
-from SvenBot.utility import getOperationMissions, sendMessage, mission_colour_from_mode
+from SvenBot.utility import getOperationMissions, mission_colour_from_mode, sendMessage
 
 gunicorn_logger = logging.getLogger("gunicorn.error")
 
@@ -94,7 +95,7 @@ def app():
                 EmbedField(name="End", value=f"<t:{end_time}:t>", inline=True),
             ]
             embeds = [
-                Embed(title=title, description=f"Starting <t:{start_time}:R>", fields=fields, color=color)
+                Embed(title=title, description=f"Starting <t:{start_time}:R>", fields=fields, color=color),
             ]
 
             if event == "main":
@@ -103,15 +104,20 @@ def app():
                     maker_string = "Maintained" if mission["hasMaintainer"] else "Made"
 
                     thumbnail: EmbedThumbnail | None
-                    if " " in mission['thumbnail']:
+                    if " " in mission["thumbnail"]:
                         print("Skipping thumbnail!")
                         thumbnail = None
                     else:
                         thumbnail = EmbedThumbnail(url=f"{BASE_ARCHUB_URL}{mission['thumbnail']}")
 
                     embeds.append(
-                        Embed(title=mission['display_name'], description=f"{maker_string} by {mission['user']}",
-                              url=link, thumbnail=thumbnail, color=mission_colour_from_mode(mission["mode"]))
+                        Embed(
+                            title=mission["display_name"],
+                            description=f"{maker_string} by {mission['user']}",
+                            url=link,
+                            thumbnail=thumbnail,
+                            color=mission_colour_from_mode(mission["mode"]),
+                        ),
                     )
 
             await sendMessage(channel, pings, ["roles"], embeds)

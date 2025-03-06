@@ -13,9 +13,11 @@ gunicorn_logger = logging.getLogger("gunicorn.error")
 
 async def recruit_task():
     gunicorn_logger.info("Recruit task")
-    return await utility.sendMessage(settings.STAFF_CHANNEL,
-                                     f"<@&{settings.ADMIN_ROLE}> Post recruitment on <https://www.reddit.com/r/FindAUnit>",
-                                     ["roles"])
+    return await utility.sendMessage(
+        settings.STAFF_CHANNEL,
+        f"<@&{settings.ADMIN_ROLE}> Post recruitment on <https://www.reddit.com/r/FindAUnit>",
+        ["roles"],
+    )
 
 
 async def a3sync_task():
@@ -33,12 +35,21 @@ async def a3sync_task():
         updatePost = f"```md\n# The A3Sync repo has changed #\n\n[{newRepoSize} GB]\n```\n"
         for changelog in changelogs:
             if changelog["revision"] > revision["revision"]:
-                new = "" if (len(changelog["newAddons"]) == 0) else "< New >\n{}".format(
-                    "\n".join(changelog["newAddons"]))
-                deleted = "" if (len(changelog["deletedAddons"]) == 0) else "\n\n< Deleted >\n{}".format(
-                    "\n".join(changelog["deletedAddons"]))
-                updated = "" if (len(changelog["updatedAddons"]) == 0) else "\n\n< Updated >\n{}".format(
-                    "\n".join(changelog["updatedAddons"]))
+                new = (
+                    ""
+                    if (len(changelog["newAddons"]) == 0)
+                    else "< New >\n{}".format("\n".join(changelog["newAddons"]))
+                )
+                deleted = (
+                    ""
+                    if (len(changelog["deletedAddons"]) == 0)
+                    else "\n\n< Deleted >\n{}".format("\n".join(changelog["deletedAddons"]))
+                )
+                updated = (
+                    ""
+                    if (len(changelog["updatedAddons"]) == 0)
+                    else "\n\n< Updated >\n{}".format("\n".join(changelog["updatedAddons"]))
+                )
                 if len(new + deleted + updated) > 0:
                     updatePost += f"```md\n{new}{deleted}{updated}\n```\n"
 

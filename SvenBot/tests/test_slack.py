@@ -6,20 +6,22 @@ from starlette.status import HTTP_200_OK
 from SvenBot.config import (
     ARCHUB_API,
     ARCHUB_HEADERS,
+    BASE_ARCHUB_URL,
     CHANNELS_URL,
     EVENT_PINGS,
     HUB_URL,
-    settings, BASE_ARCHUB_URL,
+    settings,
 )
 from SvenBot.main import app
 from SvenBot.models import (
     Embed,
     EmbedField,
+    EmbedThumbnail,
     ResponseData,
     SlackCalendarEvent,
     SlackEvent,
     SlackNotification,
-    SlackNotificationType, EmbedThumbnail,
+    SlackNotificationType,
 )
 
 client = TestClient(app)
@@ -44,11 +46,13 @@ def mock_calendar_notification(title: str) -> SlackNotification:
         event=SlackEvent(
             type="abc",
             text="abcdef",
-            attachments=[SlackCalendarEvent(
-                color="#colorrr",
-                text="random text",
-                title=f"<!date^{startTime}^{{time}}|7:00 PM> - <!date^{endTime}^{{time}}|11:00 PM> <https://www.google.com/calendar/event?eid=abc&amp;ctz=UTC|{title}>",
-            )],
+            attachments=[
+                SlackCalendarEvent(
+                    color="#colorrr",
+                    text="random text",
+                    title=f"<!date^{startTime}^{{time}}|7:00 PM> - <!date^{endTime}^{{time}}|11:00 PM> <https://www.google.com/calendar/event?eid=abc&amp;ctz=UTC|{title}>",
+                )
+            ],
         ),
     )
 
@@ -65,18 +69,23 @@ def test_random_event(httpx_mock: HTTPXMock):
     response = client.post("/slack/", json=notification.dict())
 
     assert response.status_code == HTTP_200_OK
-    assert httpx_mock.get_request().content.decode() == ResponseData(
-        content=None,
-        allowed_mentions={"parse": ["roles"]},
-        embeds=[Embed(
-            title=title,
-            description=f"Starting <t:{startTime}:R>",
-            fields=[
-                EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True),
-                EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True),
+    assert (
+        httpx_mock.get_request().content.decode()
+        == ResponseData(
+            content=None,
+            allowed_mentions={"parse": ["roles"]},
+            embeds=[
+                Embed(
+                    title=title,
+                    description=f"Starting <t:{startTime}:R>",
+                    fields=[
+                        EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True),
+                        EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True),
+                    ],
+                )
             ],
-        )],
-    ).json()
+        ).json()
+    )
 
 
 def test_main_event(httpx_mock: HTTPXMock):
@@ -103,37 +112,45 @@ def test_main_event(httpx_mock: HTTPXMock):
     response = client.post("/slack/", json=notification.dict())
 
     assert response.status_code == HTTP_200_OK
-    assert httpx_mock.get_request(method="POST").content.decode() == ResponseData(
-        content=f"<@&{settings.MEMBER_ROLE}> <@&{settings.RECRUIT_ROLE}>",
-        allowed_mentions={"parse": ["roles"]},
-        embeds=[Embed(
-            title=title,
-            description=f"Starting <t:{startTime}:R>",
-            fields=[
-                EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True),
-                EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True),
+    assert (
+        httpx_mock.get_request(method="POST").content.decode()
+        == ResponseData(
+            content=f"<@&{settings.MEMBER_ROLE}> <@&{settings.RECRUIT_ROLE}>",
+            allowed_mentions={"parse": ["roles"]},
+            embeds=[
+                Embed(
+                    title=title,
+                    description=f"Starting <t:{startTime}:R>",
+                    fields=[
+                        EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True),
+                        EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True),
+                    ],
+                    color=EVENT_PINGS["main"][2],
+                ),
+                Embed(
+                    title=mission1.display_name,
+                    url=f"{HUB_URL}/missions/{mission1.id}",
+                    description=f"Made by {mission1.user}",
+                    color=959977,
+                    thumbnail=EmbedThumbnail(url=f"{BASE_ARCHUB_URL}{mission1.thumbnail}"),
+                ),
+                Embed(
+                    title=mission2.display_name,
+                    url=f"{HUB_URL}/missions/{mission2.id}",
+                    description=f"Made by {mission2.user}",
+                    color=16007006,
+                    thumbnail=EmbedThumbnail(url=f"{BASE_ARCHUB_URL}{mission2.thumbnail}"),
+                ),
+                Embed(
+                    title=mission3.display_name,
+                    url=f"{HUB_URL}/missions/{mission3.id}",
+                    description=f"Maintained by {mission3.user}",
+                    color=1096065,
+                    thumbnail=EmbedThumbnail(url=f"{BASE_ARCHUB_URL}{mission3.thumbnail}"),
+                ),
             ],
-            color=EVENT_PINGS["main"][2],
-        ), Embed(
-            title=mission1.display_name,
-            url=f"{HUB_URL}/missions/{mission1.id}",
-            description=f"Made by {mission1.user}",
-            color=959977,
-            thumbnail=EmbedThumbnail(url=f"{BASE_ARCHUB_URL}{mission1.thumbnail}"),
-        ), Embed(
-            title=mission2.display_name,
-            url=f"{HUB_URL}/missions/{mission2.id}",
-            description=f"Made by {mission2.user}",
-            color=16007006,
-            thumbnail=EmbedThumbnail(url=f"{BASE_ARCHUB_URL}{mission2.thumbnail}"),
-        ), Embed(
-            title=mission3.display_name,
-            url=f"{HUB_URL}/missions/{mission3.id}",
-            description=f"Maintained by {mission3.user}",
-            color=1096065,
-            thumbnail=EmbedThumbnail(url=f"{BASE_ARCHUB_URL}{mission3.thumbnail}"),
-        )],
-    ).json()
+        ).json()
+    )
 
 
 def test_recruit_event(httpx_mock: HTTPXMock):
@@ -148,16 +165,21 @@ def test_recruit_event(httpx_mock: HTTPXMock):
     response = client.post("/slack/", json=notification.dict())
 
     assert response.status_code == HTTP_200_OK
-    assert httpx_mock.get_request().content.decode() == ResponseData(
-        content=f"<@&{settings.RECRUIT_ROLE}>",
-        allowed_mentions={"parse": ["roles"]},
-        embeds=[Embed(
-            title=title,
-            description=f"Starting <t:{startTime}:R>",
-            fields=[
-                EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True),
-                EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True),
+    assert (
+        httpx_mock.get_request().content.decode()
+        == ResponseData(
+            content=f"<@&{settings.RECRUIT_ROLE}>",
+            allowed_mentions={"parse": ["roles"]},
+            embeds=[
+                Embed(
+                    title=title,
+                    description=f"Starting <t:{startTime}:R>",
+                    fields=[
+                        EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True),
+                        EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True),
+                    ],
+                    color=EVENT_PINGS["recruit"][2],
+                )
             ],
-            color=EVENT_PINGS["recruit"][2],
-        )],
-    ).json()
+        ).json()
+    )

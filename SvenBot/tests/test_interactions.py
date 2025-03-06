@@ -31,10 +31,17 @@ class Role(dict):
 
 class MockRequest(dict):
     def __init__(self, name, member=None, options=[]):
-        dict.__init__(self, type=InteractionType.APPLICATION_COMMAND, member=member,
-                      data={"name": name, "options": options, "id": "MockCommandId"},
-                      guild_id="342006395010547712", version=1, token="MockToken", application_id="MockAppId",
-                      id="MockRequestId")
+        dict.__init__(
+            self,
+            type=InteractionType.APPLICATION_COMMAND,
+            member=member,
+            data={"name": name, "options": options, "id": "MockCommandId"},
+            guild_id="342006395010547712",
+            version=1,
+            token="MockToken",
+            application_id="MockAppId",
+            id="MockRequestId",
+        )
 
 
 botRole = Role("SvenBotRoleId", "SvenBot", 3, botId=settings.CLIENT_ID)
@@ -49,7 +56,7 @@ memberNoRole = Member(user={"id": "User234", "username": "TestUser2", "discrimin
 memberWithRole = Member(user={"id": "User123", "username": "TestUser", "discriminator": "3124"}, roles=[testRole["id"]])
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_ping():
     interaction = Interaction(**MockRequest("ping", memberNoRole))
     reply = await handle_interaction(interaction)
@@ -58,15 +65,19 @@ async def test_ping():
     assert reply == expected
 
 
-@pytest.mark.asyncio()
-@pytest.mark.parametrize(("httpx_mock", "user", "role", "roleMethod", "roleStatus", "replyType"), [
-    (None, memberWithRole, testRole, "DELETE", 204, "left"),
-    (None, memberNoRole, testRole, "PUT", 204, "joined"),
-    (None, memberWithRole, testRole, "DELETE", 403, "restricted"),
-    (None, memberNoRole, testRole, "PUT", 403, "restricted"),
-    (None, memberWithRole, invalidRole, None, None, "restricted"),
-    (None, memberNoRole, invalidRole, None, None, "restricted"),
-], indirect=["httpx_mock"])
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("httpx_mock", "user", "role", "roleMethod", "roleStatus", "replyType"),
+    [
+        (None, memberWithRole, testRole, "DELETE", 204, "left"),
+        (None, memberNoRole, testRole, "PUT", 204, "joined"),
+        (None, memberWithRole, testRole, "DELETE", 403, "restricted"),
+        (None, memberNoRole, testRole, "PUT", 403, "restricted"),
+        (None, memberWithRole, invalidRole, None, None, "restricted"),
+        (None, memberNoRole, invalidRole, None, None, "restricted"),
+    ],
+    indirect=["httpx_mock"],
+)
 async def test_role(httpx_mock, user, role, roleMethod, roleStatus, replyType):
     userId = user.user.id
     roleId = role["id"]
@@ -86,7 +97,8 @@ async def test_role(httpx_mock, user, role, roleMethod, roleStatus, replyType):
         )
 
     interaction = Interaction(
-        **MockRequest("role", user, options=[Option(value=roleId, name="role", type=OptionType.ROLE)]))
+        **MockRequest("role", user, options=[Option(value=roleId, name="role", type=OptionType.ROLE)])
+    )
     reply = await handle_interaction(interaction)
 
     if replyType in ("left", "joined"):
@@ -97,7 +109,7 @@ async def test_role(httpx_mock, user, role, roleMethod, roleStatus, replyType):
         pytest.fail("Unknown reply type")
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_roles(httpx_mock):
     httpx_mock.add_response(
         method="GET",
@@ -112,7 +124,7 @@ async def test_roles(httpx_mock):
     assert reply == ImmediateReply("```\n{}\n```".format(testRole["name"]), mentions=[])
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_rolesNoBotRole(httpx_mock):
     httpx_mock.add_response(
         method="GET",
@@ -126,7 +138,7 @@ async def test_rolesNoBotRole(httpx_mock):
         await handle_interaction(interaction)
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_members(httpx_mock):
     roleId = testRole["id"]
 
@@ -138,14 +150,15 @@ async def test_members(httpx_mock):
     )
 
     interaction = Interaction(
-        **MockRequest("members", memberNoRole, options=[Option(value=roleId, name="role", type=OptionType.ROLE)]))
+        **MockRequest("members", memberNoRole, options=[Option(value=roleId, name="role", type=OptionType.ROLE)])
+    )
     reply = await handle_interaction(interaction)
 
     username = memberWithRole.user.username
     assert reply == ImmediateReply(f"```\n{username}\n```", mentions=[])
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_myroles():
     interaction = Interaction(**MockRequest("myroles", memberWithRole))
     reply = await handle_interaction(interaction)
@@ -153,16 +166,19 @@ async def test_myroles():
     assert reply == ImmediateReply("<@&{}>\n".format(testRole["id"]), mentions=[], ephemeral=True)
 
 
-@pytest.mark.asyncio()
-@pytest.mark.parametrize(("now_mock", "modifier", "timeUntilOptime"), [
-    (datetime(2021, 3, 19, 15, 30), "", "3:30:00"),
-    (datetime(2021, 3, 19, 19, 30, 42), "", "23:29:18"),
-    (datetime(2021, 3, 19, 18, 0, 0), "", "1:00:00"),
-    (datetime(2021, 3, 19, 18, 0, 0), " +1", "2:00:00"),
-    (datetime(2021, 3, 19, 18, 0, 0), " -1", "0:00:00"),
-    (datetime(2021, 3, 19, 18, 0, 0), " +7", "8:00:00"),
-    (datetime(2021, 3, 19, 18, 0, 0), " -7", "18:00:00"),
-])
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("now_mock", "modifier", "timeUntilOptime"),
+    [
+        (datetime(2021, 3, 19, 15, 30), "", "3:30:00"),
+        (datetime(2021, 3, 19, 19, 30, 42), "", "23:29:18"),
+        (datetime(2021, 3, 19, 18, 0, 0), "", "1:00:00"),
+        (datetime(2021, 3, 19, 18, 0, 0), " +1", "2:00:00"),
+        (datetime(2021, 3, 19, 18, 0, 0), " -1", "0:00:00"),
+        (datetime(2021, 3, 19, 18, 0, 0), " +7", "8:00:00"),
+        (datetime(2021, 3, 19, 18, 0, 0), " -7", "18:00:00"),
+    ],
+)
 async def test_optime(now_mock, modifier, timeUntilOptime):
     with freeze_time(now_mock):
         options = None if modifier == "" else [Option(value=int(modifier), name="modifier", type=OptionType.INTEGER)]
@@ -172,11 +188,15 @@ async def test_optime(now_mock, modifier, timeUntilOptime):
     assert reply == ImmediateReply(f"Optime{modifier} starts in {timeUntilOptime}!", mentions=[])
 
 
-@pytest.mark.asyncio()
-@pytest.mark.parametrize(("httpx_mock", "roleName", "roleId", "sendsPost", "replyType"), [
-    (None, "NewRole", "NewRoleId", True, "added"),
-    (None, "TestRole", "RoleId456", False, "already exists"),
-], indirect=["httpx_mock"])
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("httpx_mock", "roleName", "roleId", "sendsPost", "replyType"),
+    [
+        (None, "NewRole", "NewRoleId", True, "added"),
+        (None, "TestRole", "RoleId456", False, "already exists"),
+    ],
+    indirect=["httpx_mock"],
+)
 async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
     httpx_mock.add_response(
         method="GET",
@@ -194,17 +214,22 @@ async def test_addrole(httpx_mock, roleName, roleId, sendsPost, replyType):
         )
 
     interaction = Interaction(
-        **MockRequest("addrole", memberNoRole, options=[Option(value=roleName, name="name", type=OptionType.STRING)]))
+        **MockRequest("addrole", memberNoRole, options=[Option(value=roleName, name="name", type=OptionType.STRING)])
+    )
     reply = await handle_interaction(interaction)
 
     assert reply == ImmediateReply(f"<@&{roleId}> {replyType}", mentions=[])
 
 
-@pytest.mark.asyncio()
-@pytest.mark.parametrize(("httpx_mock", "role", "sendsDelete", "replyType"), [
-    (None, testRole, True, "Role deleted"),
-    (None, invalidRole, False, "Role is restricted"),
-], indirect=["httpx_mock"])
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("httpx_mock", "role", "sendsDelete", "replyType"),
+    [
+        (None, testRole, True, "Role deleted"),
+        (None, invalidRole, False, "Role is restricted"),
+    ],
+    indirect=["httpx_mock"],
+)
 async def test_removerole(httpx_mock, role, sendsDelete, replyType):
     roleId = role["id"]
 
@@ -223,17 +248,22 @@ async def test_removerole(httpx_mock, role, sendsDelete, replyType):
         )
 
     interaction = Interaction(
-        **MockRequest("removerole", memberNoRole, options=[Option(value=roleId, name="role", type=OptionType.ROLE)]))
+        **MockRequest("removerole", memberNoRole, options=[Option(value=roleId, name="role", type=OptionType.ROLE)])
+    )
     reply = await handle_interaction(interaction)
 
     assert reply == ImmediateReply(replyType, mentions=[])
 
 
-@pytest.mark.asyncio()
-@pytest.mark.parametrize(("httpx_mock", "statusCode", "replyType"), [
-    (None, HTTP_201_CREATED, "You are now subscribed to"),
-    (None, HTTP_204_NO_CONTENT, "You are no longer subscribed to"),
-], indirect=["httpx_mock"])
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("httpx_mock", "statusCode", "replyType"),
+    [
+        (None, HTTP_201_CREATED, "You are now subscribed to"),
+        (None, HTTP_204_NO_CONTENT, "You are no longer subscribed to"),
+    ],
+    indirect=["httpx_mock"],
+)
 async def test_subscribe(httpx_mock, statusCode, replyType):
     missionId = 900
     userId = memberNoRole.user.id
@@ -245,15 +275,18 @@ async def test_subscribe(httpx_mock, statusCode, replyType):
         match_headers=ARCHUB_HEADERS,
     )
 
-    interaction = Interaction(**MockRequest("subscribe", memberNoRole, options=[
-        Option(value=missionId, name="subscribe", type=OptionType.INTEGER)]))
+    interaction = Interaction(
+        **MockRequest(
+            "subscribe", memberNoRole, options=[Option(value=missionId, name="subscribe", type=OptionType.INTEGER)]
+        )
+    )
     reply = await handle_interaction(interaction)
     expected = f"{replyType} {HUB_URL}/missions/{missionId}"
 
     assert reply == ImmediateReply(expected, mentions=[])
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_ticket(httpx_mock):
     createdUrl = "https://github.com/ARCOMM/ArcommBot/issues/64"
 
@@ -277,27 +310,37 @@ async def test_ticket(httpx_mock):
     assert reply == ImmediateReply(expected, mentions=[])
 
 
-@pytest.mark.asyncio()
-@pytest.mark.parametrize(("httpx_mock", "coin"), [
-    (None, "Heads"),
-    (None, "Tails"),
-], indirect=["httpx_mock"])
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("httpx_mock", "coin"),
+    [
+        (None, "Heads"),
+        (None, "Tails"),
+    ],
+    indirect=["httpx_mock"],
+)
 async def test_cointoss(httpx_mock, coin):
     interaction = Interaction(**MockRequest("cointoss", memberNoRole))
 
     with mock.patch.object(random, "choice") as m:
         m.return_value = coin
         reply = await handle_interaction(interaction)
-        assert (reply == ImmediateReply(coin))
+        assert reply == ImmediateReply(coin)
 
 
-@pytest.mark.asyncio()
-@pytest.mark.parametrize(("httpx_mock", "roll_str", "error_expected"), [
-    (None, "1d6", False),
-    (None, "aaa", True),
-], indirect=["httpx_mock"])
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("httpx_mock", "roll_str", "error_expected"),
+    [
+        (None, "1d6", False),
+        (None, "aaa", True),
+    ],
+    indirect=["httpx_mock"],
+)
 async def test_d20(httpx_mock, roll_str, error_expected):
-    interaction = Interaction(**MockRequest("d20", memberNoRole, options=[Option(value=roll_str, name="options", type=OptionType.STRING)]))
+    interaction = Interaction(
+        **MockRequest("d20", memberNoRole, options=[Option(value=roll_str, name="options", type=OptionType.STRING)])
+    )
 
     if error_expected:
         with pytest.raises(HTTPException), pytest.raises(RollSyntaxError):
@@ -306,12 +349,16 @@ async def test_d20(httpx_mock, roll_str, error_expected):
         await handle_interaction(interaction)
 
 
-@pytest.mark.asyncio()
-@pytest.mark.parametrize(("httpx_mock", "role", "newName", "patches", "replyType"), [
-    (None, testRole, "RandomName", True, "was renamed"),
-    (None, invalidRole, "RandomName", False, "is restricted"),
-    (None, testRole, invalidRole["name"], False, "already exists"),
-], indirect=["httpx_mock"])
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("httpx_mock", "role", "newName", "patches", "replyType"),
+    [
+        (None, testRole, "RandomName", True, "was renamed"),
+        (None, invalidRole, "RandomName", False, "is restricted"),
+        (None, testRole, invalidRole["name"], False, "already exists"),
+    ],
+    indirect=["httpx_mock"],
+)
 async def test_renamerole(httpx_mock, role, newName, patches, replyType):
     roleId = role["id"]
 
@@ -330,8 +377,15 @@ async def test_renamerole(httpx_mock, role, newName, patches, replyType):
         )
 
     interaction = Interaction(
-        **MockRequest("renamerole", memberNoRole, options=[Option(value=roleId, name="role", type=OptionType.ROLE),
-                                                           Option(value=newName, name="name", type=OptionType.STRING)]))
+        **MockRequest(
+            "renamerole",
+            memberNoRole,
+            options=[
+                Option(value=roleId, name="role", type=OptionType.ROLE),
+                Option(value=newName, name="name", type=OptionType.STRING),
+            ],
+        )
+    )
     reply = await handle_interaction(interaction)
 
     if newName == invalidRole["name"]:
@@ -341,7 +395,7 @@ async def test_renamerole(httpx_mock, role, newName, patches, replyType):
         assert reply == ImmediateReply(f"<@&{roleId}> {replyType}", mentions=[])
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_maps(httpx_mock):
     maps = [{"class_name": "map1class", "display_name": "map1display"}]
     httpx_mock.add_response(
@@ -359,7 +413,7 @@ async def test_maps(httpx_mock):
     assert reply == ImmediateReply(outString, mentions=[])
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_renamemap(httpx_mock):
     old_name, new_name = "abc", "def"
     httpx_mock.add_response(
@@ -370,8 +424,15 @@ async def test_renamemap(httpx_mock):
     )
 
     interaction = Interaction(
-        **MockRequest("renamemap", memberNoRole, options=[Option(value=old_name, name="old_name", type=OptionType.STRING),
-                                                          Option(value=new_name, name="new_name", type=OptionType.STRING)]))
+        **MockRequest(
+            "renamemap",
+            memberNoRole,
+            options=[
+                Option(value=old_name, name="old_name", type=OptionType.STRING),
+                Option(value=new_name, name="new_name", type=OptionType.STRING),
+            ],
+        )
+    )
     reply = await handle_interaction(interaction)
 
     assert reply == ImmediateReply(f"`{old_name}` was renamed to `{new_name}`", mentions=[])
