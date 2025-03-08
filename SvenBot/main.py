@@ -1,9 +1,9 @@
 import json
 import logging
-import os
 import re
 import sys
 from datetime import datetime
+from pathlib import Path
 
 import uvicorn
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -12,9 +12,8 @@ from fastapi.params import Depends
 from nacl.signing import VerifyKey
 from starlette.status import HTTP_401_UNAUTHORIZED
 
-PACKAGE_PARENT = ".."
-SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
-sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
+ROOT_DIR = Path(__file__).parent.parent
+sys.path.append(str(ROOT_DIR))
 
 from SvenBot.config import BASE_ARCHUB_URL, EVENT_PINGS, HUB_URL, settings
 from SvenBot.interactions import handle_interaction
@@ -29,7 +28,7 @@ from SvenBot.models import (
     SlackNotification,
     SlackNotificationType,
 )
-from SvenBot.tasks import a3sync_task, recruit_task, steam_task
+from SvenBot.tasks import REVISION_PATH, TIMESTAMP_PATH, a3sync_task, recruit_task, steam_task
 from SvenBot.utility import get_operation_missions, mission_colour_from_mode, send_message
 
 gunicorn_logger = logging.getLogger("gunicorn.error")
@@ -134,17 +133,17 @@ app = app()
 @app.on_event("startup")
 def init_scheduler() -> None:
     try:
-        with open("revision.json") as f:
+        with REVISION_PATH.open() as f:
             json.load(f)
     except Exception:
-        with open("revision.json", "w") as f:
+        with REVISION_PATH.open("w") as f:
             json.dump({"revision": 0}, f)
 
     try:
-        with open("steam_timestamp.json") as f:
+        with TIMESTAMP_PATH.open() as f:
             json.load(f)
     except Exception:
-        with open("steam_timestamp.json", "w") as f:
+        with TIMESTAMP_PATH.open("w") as f:
             last_month = datetime.utcnow().timestamp() - 2500000
             json.dump({"last_checked": last_month}, f)
 

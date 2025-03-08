@@ -1,6 +1,7 @@
 import json
 import logging
 from datetime import datetime
+from pathlib import Path
 
 from bs4 import BeautifulSoup
 from starlette.status import HTTP_200_OK
@@ -10,6 +11,9 @@ from SvenBot.config import REPO_URL, STEAM_URL, settings
 from SvenBot.models import ResponseData
 
 gunicorn_logger = logging.getLogger("gunicorn.error")
+
+REVISION_PATH = Path("revision.json")
+TIMESTAMP_PATH = Path("steam_timestamp.json")
 
 
 async def recruit_task() -> ResponseData:
@@ -25,7 +29,7 @@ async def a3sync_task() -> ResponseData | None:
     r = await utility.get([HTTP_200_OK], f"{REPO_URL}/repo")
     repo_info = r.json()
 
-    with open("revision.json") as f:
+    with REVISION_PATH.open() as f:
         revision = json.load(f)
 
     if repo_info["revision"] != revision["revision"]:
@@ -56,7 +60,7 @@ async def a3sync_task() -> ResponseData | None:
 
         revision["revision"] = changelog["revision"]
 
-        with open("revision.json", "w") as f:
+        with REVISION_PATH.open("w") as f:
             json.dump(revision, f)
 
         return await utility.send_message(settings.ANNOUNCE_CHANNEL, update_post)
@@ -64,7 +68,7 @@ async def a3sync_task() -> ResponseData | None:
 
 
 async def steam_task() -> ResponseData | None:
-    with open("steam_timestamp.json") as f:
+    with TIMESTAMP_PATH.open() as f:
         steam_timestamp = json.load(f)
 
     mods = set(await get_steam_mods(settings.STEAM_MODLIST))
@@ -97,7 +101,7 @@ async def steam_task() -> ResponseData | None:
             update_post += f"```\n{changelog}```\n"
 
     steam_timestamp["last_checked"] = now
-    with open("steam_timestamp.json", "w") as f:
+    with TIMESTAMP_PATH.open("w") as f:
         json.dump(steam_timestamp, f)
 
     if update_post:
@@ -107,8 +111,8 @@ async def steam_task() -> ResponseData | None:
     return None
 
 
-async def get_steam_mods(collection: int) -> list[str]:
-    data = {"collectioncount": 1, "publishedfileids[0]": collection}
+async def get_steam_mods(collection_id: int) -> list[str]:
+    data = {"collectioncount": 1, "publishedfileids[0]": collection_id}
     mods: list[str] = []
 
     r = await utility.post([HTTP_200_OK], f"{STEAM_URL}/GetCollectionDetails/v1/", data=data, headers=None)

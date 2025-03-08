@@ -52,11 +52,7 @@ async def execute_roles(interaction: Interaction) -> str:
     guild_id = interaction.guild_id
     roles = await utility.get_roles(guild_id)
 
-    joinable_roles = []
-    for role in roles:
-        if await utility.validate_role(guild_id, role, roles):
-            joinable_roles.append(role["name"])
-
+    joinable_roles = [role["name"] for role in roles if await utility.validate_role(guild_id, role, roles)]
     joinable_roles = sorted(joinable_roles)
     return "```\n{}\n```".format("\n".join(joinable_roles))
 

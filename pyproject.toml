@@ -70,12 +70,12 @@ select = [
     "SIM", # flake8-simplify
     "TID", # flake8-tidy-imports
     "ARG", # flake8-unused-arguments
-    # "PTH", # flake8-use-pathlib
+    "PTH", # flake8-use-pathlib
     "PGH", # pygrep-hooks
     "PL", # pylint
     # "TRY", # tryceratops
     "FLY", # flynt
-    # "PERF", # perflint
+    "PERF", # perflint
     "RUF", # ruff-specific rules
 ]
 ignore = [
@@ -83,7 +83,7 @@ ignore = [
     "PLR0913", # too-many-arguments
     "E402", # module import not at top of file
     "SIM102", # nested if statements
-
+    "COM812", # trailing comma - formatter issues
 
     # Shouldn't ignore
     "B008", # Function call in argument defaults
