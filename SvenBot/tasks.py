@@ -101,7 +101,9 @@ async def steam_task() -> ResponseData | None:
         json.dump(steam_timestamp, f)
 
     if update_post:
-        return await utility.send_message(settings.STAFF_CHANNEL, f"<@&{settings.ADMIN_ROLE}>\n{update_post}", ["roles"])
+        return await utility.send_message(
+            settings.STAFF_CHANNEL, f"<@&{settings.ADMIN_ROLE}>\n{update_post}", ["roles"]
+        )
     return None
 
 

@@ -68,7 +68,7 @@ def app() -> FastAPI:
     @fast_app.post("/interaction/", response_model=InteractionResponse)
     async def interact(
         interaction: Interaction = Body(...),
-        valid: bool = Depends(ValidDiscordRequest()),   # noqa: ARG001
+        valid: bool = Depends(ValidDiscordRequest()),  # noqa: ARG001
     ) -> InteractionResponse:
         if interaction.type == InteractionType.PING:
             return InteractionResponse(type=InteractionResponseType.PONG)

@@ -35,7 +35,7 @@ class ArchubMission(BaseModel):
     display_name: str
     mode: str
     user: str
-    hasMaintainer: bool # noqa: N815
+    hasMaintainer: bool  # noqa: N815
     thumbnail: str = "/thumb"
 
 

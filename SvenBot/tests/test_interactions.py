@@ -54,7 +54,9 @@ roles = [bot_role, normal_role, invalid_role]
 arcomm_guild = "342006395010547712"
 
 member_no_role = Member(user={"id": "User234", "username": "TestUser2", "discriminator": "4042"}, roles=[])
-member_with_role = Member(user={"id": "User123", "username": "TestUser", "discriminator": "3124"}, roles=[normal_role["id"]])
+member_with_role = Member(
+    user={"id": "User123", "username": "TestUser", "discriminator": "3124"}, roles=[normal_role["id"]]
+)
 
 
 @pytest.mark.asyncio
@@ -222,7 +224,9 @@ async def test_addrole(httpx_mock: HTTPXMock, role_name: str, role_id: str, send
         )
 
     interaction = Interaction(
-        **MockRequest("addrole", member_no_role, options=[Option(value=role_name, name="name", type=OptionType.STRING)]),
+        **MockRequest(
+            "addrole", member_no_role, options=[Option(value=role_name, name="name", type=OptionType.STRING)]
+        ),
     )
     reply = await handle_interaction(interaction)
 
