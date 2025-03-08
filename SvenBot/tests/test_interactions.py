@@ -322,14 +322,13 @@ async def test_ticket(httpx_mock: HTTPXMock) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    ("httpx_mock", "coin"),
+    "coin",
     [
-        (None, "Heads"),
-        (None, "Tails"),
+        "Heads",
+        "Tails",
     ],
-    indirect=["httpx_mock"],
 )
-async def test_cointoss(httpx_mock: HTTPXMock, coin: str) -> None:
+async def test_cointoss(coin: str) -> None:
     interaction = Interaction(**MockRequest("cointoss", member_no_role))
 
     with mock.patch.object(random, "choice") as m:
@@ -340,14 +339,13 @@ async def test_cointoss(httpx_mock: HTTPXMock, coin: str) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    ("httpx_mock", "roll_str", "error_expected"),
+    ("roll_str", "error_expected"),
     [
-        (None, "1d6", False),
-        (None, "aaa", True),
+        ("1d6", False),
+        ("aaa", True),
     ],
-    indirect=["httpx_mock"],
 )
-async def test_d20(httpx_mock: HTTPXMock, roll_str: str, error_expected: bool) -> None:
+async def test_d20(roll_str: str, error_expected: bool) -> None:
     interaction = Interaction(
         **MockRequest("d20", member_no_role, options=[Option(value=roll_str, name="options", type=OptionType.STRING)]),
     )

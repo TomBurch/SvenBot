@@ -145,7 +145,7 @@ async def execute_ticket(interaction: Interaction) -> str:
     return f"Ticket created at: {created_url}"
 
 
-async def execute_cointoss(interaction: Interaction) -> str:
+async def execute_cointoss(interaction: Interaction) -> str:  # noqa: ARG001
     return random.choice(["Heads", "Tails"])
 
 
@@ -171,7 +171,7 @@ async def execute_renamerole(interaction: Interaction) -> str:
     return f"<@&{role_id.value}> was renamed"
 
 
-async def execute_maps(interaction: Interaction) -> str:
+async def execute_maps(interaction: Interaction) -> str:  # noqa: ARG001
     url = f"{ARCHUB_API}/maps"
     r = await utility.get([HTTP_200_OK], url, headers=ARCHUB_HEADERS)
     maps = r.json()
@@ -209,7 +209,7 @@ async def execute_subscribe(interaction: Interaction) -> str:
     return f"You are no longer subscribed to {mission_url}"
 
 
-async def execute_ping(interaction: Interaction) -> str:
+async def execute_ping(interaction: Interaction) -> str:  # noqa: ARG001
     return "Pong!"
 
 
