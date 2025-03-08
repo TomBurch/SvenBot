@@ -99,4 +99,4 @@ ignore = [
 allow-star-arg-any = true
 
 [tool.ruff.lint.pep8-naming]
-extend-ignore-names = ["SvenBot", "gunicorn.conf", "global"]
+extend-ignore-names = ["SvenBot", "gunicorn.conf"]
