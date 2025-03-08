@@ -32,13 +32,13 @@ commands = [
 if __name__ == "__main__":
     r = requests.get(url, headers=DEFAULT_HEADERS)
     print(r.status_code, r.reason, r.text)
-    currentCommands = r.json()
+    current_commands = r.json()
 
     for command in commands:
-        commandId = next((c["id"] for c in currentCommands if c["name"] == command.name), None)
+        command_id = next((c["id"] for c in current_commands if c["name"] == command.name), None)
         print("===================")
         print(command.name)
-        print(f"commandId = {commandId}")
+        print(f"command_id = {command_id}")
 
         if command.name in update:
             print("update queued")
@@ -46,7 +46,7 @@ if __name__ == "__main__":
             print(r.status_code, r.reason, r.text)
 
             if command.name in staff:
-                if commandId is not None:
+                if command_id is not None:
                     print("adding staff permissions")
                     permissions = {
                         "permissions": [
@@ -57,7 +57,7 @@ if __name__ == "__main__":
                             },
                         ],
                     }
-                    r = requests.put(f"{url}/{commandId}/permissions", headers=DEFAULT_HEADERS, json=permissions)
+                    r = requests.put(f"{url}/{command_id}/permissions", headers=DEFAULT_HEADERS, json=permissions)
                     print(r.status_code, r.reason, r.text)
                 else:
-                    print("ERROR commandId is NONE")
+                    print("ERROR command_id is NONE")

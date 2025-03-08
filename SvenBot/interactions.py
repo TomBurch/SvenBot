@@ -31,7 +31,7 @@ async def execute_role(interaction: Interaction) -> str:
     user_id = interaction.member.user.id
     (role_id,) = interaction.data.options
 
-    if not await utility.validateRoleById(guild_id, role_id.value):
+    if not await utility.validate_role_by_id(guild_id, role_id.value):
         return f"<@&{role_id.value}> is restricted"
 
     url = f"{GUILD_URL}/{guild_id}/members/{user_id}/roles/{role_id.value}"
@@ -50,15 +50,15 @@ async def execute_role(interaction: Interaction) -> str:
 
 async def execute_roles(interaction: Interaction) -> str:
     guild_id = interaction.guild_id
-    roles = await utility.getRoles(guild_id)
+    roles = await utility.get_roles(guild_id)
 
-    joinableRoles = []
+    joinable_roles = []
     for role in roles:
-        if await utility.validateRole(guild_id, role, roles):
-            joinableRoles.append(role["name"])
+        if await utility.validate_role(guild_id, role, roles):
+            joinable_roles.append(role["name"])
 
-    joinableRoles = sorted(joinableRoles)
-    return "```\n{}\n```".format("\n".join(joinableRoles))
+    joinable_roles = sorted(joinable_roles)
+    return "```\n{}\n```".format("\n".join(joinable_roles))
 
 
 async def execute_members(interaction: Interaction) -> str:
@@ -93,23 +93,23 @@ async def execute_optime(interaction: Interaction) -> str:
         modifier = interaction.data.options[0].value
 
     if modifier == 0:
-        modifierString = ""
+        modifier_string = ""
     elif modifier > 0:
-        modifierString = f" +{modifier}"
+        modifier_string = f" +{modifier}"
     else:
-        modifierString = f" {modifier}"
+        modifier_string = f" {modifier}"
 
-    timeUntilOptime = utility.timeUntilOptime(modifier)
-    return f"Optime{modifierString} starts in {timeUntilOptime}!"
+    time_until_optime = utility.time_until_optime(modifier)
+    return f"Optime{modifier_string} starts in {time_until_optime}!"
 
 
 async def execute_addrole(interaction: Interaction) -> str:
     guild_id = interaction.guild_id
     (name,) = interaction.data.options
 
-    existingRole = await utility.findRoleByName(guild_id, name.value, excludeReserved=False)
-    if existingRole is not None:
-        role_id = existingRole["id"]
+    existing_role = await utility.find_role_by_name(guild_id, name.value, exclude_reserved=False)
+    if existing_role is not None:
+        role_id = existing_role["id"]
         return f"<@&{role_id}> already exists"
 
     url = f"{GUILD_URL}/{guild_id}/roles"
@@ -123,7 +123,7 @@ async def execute_removerole(interaction: Interaction) -> str:
     guild_id = interaction.guild_id
     (role_id,) = interaction.data.options
 
-    if await utility.validateRoleById(guild_id, role_id.value):
+    if await utility.validate_role_by_id(guild_id, role_id.value):
         url = f"{GUILD_URL}/{guild_id}/roles/{role_id.value}"
 
         await utility.delete([HTTP_204_NO_CONTENT], url)
@@ -138,11 +138,11 @@ async def execute_ticket(interaction: Interaction) -> str:
     username = member.user.username if (member.nick is None) else member.nick
     json = {"title": f"{username}: {title.value}", "body": body.value}
 
-    repoUrl = f"https://api.github.com/repos/{repo.value}/issues"
-    r = await utility.post([HTTP_201_CREATED], repoUrl, json=json, headers=GITHUB_HEADERS)
-    createdUrl = r.json()["html_url"]
+    repo_url = f"https://api.github.com/repos/{repo.value}/issues"
+    r = await utility.post([HTTP_201_CREATED], repo_url, json=json, headers=GITHUB_HEADERS)
+    created_url = r.json()["html_url"]
 
-    return f"Ticket created at: {createdUrl}"
+    return f"Ticket created at: {created_url}"
 
 
 async def execute_cointoss(interaction: Interaction) -> str:
@@ -157,12 +157,12 @@ async def execute_d20(interaction: Interaction) -> str:
 async def execute_renamerole(interaction: Interaction) -> str:
     guild_id = interaction.guild_id
     role_id, new_name = interaction.data.options
-    if not await utility.validateRoleById(guild_id, role_id.value):
+    if not await utility.validate_role_by_id(guild_id, role_id.value):
         return f"<@&{role_id.value}> is restricted"
 
-    existingRole = await utility.findRoleByName(guild_id, new_name.value, excludeReserved=False)
-    if existingRole is not None:
-        role_id = existingRole["id"]
+    existing_role = await utility.find_role_by_name(guild_id, new_name.value, exclude_reserved=False)
+    if existing_role is not None:
+        role_id = existing_role["id"]
         return f"<@&{role_id}> already exists"
 
     url = f"{GUILD_URL}/{guild_id}/roles/{role_id.value}"
@@ -176,15 +176,15 @@ async def execute_maps(interaction: Interaction) -> str:
     r = await utility.get([HTTP_200_OK], url, headers=ARCHUB_HEADERS)
     maps = r.json()
 
-    outString = "File name [Display name]\n=========================\n"
+    out_string = "File name [Display name]\n=========================\n"
     for _map in maps:
-        outString += (
+        out_string += (
             f"{_map['class_name']}\n"
             if _map["class_name"] == _map["display_name"]
             else f"{_map['class_name']} [{_map['display_name']}]\n"
         )
 
-    return f"```ini\n{outString}```"
+    return f"```ini\n{out_string}```"
 
 
 async def execute_renamemap(interaction: Interaction) -> str:
@@ -201,12 +201,12 @@ async def execute_subscribe(interaction: Interaction) -> str:
     (mission_id,) = interaction.data.options
     url = f"{ARCHUB_API}/missions/{mission_id.value}/subscribe?discord_id={user_id}"
     r = await utility.post([HTTP_201_CREATED, HTTP_204_NO_CONTENT], url, headers=ARCHUB_HEADERS)
-    missionUrl = f"{HUB_URL}/missions/{mission_id.value}"
+    mission_url = f"{HUB_URL}/missions/{mission_id.value}"
 
     if r.status_code == HTTP_201_CREATED:
-        return f"You are now subscribed to {missionUrl}"
+        return f"You are now subscribed to {mission_url}"
 
-    return f"You are no longer subscribed to {missionUrl}"
+    return f"You are no longer subscribed to {mission_url}"
 
 
 async def execute_ping(interaction: Interaction) -> str:
@@ -246,7 +246,7 @@ async def handle_interaction(interaction: Interaction) -> InteractionResponse:
         gunicorn_logger.info(f"'{interaction.member.user.username}' executing '{command}'")
 
         reply = await execute_map[command](interaction)
-        return utility.ImmediateReply(reply, ephemeral=command in ephemeral)
+        return utility.immediate_reply(reply, ephemeral=command in ephemeral)
 
     except Exception as e:
         gunicorn_logger.error(f"Error executing '{command}':\n{e})")

@@ -26,8 +26,8 @@ from SvenBot.models import (
 
 client = TestClient(app)
 
-startTime = 1657144680
-endTime = 1657148280
+start_time = 1657144680
+end_time = 1657148280
 
 
 class ArchubMission(BaseModel):
@@ -35,7 +35,7 @@ class ArchubMission(BaseModel):
     display_name: str
     mode: str
     user: str
-    hasMaintainer: bool
+    hasMaintainer: bool # noqa: N815
     thumbnail: str = "/thumb"
 
 
@@ -50,7 +50,7 @@ def mock_calendar_notification(title: str) -> SlackNotification:
                 SlackCalendarEvent(
                     color="#colorrr",
                     text="random text",
-                    title=f"<!date^{startTime}^{{time}}|7:00 PM> - <!date^{endTime}^{{time}}|11:00 PM> <https://www.google.com/calendar/event?eid=abc&amp;ctz=UTC|{title}>",
+                    title=f"<!date^{start_time}^{{time}}|7:00 PM> - <!date^{end_time}^{{time}}|11:00 PM> <https://www.google.com/calendar/event?eid=abc&amp;ctz=UTC|{title}>",
                 ),
             ],
         ),
@@ -77,10 +77,10 @@ def test_random_event(httpx_mock: HTTPXMock) -> None:
             embeds=[
                 Embed(
                     title=title,
-                    description=f"Starting <t:{startTime}:R>",
+                    description=f"Starting <t:{start_time}:R>",
                     fields=[
-                        EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True),
-                        EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True),
+                        EmbedField(name="Start", value=f"<t:{start_time}:t>", inline=True),
+                        EmbedField(name="End", value=f"<t:{end_time}:t>", inline=True),
                     ],
                 ),
             ],
@@ -120,10 +120,10 @@ def test_main_event(httpx_mock: HTTPXMock) -> None:
             embeds=[
                 Embed(
                     title=title,
-                    description=f"Starting <t:{startTime}:R>",
+                    description=f"Starting <t:{start_time}:R>",
                     fields=[
-                        EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True),
-                        EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True),
+                        EmbedField(name="Start", value=f"<t:{start_time}:t>", inline=True),
+                        EmbedField(name="End", value=f"<t:{end_time}:t>", inline=True),
                     ],
                     color=EVENT_PINGS["main"][2],
                 ),
@@ -173,10 +173,10 @@ def test_recruit_event(httpx_mock: HTTPXMock) -> None:
             embeds=[
                 Embed(
                     title=title,
-                    description=f"Starting <t:{startTime}:R>",
+                    description=f"Starting <t:{start_time}:R>",
                     fields=[
-                        EmbedField(name="Start", value=f"<t:{startTime}:t>", inline=True),
-                        EmbedField(name="End", value=f"<t:{endTime}:t>", inline=True),
+                        EmbedField(name="Start", value=f"<t:{start_time}:t>", inline=True),
+                        EmbedField(name="End", value=f"<t:{end_time}:t>", inline=True),
                     ],
                     color=EVENT_PINGS["recruit"][2],
                 ),

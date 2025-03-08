@@ -30,7 +30,7 @@ from SvenBot.models import (
     SlackNotificationType,
 )
 from SvenBot.tasks import a3sync_task, recruit_task, steam_task
-from SvenBot.utility import getOperationMissions, mission_colour_from_mode, sendMessage
+from SvenBot.utility import get_operation_missions, mission_colour_from_mode, send_message
 
 gunicorn_logger = logging.getLogger("gunicorn.error")
 
@@ -102,7 +102,7 @@ def app() -> FastAPI:
             ]
 
             if event == "main":
-                for mission in await getOperationMissions():
+                for mission in await get_operation_missions():
                     link = f"{HUB_URL}/missions/{mission['id']}"
                     maker_string = "Maintained" if mission["hasMaintainer"] else "Made"
 
@@ -123,7 +123,7 @@ def app() -> FastAPI:
                         ),
                     )
 
-            await sendMessage(channel, pings, ["roles"], embeds)
+            await send_message(channel, pings, ["roles"], embeds)
 
     return fast_app
 
@@ -145,8 +145,8 @@ def init_scheduler() -> None:
             json.load(f)
     except Exception:
         with open("steam_timestamp.json", "w") as f:
-            lastMonth = datetime.utcnow().timestamp() - 2500000
-            json.dump({"last_checked": lastMonth}, f)
+            last_month = datetime.utcnow().timestamp() - 2500000
+            json.dump({"last_checked": last_month}, f)
 
     scheduler = AsyncIOScheduler()
     scheduler.add_job(recruit_task, "cron", day_of_week="mon,wed,fri", hour="17")

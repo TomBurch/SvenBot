@@ -16,6 +16,6 @@ commands = [
 
 if __name__ == "__main__":
     for command in commands:
-        if command["name"] in update:
+        if command.name in update:
             r = requests.post(url, headers=DEFAULT_HEADERS, json=command.dict())
             print(r.status_code, r.reason, r.text)

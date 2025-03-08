@@ -14,7 +14,7 @@ gunicorn_logger = logging.getLogger("gunicorn.error")
 
 async def recruit_task() -> ResponseData:
     gunicorn_logger.info("Recruit task")
-    return await utility.sendMessage(
+    return await utility.send_message(
         settings.STAFF_CHANNEL,
         f"<@&{settings.ADMIN_ROLE}> Post recruitment on <https://www.reddit.com/r/FindAUnit>",
         ["roles"],
@@ -23,17 +23,17 @@ async def recruit_task() -> ResponseData:
 
 async def a3sync_task() -> ResponseData | None:
     r = await utility.get([HTTP_200_OK], f"{REPO_URL}/repo")
-    repoInfo = r.json()
+    repo_info = r.json()
 
     with open("revision.json") as f:
         revision = json.load(f)
 
-    if repoInfo["revision"] != revision["revision"]:
+    if repo_info["revision"] != revision["revision"]:
         r = await utility.get([HTTP_200_OK], f"{REPO_URL}/changelog")
         changelogs = r.json()["list"]
 
-        newRepoSize = round((float(repoInfo["totalFilesSize"]) / 1000000000), 2)
-        updatePost = f"```md\n# The A3Sync repo has changed #\n\n[{newRepoSize} GB]\n```\n"
+        new_repo_size = round((float(repo_info["totalFilesSize"]) / 1000000000), 2)
+        update_post = f"```md\n# The A3Sync repo has changed #\n\n[{new_repo_size} GB]\n```\n"
         for changelog in changelogs:
             if changelog["revision"] > revision["revision"]:
                 new = (
@@ -52,14 +52,14 @@ async def a3sync_task() -> ResponseData | None:
                     else "\n\n< Updated >\n{}".format("\n".join(changelog["updatedAddons"]))
                 )
                 if len(new + deleted + updated) > 0:
-                    updatePost += f"```md\n{new}{deleted}{updated}\n```\n"
+                    update_post += f"```md\n{new}{deleted}{updated}\n```\n"
 
         revision["revision"] = changelog["revision"]
 
         with open("revision.json", "w") as f:
             json.dump(revision, f)
 
-        return await utility.sendMessage(settings.ANNOUNCE_CHANNEL, updatePost)
+        return await utility.send_message(settings.ANNOUNCE_CHANNEL, update_post)
     return None
 
 
@@ -67,45 +67,45 @@ async def steam_task() -> ResponseData | None:
     with open("steam_timestamp.json") as f:
         steam_timestamp = json.load(f)
 
-    mods = set(await getSteamMods(settings.STEAM_MODLIST))
+    mods = set(await get_steam_mods(settings.STEAM_MODLIST))
     data = {"itemcount": len(mods)}
     for i, mod in enumerate(mods):
         data[f"publishedfileids[{i}]"] = mod
 
     r = await utility.post([HTTP_200_OK], f"{STEAM_URL}/GetPublishedFileDetails/v1/", data=data, headers=None)
 
-    updatePost = ""
+    update_post = ""
     now = datetime.utcnow().timestamp()
-    lastChecked = steam_timestamp["last_checked"]
+    last_checked = steam_timestamp["last_checked"]
 
     for mod in r.json()["response"]["publishedfiledetails"]:
-        modId = mod["publishedfileid"]
-        timeUpdated = mod.get("time_updated")
-        if not timeUpdated:
+        mod_id = mod["publishedfileid"]
+        time_updated = mod.get("time_updated")
+        if not time_updated:
             continue
 
-        if lastChecked <= timeUpdated <= now:
-            changelogUrl = f"https://steamcommunity.com/sharedfiles/filedetails/changelog/{modId}"
-            updatePost += f"**{mod['title']}** has released a new version\n<{changelogUrl}>\n"
+        if last_checked <= time_updated <= now:
+            changelog_url = f"https://steamcommunity.com/sharedfiles/filedetails/changelog/{mod_id}"
+            update_post += f"**{mod['title']}** has released a new version\n<{changelog_url}>\n"
 
             try:
-                changelog = await getSteamChangelog(changelogUrl)
+                changelog = await get_steam_changelog(changelog_url)
             except Exception as e:
-                gunicorn_logger.error(f"Error retrieving changelog for {modId}:\n{e}")
+                gunicorn_logger.error(f"Error retrieving changelog for {mod_id}:\n{e}")
                 changelog = "Error retrieving changelog"
 
-            updatePost += f"```\n{changelog}```\n"
+            update_post += f"```\n{changelog}```\n"
 
     steam_timestamp["last_checked"] = now
     with open("steam_timestamp.json", "w") as f:
         json.dump(steam_timestamp, f)
 
-    if updatePost:
-        return await utility.sendMessage(settings.STAFF_CHANNEL, f"<@&{settings.ADMIN_ROLE}>\n{updatePost}", ["roles"])
+    if update_post:
+        return await utility.send_message(settings.STAFF_CHANNEL, f"<@&{settings.ADMIN_ROLE}>\n{update_post}", ["roles"])
     return None
 
 
-async def getSteamMods(collection: int) -> list[str]:
+async def get_steam_mods(collection: int) -> list[str]:
     data = {"collectioncount": 1, "publishedfileids[0]": collection}
     mods: list[str] = []
 
@@ -117,13 +117,13 @@ async def getSteamMods(collection: int) -> list[str]:
             if child["filetype"] == 0:
                 mods.append(child["publishedfileid"])
             elif child["filetype"] == 2:
-                mods += await getSteamMods(child["publishedfileid"])
+                mods += await get_steam_mods(child["publishedfileid"])
 
     return mods
 
 
-async def getSteamChangelog(changelogUrl: str) -> str:
-    r = await utility.get([HTTP_200_OK], changelogUrl, headers=None)
+async def get_steam_changelog(changelog_url: str) -> str:
+    r = await utility.get([HTTP_200_OK], changelog_url, headers=None)
     soup = BeautifulSoup(r.text, features="html.parser")
     headline = soup.find("div", {"class": "changelog headline"})
 

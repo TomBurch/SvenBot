@@ -60,7 +60,7 @@ async def patch(statuses: list[int], url: str, **kwargs: Any) -> httpx.Response:
     return await req(client.patch, statuses, url, **kwargs)
 
 
-async def sendMessage(
+async def send_message(
     channel_id: int,
     text: str | None = None,
     mentions: list[str] = [],
@@ -72,7 +72,7 @@ async def sendMessage(
     return message
 
 
-def ImmediateReply(content: str, mentions: list[str] = [], ephemeral: bool = False) -> InteractionResponse:
+def immediate_reply(content: str, mentions: list[str] = [], ephemeral: bool = False) -> InteractionResponse:
     data = ResponseData(content=content, allowed_mentions={"parse": mentions})
     if ephemeral:
         data.flags = 64
@@ -80,88 +80,88 @@ def ImmediateReply(content: str, mentions: list[str] = [], ephemeral: bool = Fal
     return InteractionResponse(type=InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data=data)
 
 
-def basicValidation(role: dict, botPosition: int) -> bool:
-    return role.get("tags", {}).get("bot_id") is None and role["position"] < botPosition
+def basic_validation(role: dict, bot_position: int) -> bool:
+    return role.get("tags", {}).get("bot_id") is None and role["position"] < bot_position
 
 
-def colourValidation(role: dict, botPosition: int) -> bool:
-    return basicValidation(role, botPosition) and role["color"] == 0
+def colour_validation(role: dict, bot_position: int) -> bool:
+    return basic_validation(role, bot_position) and role["color"] == 0
 
 
 role_validate_funcs: dict[str, Callable[[dict, int], bool]] = {
-    "342006395010547712": colourValidation,
-    "240160552867987475": colourValidation,
-    "333316787603243018": basicValidation,
+    "342006395010547712": colour_validation,
+    "240160552867987475": colour_validation,
+    "333316787603243018": basic_validation,
 }
 
 
-async def validateRole(guild_id: str, role: dict, roles: list[dict] | None = None) -> bool:
+async def validate_role(guild_id: str, role: dict, roles: list[dict] | None = None) -> bool:
     if roles is None:
-        roles = await getRoles(guild_id)
+        roles = await get_roles(guild_id)
 
-    botPosition = -1
+    bot_position = -1
     for r in roles:
         if r.get("tags", {}).get("bot_id") is not None:
             if r["tags"]["bot_id"] == settings.CLIENT_ID:
-                botPosition = r["position"]
+                bot_position = r["position"]
                 break
 
-    if botPosition == -1:
+    if bot_position == -1:
         raise RuntimeError("Unable to find bot's role")
 
     role_validate = role_validate_funcs.get(guild_id)
     if role_validate is None:
         return False
-    return role_validate(role, botPosition)
+    return role_validate(role, bot_position)
 
 
-async def validateRoleById(guild_id: str, role_id: str) -> bool:
-    roleMatchingRoleId = None
-    roles = await getRoles(guild_id)
+async def validate_role_by_id(guild_id: str, role_id: str) -> bool:
+    role_matching_role_id = None
+    roles = await get_roles(guild_id)
     for r in roles:
         if r["id"] == role_id:
-            roleMatchingRoleId = r
+            role_matching_role_id = r
             break
 
-    if roleMatchingRoleId is None:
+    if role_matching_role_id is None:
         raise RuntimeError("Unable to find role")
 
-    return await validateRole(guild_id, roleMatchingRoleId, roles)
+    return await validate_role(guild_id, role_matching_role_id, roles)
 
 
-async def getRoles(guild_id: str) -> list[dict]:
+async def get_roles(guild_id: str) -> list[dict]:
     roles = await get([HTTP_200_OK], f"{GUILD_URL}/{guild_id}/roles")
     return roles.json()
 
 
-async def findRoleByName(
+async def find_role_by_name(
     guild_id: str,
     query: str,
     autocomplete: bool = False,
-    excludeReserved: bool = True,
+    exclude_reserved: bool = True,
 ) -> dict | None:
     query = query.lower()
-    roles = await getRoles(guild_id)
+    roles = await get_roles(guild_id)
     candidate = None
 
     for role in roles:
-        roleName = role["name"].lower()
-        if roleName == query:
+        role_name = role["name"].lower()
+        if role_name == query:
             candidate = role
             break
 
-        if autocomplete and re.match(re.escape(query), roleName):
+        if autocomplete and re.match(re.escape(query), role_name):
             candidate = role
 
-    if excludeReserved and (candidate is not None):
-        if await validateRole(guild_id, candidate, roles):
+    if exclude_reserved and (candidate is not None):
+        if await validate_role(guild_id, candidate, roles):
             return candidate
         return None
 
     return candidate
 
 
-def timeUntilOptime(modifier: int = 0) -> timedelta:
+def time_until_optime(modifier: int = 0) -> timedelta:
     today = datetime.now(tz=ZoneInfo("Europe/London"))
     opday = today
     opday = opday.replace(hour=19, minute=0, second=0) + timedelta(hours=modifier)
@@ -171,7 +171,7 @@ def timeUntilOptime(modifier: int = 0) -> timedelta:
     return opday - today
 
 
-async def getOperationMissions() -> list[dict]:
+async def get_operation_missions() -> list[dict]:
     response = await get([HTTP_200_OK, HTTP_204_NO_CONTENT], f"{ARCHUB_API}/operations/next", headers=ARCHUB_HEADERS)
     if response.status_code == HTTP_200_OK:
         return response.json()
